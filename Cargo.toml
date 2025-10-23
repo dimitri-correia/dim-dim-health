@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 
 # Axum and related web libraries
-axum = "0.8.6"
+axum = { version = "0.8.6", features = ["macros"] }
 tokio = { version = "1.48.0", features = ["full"] }
 
 # Serialization
