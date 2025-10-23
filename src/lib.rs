@@ -1,3 +1,4 @@
+pub mod auth;
 pub mod axummain;
 pub mod handlers;
 pub mod models;
