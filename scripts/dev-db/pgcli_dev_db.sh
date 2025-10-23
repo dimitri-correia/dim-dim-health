@@ -1,0 +1,1 @@
+PGPASSWORD='dev-db' pgcli -h localhost -p 5432 -U dev -d dimdimhealthdev
