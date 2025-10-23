@@ -1,3 +1,4 @@
+pub mod schemas;
 pub mod repositories;
 pub mod models;
 pub mod handlers;
