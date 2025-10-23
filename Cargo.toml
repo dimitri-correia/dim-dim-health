@@ -4,6 +4,21 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+
+# Axum and related web libraries
 axum = "0.8.6"
 tokio = { version = "1.48.0", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
+
+# Database
+sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "migrate"] }
+
+# UUID and DateTime
+uuid = { version = "1.18.1", features = ["v4", "serde"] }
+chrono = { version = "0.4.42", features = ["serde"] }
+
+# Environment variable management
+dotenvy = "0.15.7"
