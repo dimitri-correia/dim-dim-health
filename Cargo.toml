@@ -25,3 +25,7 @@ dotenvy = "0.15.7"
 
 # Validation
 validator = { version = "0.20.0", features = ["derive"] }
+
+# Auth
+bcrypt = "0.17.1"
+jsonwebtoken = { version = "10", features = ["aws_lc_rs"] }
