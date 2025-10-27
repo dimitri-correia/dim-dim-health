@@ -1,3 +1,5 @@
+use super::traits::UserRepositoryTrait;
+use async_trait::async_trait;
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -12,8 +14,11 @@ impl UserRepository {
     pub fn new(db: PgPool) -> Self {
         Self { db }
     }
+}
 
-    pub async fn create(
+#[async_trait]
+impl UserRepositoryTrait for UserRepository {
+    async fn create(
         &self,
         username: &str,
         email: &str,
@@ -36,7 +41,7 @@ impl UserRepository {
         Ok(user)
     }
 
-    pub async fn find_by_id(&self, id: Uuid) -> Result<Option<User>, sqlx::Error> {
+    async fn find_by_id(&self, id: Uuid) -> Result<Option<User>, sqlx::Error> {
         let user = sqlx::query_as::<_, User>(
             r#"
             SELECT id, username, email, password_hash, user_image,
@@ -52,7 +57,7 @@ impl UserRepository {
         Ok(user)
     }
 
-    pub async fn find_by_email(&self, email: &str) -> Result<Option<User>, sqlx::Error> {
+    async fn find_by_email(&self, email: &str) -> Result<Option<User>, sqlx::Error> {
         let user = sqlx::query_as::<_, User>(
             r#"
             SELECT id, username, email, password_hash, user_image,
@@ -68,7 +73,7 @@ impl UserRepository {
         Ok(user)
     }
 
-    pub async fn find_by_username(&self, username: &str) -> Result<Option<User>, sqlx::Error> {
+    async fn find_by_username(&self, username: &str) -> Result<Option<User>, sqlx::Error> {
         let user = sqlx::query_as::<_, User>(
             r#"
             SELECT id, username, email, password_hash, user_image,
@@ -84,11 +89,7 @@ impl UserRepository {
         Ok(user)
     }
 
-    pub async fn user_already_exists(
-        &self,
-        email: &str,
-        username: &str,
-    ) -> Result<bool, sqlx::Error> {
+    async fn user_already_exists(&self, email: &str, username: &str) -> Result<bool, sqlx::Error> {
         let exists: bool = sqlx::query_scalar(
             r#"
         SELECT EXISTS(
@@ -106,7 +107,7 @@ impl UserRepository {
         Ok(exists)
     }
 
-    pub async fn update(
+    async fn update(
         &self,
         id: Uuid,
         username: Option<&str>,
