@@ -1,9 +1,9 @@
-use crate::axummain::{router, state};
+use crate::axummain::{env_loader::Settings, router, state};
 
 pub async fn axum_main() {
-    dotenvy::dotenv().ok();
+    let settings = Settings::load_config().expect("Failed to load configuration");
 
-    let app_state = state::AppState::new()
+    let app_state = state::AppState::new(settings)
         .await
         .expect("Failed to create AppState");
 

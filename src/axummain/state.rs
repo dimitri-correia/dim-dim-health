@@ -1,7 +1,7 @@
 use axum::extract::FromRef;
 use sqlx::PgPool;
 
-use crate::repositories::user_repository::UserRepository;
+use crate::{axummain::env_loader::Settings, repositories::user_repository::UserRepository};
 
 #[derive(Clone, FromRef)]
 pub struct AppState {
@@ -12,11 +12,8 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub async fn new() -> Result<Self, sqlx::Error> {
-        let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-        let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
-
-        let db = PgPool::connect(&database_url).await?;
+    pub async fn new(settings: Settings) -> Result<Self, sqlx::Error> {
+        let db = PgPool::connect(&settings.database_url).await?;
 
         sqlx::migrate!("./migrations").run(&db).await?;
 
@@ -25,7 +22,7 @@ impl AppState {
         Ok(Self {
             db,
             user_repository,
-            jwt_secret,
+            jwt_secret: settings.jwt_secret,
         })
     }
 }
