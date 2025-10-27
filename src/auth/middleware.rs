@@ -24,10 +24,8 @@ where
         let headers = &parts.headers;
         let token = extract_token_from_headers(headers).ok_or(StatusCode::UNAUTHORIZED)?;
 
-        let jwt_secret =
-            std::env::var("JWT_SECRET").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-        let claims = validate_token(&token, &jwt_secret).map_err(|_| StatusCode::UNAUTHORIZED)?;
+        let claims =
+            validate_token(&token, &app_state.jwt_secret).map_err(|_| StatusCode::UNAUTHORIZED)?;
 
         let user_id = Uuid::parse_str(&claims.sub).map_err(|_| StatusCode::UNAUTHORIZED)?;
 
@@ -58,10 +56,7 @@ where
             None => return Ok(OptionalAuth(None)),
         };
 
-        let jwt_secret =
-            std::env::var("JWT_SECRET").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-        let claims = match validate_token(&token, &jwt_secret) {
+        let claims = match validate_token(&token, &app_state.jwt_secret) {
             Ok(claims) => claims,
             Err(_) => return Ok(OptionalAuth(None)),
         };

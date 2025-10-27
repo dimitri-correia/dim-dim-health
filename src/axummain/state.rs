@@ -8,10 +8,11 @@ pub struct AppState {
     pub db: PgPool,
 
     pub user_repository: UserRepository,
+    pub jwt_secret: String,
 }
 
 impl AppState {
-    pub async fn new(database_url: &str) -> Result<Self, sqlx::Error> {
+    pub async fn new(database_url: &str, jwt_token: String) -> Result<Self, sqlx::Error> {
         let db = PgPool::connect(database_url).await?;
 
         sqlx::migrate!("./migrations").run(&db).await?;
@@ -21,6 +22,7 @@ impl AppState {
         Ok(Self {
             db,
             user_repository,
+            jwt_secret,
         })
     }
 }
