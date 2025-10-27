@@ -1,7 +1,4 @@
-use axum::{Router, routing::get};
-
-use crate::axummain::state;
-use crate::handlers::server_health::server_health_check;
+use crate::axummain::{router, state};
 
 pub async fn axum_main() {
     dotenvy::dotenv().ok();
@@ -13,10 +10,9 @@ pub async fn axum_main() {
         .await
         .expect("Failed to create AppState");
 
-    let app = Router::new()
-        .route("/health", get(server_health_check))
-        .with_state(app_state);
+    let app = router::get_main_router(app_state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+
     axum::serve(listener, app).await.unwrap();
 }
