@@ -3,10 +3,7 @@ use crate::axummain::{router, state};
 pub async fn axum_main() {
     dotenvy::dotenv().ok();
 
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
-
-    let app_state = state::AppState::new(&database_url, jwt_secret)
+    let app_state = state::AppState::new()
         .await
         .expect("Failed to create AppState");
 

@@ -12,8 +12,11 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub async fn new(database_url: &str, jwt_token: String) -> Result<Self, sqlx::Error> {
-        let db = PgPool::connect(database_url).await?;
+    pub async fn new() -> Result<Self, sqlx::Error> {
+        let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+        let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+
+        let db = PgPool::connect(&database_url).await?;
 
         sqlx::migrate!("./migrations").run(&db).await?;
 
