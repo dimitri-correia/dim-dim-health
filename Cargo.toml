@@ -14,7 +14,13 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 
 # Database
-sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "migrate"] }
+sqlx = { version = "0.8.6", features = [
+    "runtime-tokio-rustls",
+    "postgres",
+    "uuid",
+    "chrono",
+    "migrate",
+] }
 
 # UUID and DateTime
 uuid = { version = "1.18.1", features = ["v4", "serde"] }
@@ -28,4 +34,4 @@ validator = { version = "0.20.0", features = ["derive"] }
 
 # Auth
 bcrypt = "0.17.1"
-jsonwebtoken = { version = "10", features = ["aws_lc_rs"] }
+jsonwebtoken = { version = "10.1.0", features = ["aws_lc_rs"] }
