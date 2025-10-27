@@ -3,6 +3,14 @@ name = "dimdim-health"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "dimdim_health"
+path = "src/lib.rs"
+
+[[bin]]
+name = "dimdim-health"
+path = "src/main.rs"
+
 [dependencies]
 
 # Axum and related web libraries
