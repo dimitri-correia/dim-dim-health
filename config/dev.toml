@@ -1,0 +1,2 @@
+database_url = "postgresql://dev:dev-db@localhost:5432/dimdimhealthdev"
+jwt_secret = "dev_jwt_secret_key"
