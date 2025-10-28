@@ -11,7 +11,14 @@ path = "src/lib.rs"
 name = "dimdim-health"
 path = "src/main.rs"
 
+
+[workspace]
+members = [".", "migration"]
+
+
 [dependencies]
+# Workspace members
+migration = { path = "./migration" }
 
 # Async trait support
 async-trait = "0.1.89"
@@ -25,12 +32,10 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 
 # Database
-sqlx = { version = "0.8.6", features = [
-    "runtime-tokio-rustls",
-    "postgres",
-    "uuid",
-    "chrono",
-    "migrate",
+sea-orm = { version = "2.0.0-rc", features = [
+    "sqlx-postgres",
+    "runtime-tokio-native-tls",
+    "macros",
 ] }
 
 # UUID and DateTime
