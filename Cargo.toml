@@ -36,6 +36,11 @@ sea-orm = { version = "2.0.0-rc", features = [
     "sqlx-postgres",
     "runtime-tokio-native-tls",
     "macros",
+    "mock",
+    "with-chrono",
+    "with-json",
+    "with-uuid",
+    "postgres-array",
 ] }
 
 # UUID and DateTime
