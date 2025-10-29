@@ -32,7 +32,7 @@ pub async fn register(
         return Err(StatusCode::CONFLICT.into_response());
     }
 
-    let password_hash = hash_password(&payload.user.password)
+    let password_hash = hash_password(&payload.user.password, None)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
     let user = state
