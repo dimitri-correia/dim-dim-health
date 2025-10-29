@@ -26,6 +26,13 @@ async-trait = "0.1.89"
 # Axum and related web libraries
 axum = { version = "0.8.6", features = ["macros"] }
 tokio = { version = "1.48.0", features = ["full"] }
+tower = "0.5.2"
+tower-http = { version = "0.6.6", features = ["trace"] }
+
+# Logging
+log = "0.4.28"
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 
 # Serialization
 serde = { version = "1.0.228", features = ["derive"] }

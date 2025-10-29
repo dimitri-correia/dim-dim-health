@@ -1,5 +1,6 @@
 use axum::routing::post;
 use axum::{Router, routing::get};
+use tower_http::trace::TraceLayer;
 
 use crate::axummain::state::AppState;
 use crate::handlers::auth::{current_user, login, register};
@@ -15,4 +16,5 @@ pub fn get_main_router(app_state: AppState) -> Router {
         .route("/api/user", get(current_user))
         // Set application state
         .with_state(app_state)
+        .layer(TraceLayer::new_for_http())
 }
