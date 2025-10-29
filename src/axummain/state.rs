@@ -1,29 +1,26 @@
 use std::sync::Arc;
 
 use axum::extract::FromRef;
-use sqlx::PgPool;
+use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 
-use crate::{
-    axummain::env_loader::Settings,
-    repositories::{traits::UserRepositoryTrait, user_repository::UserRepository},
-};
+use crate::{axummain::env_loader::Settings, repositories::user_repository::UserRepository};
+use migration::{Migrator, MigratorTrait};
 
 #[derive(Clone, FromRef)]
 pub struct AppState {
-    pub db: PgPool,
+    pub db: DatabaseConnection,
 
-    pub user_repository: Arc<dyn UserRepositoryTrait>,
+    pub user_repository: Arc<UserRepository>,
     pub jwt_secret: String,
 }
 
 impl AppState {
-    pub async fn new(settings: Settings) -> Result<Self, sqlx::Error> {
-        let db = PgPool::connect(&settings.database_url).await?;
+    pub async fn new(settings: Settings) -> Result<Self, sea_orm::DbErr> {
+        let db = get_db_pool(&settings.database_url).await?;
 
-        sqlx::migrate!("./migrations").run(&db).await?;
+        Migrator::up(&db, None).await?;
 
-        let user_repository: Arc<dyn UserRepositoryTrait> =
-            Arc::new(UserRepository::new(db.clone()));
+        let user_repository = Arc::new(UserRepository::new(db.clone()));
 
         Ok(Self {
             db,
@@ -31,4 +28,14 @@ impl AppState {
             jwt_secret: settings.jwt_secret,
         })
     }
+}
+
+async fn get_db_pool(database_url: &str) -> Result<DatabaseConnection, sea_orm::DbErr> {
+    let mut opt = ConnectOptions::new(database_url);
+    opt.max_connections(100).min_connections(5);
+    // .sqlx_logging(true)
+    // .sqlx_logging_level(log::LevelFilter::Info);
+
+    let db = Database::connect(opt).await?;
+    Ok(db)
 }

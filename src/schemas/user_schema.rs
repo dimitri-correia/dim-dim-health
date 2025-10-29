@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
@@ -30,9 +30,6 @@ pub struct UpdateUserRequest {
 
     #[validate(email(message = "Invalid email format"))]
     pub email: Option<String>,
-
-    #[validate(url(message = "Image must be a valid URL"))]
-    pub user_image: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -40,18 +37,16 @@ pub struct UserResponse {
     pub id: Uuid,
     pub username: String,
     pub email: String,
-    pub user_image: Option<String>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub created_at: DateTime<FixedOffset>,
+    pub updated_at: DateTime<FixedOffset>,
 }
 
-impl From<crate::models::user::User> for UserResponse {
-    fn from(user: crate::models::user::User) -> Self {
+impl From<crate::entities::users::Model> for UserResponse {
+    fn from(user: crate::entities::users::Model) -> Self {
         Self {
             id: user.id,
             username: user.username,
             email: user.email,
-            user_image: user.user_image,
             created_at: user.created_at,
             updated_at: user.updated_at,
         }
