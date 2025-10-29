@@ -1,4 +1,4 @@
-use crate::{auth::jwt::validate_token, axummain::state::AppState, models::user::User};
+use crate::{auth::jwt::validate_token, axummain::state::AppState, entities::users::Model as User};
 use axum::{
     extract::{FromRef, FromRequestParts},
     http::{HeaderMap, StatusCode, request::Parts},

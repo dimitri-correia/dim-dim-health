@@ -46,16 +46,14 @@ pub struct UserData {
     pub email: String,
     pub token: String,
     pub username: String,
-    pub user_image: Option<String>,
 }
 
 impl UserData {
-    pub fn from_user_with_token(user: crate::models::user::User, token: String) -> Self {
+    pub fn from_user_with_token(user: crate::entities::users::Model, token: String) -> Self {
         Self {
             email: user.email,
             token,
             username: user.username,
-            user_image: user.user_image,
         }
     }
 }
