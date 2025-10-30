@@ -70,3 +70,7 @@ lettre = { version = "0.11.19", features = [
     "builder",
     "hostname",
 ] }
+
+[dev-dependencies]
+async-once-cell = "0.5.4"
+axum-test = { version = "18.2.1", features = ["pretty-assertions"] }
