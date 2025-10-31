@@ -16,6 +16,13 @@ if podman container exists "$CONTAINER"; then
     echo "Starting existing container '$CONTAINER'..."
     podman start "$CONTAINER"
   fi
+
+  # Drop and recreate the test database
+  echo "Resetting test database..."
+  podman exec -u postgres "$CONTAINER" psql -U "$POSTGRES_USER" -d postgres -c "DROP DATABASE IF EXISTS $POSTGRES_DB;"
+  podman exec -u postgres "$CONTAINER" psql -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE $POSTGRES_DB;"
+  echo "Database reset complete."
+
 else
   echo "Creating and starting container '$CONTAINER'..."
   podman run --name "$CONTAINER" \
@@ -31,10 +38,13 @@ echo "Waiting for Postgres to be ready..."
 for i in {1..30}; do
   if podman exec "$CONTAINER" pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" > /dev/null 2>&1; then
     echo "Postgres ready!"
-    exit 0
+    break
   fi
   sleep 1
 done
 
-echo "Postgres did not become ready in time."
-exit 1
+# fallback if Postgres never becomes ready
+if ! podman exec "$CONTAINER" pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" > /dev/null 2>&1; then
+  echo "Postgres did not become ready in time."
+  exit 1
+fi
