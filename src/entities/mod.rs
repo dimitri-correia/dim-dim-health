@@ -2,4 +2,5 @@
 
 pub mod prelude;
 
+pub mod email_verification_token;
 pub mod users;
