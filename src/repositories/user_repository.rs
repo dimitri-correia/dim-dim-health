@@ -31,6 +31,7 @@ impl UserRepository {
             password_hash: Set(password_hash.to_owned()),
             created_at: NotSet,
             updated_at: NotSet,
+            email_verified: NotSet,
         };
         let user = user.insert(&self.db).await?;
 

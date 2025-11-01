@@ -102,6 +102,7 @@ mod tests {
             password_hash: "password_hash".to_string(),
             created_at: Utc::now().with_timezone(&fixed_offset),
             updated_at: Utc::now().with_timezone(&fixed_offset),
+            email_verified: true,
         }
     }
 
