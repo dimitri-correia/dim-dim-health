@@ -3,10 +3,12 @@ use axum::http::StatusCode;
 use common::test_server::get_test_server;
 use serde_json::json;
 
+use crate::common::app_paths::APP_PATHS;
+
 #[tokio::test]
 async fn test_server_health() {
     let server = get_test_server().await;
-    let res = server.get("/health").await;
+    let res = server.get(APP_PATHS.health_check).await;
     res.assert_status(StatusCode::OK);
     res.assert_json(&json!(
         {
