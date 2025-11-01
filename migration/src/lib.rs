@@ -2,6 +2,7 @@ pub use sea_orm_migration::prelude::*;
 
 mod m20251028_170454_user_table;
 mod m20251101_123625_create_email_verification_tokens;
+mod m20251101_124651_add_email_verified_to_users;
 
 pub struct Migrator;
 
@@ -11,6 +12,7 @@ impl MigratorTrait for Migrator {
         vec![
             Box::new(m20251028_170454_user_table::Migration),
             Box::new(m20251101_123625_create_email_verification_tokens::Migration),
+            Box::new(m20251101_124651_add_email_verified_to_users::Migration),
         ]
     }
 }

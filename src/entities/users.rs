@@ -15,6 +15,7 @@ pub struct Model {
     pub password_hash: String,
     pub created_at: DateTimeWithTimeZone,
     pub updated_at: DateTimeWithTimeZone,
+    pub email_verified: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
