@@ -1,5 +1,6 @@
-use super::email_verification_token::Model;
 use chrono::Utc;
+
+use crate::entities::email_verification_token::Model;
 
 impl Model {
     pub fn is_expired(&self) -> bool {
