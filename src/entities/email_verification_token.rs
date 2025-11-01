@@ -4,28 +4,32 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
-#[sea_orm(table_name = "users")]
+#[sea_orm(table_name = "email_verification_token")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
+    pub user_id: Uuid,
     #[sea_orm(unique)]
-    pub username: String,
-    #[sea_orm(unique)]
-    pub email: String,
-    pub password_hash: String,
+    pub token: String,
+    pub expires_at: DateTimeWithTimeZone,
     pub created_at: DateTimeWithTimeZone,
-    pub updated_at: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::email_verification_token::Entity")]
-    EmailVerificationToken,
+    #[sea_orm(
+        belongs_to = "super::users::Entity",
+        from = "Column::UserId",
+        to = "super::users::Column::Id",
+        on_update = "NoAction",
+        on_delete = "Cascade"
+    )]
+    Users,
 }
 
-impl Related<super::email_verification_token::Entity> for Entity {
+impl Related<super::users::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::EmailVerificationToken.def()
+        Relation::Users.def()
     }
 }
 
