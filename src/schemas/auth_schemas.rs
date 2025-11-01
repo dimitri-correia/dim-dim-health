@@ -36,12 +36,12 @@ pub struct LoginUserData {
     pub password: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UserResponse {
     pub user: UserData,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UserData {
     pub email: String,
     pub token: String,
