@@ -1,6 +1,6 @@
 mod common;
 use axum::http::StatusCode;
-use common::get_test_server;
+use common::test_server::get_test_server;
 use serde_json::json;
 
 #[tokio::test]
