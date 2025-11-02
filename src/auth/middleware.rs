@@ -33,7 +33,7 @@ where
 
         let user = app_state
             .user_repository
-            .find_by_id(user_id)
+            .find_by_id(&user_id)
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
             .ok_or(StatusCode::UNAUTHORIZED)?;
@@ -70,7 +70,7 @@ where
 
         let user = app_state
             .user_repository
-            .find_by_id(user_id)
+            .find_by_id(&user_id)
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 

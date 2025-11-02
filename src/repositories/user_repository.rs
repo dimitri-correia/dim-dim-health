@@ -38,8 +38,8 @@ impl UserRepository {
         Ok(user)
     }
 
-    pub async fn find_by_id(&self, id: Uuid) -> Result<Option<users::Model>, sea_orm::DbErr> {
-        users::Entity::find_by_id(id).one(&self.db).await
+    pub async fn find_by_id(&self, id: &Uuid) -> Result<Option<users::Model>, sea_orm::DbErr> {
+        users::Entity::find_by_id(id.to_owned()).one(&self.db).await
     }
 
     pub async fn find_by_email(&self, email: &str) -> Result<Option<users::Model>, sea_orm::DbErr> {
@@ -78,12 +78,12 @@ impl UserRepository {
 
     pub async fn update(
         &self,
-        id: Uuid,
+        id: &Uuid,
         username: Option<&str>,
         email: Option<&str>,
     ) -> Result<users::Model, sea_orm::DbErr> {
         let mut active = users::ActiveModel {
-            id: Set(id),
+            id: Set(id.to_owned()),
             ..Default::default()
         };
 
