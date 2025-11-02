@@ -1,8 +1,7 @@
-mod common;
 use axum::http::{HeaderValue, StatusCode};
-use common::{app_paths::APP_PATHS, test_server::get_test_server};
 use dimdim_health::schemas::auth_schemas::UserResponse;
 use serde_json::json;
+use tests_helpers::{app_paths::APP_PATHS, test_server::get_test_server};
 
 #[tokio::test]
 async fn test_create_user() {

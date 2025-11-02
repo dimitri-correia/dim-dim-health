@@ -1,9 +1,6 @@
-mod common;
 use axum::http::StatusCode;
-use common::test_server::get_test_server;
 use serde_json::json;
-
-use crate::common::app_paths::APP_PATHS;
+use tests_helpers::{app_paths::APP_PATHS, test_server::get_test_server};
 
 #[tokio::test]
 async fn test_server_health() {
