@@ -13,13 +13,11 @@ path = "src/main.rs"
 
 
 [workspace]
-members = [".", "migration"]
+resolver = "2"
+members = [".", "migration", "tests_helpers"]
 
 
-[dependencies]
-# Workspace members
-migration = { path = "./migration" }
-
+[workspace.dependencies]
 # Async trait support
 async-trait = "0.1.89"
 
@@ -49,6 +47,10 @@ sea-orm = { version = "2.0.0-rc", features = [
     "with-uuid",
     "postgres-array",
 ] }
+sea-orm-migration = { version = "2.0.0-rc", features = [
+    "sqlx-postgres",
+    "runtime-tokio-native-tls",
+] }
 
 # UUID and DateTime
 uuid = { version = "1.18.1", features = ["v4", "serde"] }
@@ -71,6 +73,32 @@ lettre = { version = "0.11.19", features = [
     "hostname",
 ] }
 
+[dependencies]
+# Workspace members
+migration = { path = "./migration" }
+
+# Workspace dependencies
+async-trait = { workspace = true }
+axum = { workspace = true }
+tokio = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+log = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sea-orm = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+config = { workspace = true }
+validator = { workspace = true }
+bcrypt = { workspace = true }
+jsonwebtoken = { workspace = true }
+lettre = { workspace = true }
+
+
 [dev-dependencies]
 async-once-cell = "0.5.4"
 axum-test = { version = "18.2.1", features = ["pretty-assertions"] }
+tests_helpers = { path = "./tests_helpers" }
