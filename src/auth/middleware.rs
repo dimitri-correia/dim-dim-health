@@ -1,8 +1,9 @@
-use crate::{auth::jwt::validate_token, axummain::state::AppState, entities::users::Model as User};
+use crate::{auth::jwt::validate_token, axummain::state::AppState};
 use axum::{
     extract::{FromRef, FromRequestParts},
     http::{HeaderMap, StatusCode, request::Parts},
 };
+use entities::users::Model as User;
 use uuid::Uuid;
 
 // For protected routes - requires valid JWT

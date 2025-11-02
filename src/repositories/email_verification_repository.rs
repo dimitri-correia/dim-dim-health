@@ -1,3 +1,5 @@
+use chrono::Utc;
+use entities::{email_verification_token, users};
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
@@ -5,8 +7,6 @@ use sea_orm::{
 };
 
 use uuid::Uuid;
-
-use crate::entities::email_verification_token;
 
 #[derive(Clone)]
 pub struct EmailVerificationRepository {
@@ -40,13 +40,16 @@ impl EmailVerificationRepository {
         &self,
         token: &str,
     ) -> Result<Option<email_verification_token::Model>, sea_orm::DbErr> {
+        // Note : the expired token won't be returned
+        let now = Utc::now();
         email_verification_token::Entity::find()
             .filter(email_verification_token::Column::Token.eq(token))
+            .filter(email_verification_token::Column::ExpiresAt.gte(now))
             .one(&self.db)
             .await
     }
 
-    pub async fn delete_by_token(&self, token: &str) -> Result<(), sea_orm::DbErr> {
+    pub async fn delete_by_token(&self, token: &str) -> Result<bool, sea_orm::DbErr> {
         let token = email_verification_token::Entity::find()
             .filter(email_verification_token::Column::Token.eq(token))
             .one(&self.db)
@@ -55,22 +58,20 @@ impl EmailVerificationRepository {
         if let Some(token) = token {
             let active_model: email_verification_token::ActiveModel = token.into();
             active_model.delete(&self.db).await?;
+            return Ok(true);
         }
 
-        Ok(())
+        Ok(false)
     }
 
-    pub async fn verify_user_email(&self, user_id: &Uuid) -> Result<(), sea_orm::DbErr> {
-        let user = crate::entities::users::Entity::find_by_id(user_id.to_owned())
-            .one(&self.db)
-            .await?;
+    pub async fn verify_user_email(&self, user_id: &Uuid) -> Result<users::Model, sea_orm::DbErr> {
+        let mut active = users::ActiveModel {
+            id: Set(user_id.to_owned()),
+            ..Default::default()
+        };
 
-        if let Some(user) = user {
-            let mut active_model: crate::entities::users::ActiveModel = user.into();
-            active_model.email_verified = Set(true);
-            active_model.update(&self.db).await?;
-        }
+        active.email_verified = Set(true);
 
-        Ok(())
+        active.update(&self.db).await
     }
 }

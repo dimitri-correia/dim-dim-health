@@ -49,7 +49,7 @@ pub struct UserData {
 }
 
 impl UserData {
-    pub fn from_user_with_token(user: crate::entities::users::Model, token: String) -> Self {
+    pub fn from_user_with_token(user: entities::users::Model, token: String) -> Self {
         Self {
             email: user.email,
             token,

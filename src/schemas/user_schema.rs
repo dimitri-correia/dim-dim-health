@@ -41,8 +41,8 @@ pub struct UserResponse {
     pub updated_at: DateTime<FixedOffset>,
 }
 
-impl From<crate::entities::users::Model> for UserResponse {
-    fn from(user: crate::entities::users::Model) -> Self {
+impl From<entities::users::Model> for UserResponse {
+    fn from(user: entities::users::Model) -> Self {
         Self {
             id: user.id,
             username: user.username,

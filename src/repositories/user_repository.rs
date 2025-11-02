@@ -1,3 +1,4 @@
+use entities::users;
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
@@ -5,8 +6,6 @@ use sea_orm::{
 };
 
 use uuid::Uuid;
-
-use crate::entities::users;
 
 #[derive(Clone)]
 pub struct UserRepository {
