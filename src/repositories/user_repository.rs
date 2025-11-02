@@ -81,6 +81,12 @@ impl UserRepository {
         username: Option<&str>,
         email: Option<&str>,
     ) -> Result<users::Model, sea_orm::DbErr> {
+        if username.is_none() && email.is_none() {
+            return Err(sea_orm::DbErr::Custom(
+                "At least one field (username or email) must be provided for update".to_string(),
+            ));
+        }
+
         let mut active = users::ActiveModel {
             id: Set(id.to_owned()),
             ..Default::default()
