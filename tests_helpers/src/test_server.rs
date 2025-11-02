@@ -34,22 +34,22 @@ async fn init_test_db() {
     panic!("DB not ready after retries");
 }
 
-async fn init_test_server() -> TestServer {
+pub async fn get_app_state() -> state::AppState {
     let settings = Settings {
         database_url: "postgres://test:test-db@localhost:5433/dimdimhealthtest".to_string(),
         jwt_secret: "test_secret".to_string(),
         env_filter: "debug".to_string(),
         listenner_addr: "127.0.0.1:0".to_string(),
     };
-    let app_state = state::AppState::new(&settings).await.unwrap();
-    TestServer::new(router::get_main_router(app_state)).unwrap()
+    state::AppState::new(&settings).await.unwrap()
 }
 
 pub async fn get_test_server() -> &'static TestServer {
     TEST_SERVER
         .get_or_init(async {
             init_test_db().await;
-            init_test_server().await
+            let app_state = get_app_state().await;
+            TestServer::new(router::get_main_router(app_state)).unwrap()
         })
         .await
 }
