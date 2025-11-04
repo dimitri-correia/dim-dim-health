@@ -132,3 +132,23 @@ async fn test_user_repo_create_and_update() {
         .await;
     assert!(res.is_err());
 }
+
+#[tokio::test]
+async fn test_sql_injection() {
+    let email: &str = "attacker@attack.fr'); DROP TABLE users; --";
+    let username = "test_sql_injection";
+    let password_hash = "password";
+
+    let user_repo = get_app_state().await.user_repository;
+    let res = user_repo
+        .create(username, email, password_hash)
+        .await
+        .unwrap();
+
+    assert_eq!(res.username, username);
+    assert_eq!(res.email, email);
+
+    let res = user_repo.find_by_id(&res.id).await.unwrap().unwrap();
+    assert_eq!(res.username, username);
+    assert_eq!(res.email, email);
+}
