@@ -4,7 +4,12 @@ use axum::extract::FromRef;
 use log::info;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 
-use crate::{axummain::env_loader::Settings, repositories::user_repository::UserRepository};
+use crate::{
+    axummain::env_loader::Settings,
+    repositories::{
+        email_verification_repository::EmailVerificationRepository, user_repository::UserRepository,
+    },
+};
 use migration::{Migrator, MigratorTrait};
 
 #[derive(Clone, FromRef)]
@@ -12,6 +17,8 @@ pub struct AppState {
     pub db: DatabaseConnection,
 
     pub user_repository: Arc<UserRepository>,
+    pub email_verification_repository: Arc<EmailVerificationRepository>,
+
     pub jwt_secret: String,
 }
 
@@ -24,10 +31,12 @@ impl AppState {
         Migrator::up(&db, None).await?;
 
         let user_repository = Arc::new(UserRepository::new(db.clone()));
+        let email_verification_repository = Arc::new(EmailVerificationRepository::new(db.clone()));
 
         Ok(Self {
             db,
             user_repository,
+            email_verification_repository,
             jwt_secret: settings.jwt_secret.clone(),
         })
     }
