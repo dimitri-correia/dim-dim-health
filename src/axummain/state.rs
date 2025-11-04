@@ -35,8 +35,8 @@ impl AppState {
 
 async fn get_db_pool(database_url: &str) -> Result<DatabaseConnection, sea_orm::DbErr> {
     let mut opt = ConnectOptions::new(database_url);
-    opt.max_connections(100)
-        .min_connections(5)
+    opt.max_connections(3)
+        .min_connections(2)
         .sqlx_logging(true)
         .sqlx_logging_level(log::LevelFilter::Debug);
 
