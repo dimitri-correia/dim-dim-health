@@ -872,6 +872,7 @@ dependencies = [
  "lettre",
  "log",
  "migration",
+ "once_cell",
  "sea-orm",
  "serde",
  "serde_json",
