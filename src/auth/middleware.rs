@@ -88,7 +88,9 @@ fn extract_token_from_headers(headers: &HeaderMap) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::repositories::user_repository::UserRepository;
+    use crate::repositories::{
+        email_verification_repository::EmailVerificationRepository, user_repository::UserRepository,
+    };
     use axum::http::{HeaderMap, Method, Request, Version, request::Parts};
     use chrono::{FixedOffset, Utc};
     use sea_orm::{DatabaseBackend, DatabaseConnection, MockDatabase};
@@ -116,7 +118,8 @@ mod tests {
     fn create_app_state(db: DatabaseConnection, jwt_secret: String) -> AppState {
         AppState {
             db: db.clone(),
-            user_repository: Arc::new(UserRepository::new(db)),
+            user_repository: Arc::new(UserRepository::new(db.clone())),
+            email_verification_repository: Arc::new(EmailVerificationRepository::new(db.clone())),
             jwt_secret,
         }
     }
