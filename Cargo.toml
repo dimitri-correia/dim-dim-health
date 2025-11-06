@@ -13,6 +13,9 @@ tokio = { version = "1.48.0", features = ["full"] }
 tower = "0.5.2"
 tower-http = { version = "0.6.6", features = ["trace"] }
 
+# Error handling
+anyhow = "1.0.100"
+
 # Logging
 log = "0.4.28"
 tracing = "0.1.41"
@@ -52,9 +55,5 @@ validator = { version = "0.20.0", features = ["derive"] }
 bcrypt = "0.17.1"
 jsonwebtoken = { version = "10.1.0", features = ["aws_lc_rs"] }
 
-# Email
-lettre = { version = "0.11.19", features = [
-    "tokio1-native-tls",
-    "builder",
-    "hostname",
-] }
+# Queues
+redis = { version = "0.32.7", features = ["tokio-comp", "connection-manager"] }
