@@ -115,9 +115,11 @@ mod tests {
             .into_connection()
     }
 
-    fn create_app_state(db: DatabaseConnection, jwt_secret: String) -> AppState {
+    async fn create_app_state(db: DatabaseConnection, jwt_secret: String) -> AppState {
+        let client = redis::Client::open("redis://localhost:6379").unwrap();
         AppState {
             db: db.clone(),
+            redis: client.get_connection_manager().await.unwrap(),
             user_repository: Arc::new(UserRepository::new(db.clone())),
             email_verification_repository: Arc::new(EmailVerificationRepository::new(db.clone())),
             jwt_secret,
@@ -151,7 +153,7 @@ mod tests {
         let user = create_mock_user();
         let db = create_mock_db(&user);
         let jwt_secret = "test_secret".to_string();
-        let app_state = create_app_state(db, jwt_secret.clone());
+        let app_state = create_app_state(db, jwt_secret.clone()).await;
 
         let token = crate::auth::jwt::generate_token(&user.id, &jwt_secret)
             .expect("Failed to generate token");
@@ -167,7 +169,7 @@ mod tests {
         let user = create_mock_user();
         let db = create_mock_db(&user);
         let jwt_secret = "test_secret".to_string();
-        let app_state = create_app_state(db, jwt_secret);
+        let app_state = create_app_state(db, jwt_secret).await;
 
         let mut parts = create_request_parts(Some("invalid.token.here"));
 
@@ -180,7 +182,7 @@ mod tests {
         let user = create_mock_user();
         let db = create_mock_db(&user);
         let jwt_secret = "test_secret".to_string();
-        let app_state = create_app_state(db, jwt_secret);
+        let app_state = create_app_state(db, jwt_secret).await;
 
         let mut parts = create_request_parts(None);
 
@@ -193,7 +195,7 @@ mod tests {
         let user = create_mock_user();
         let db = create_mock_db(&user);
         let jwt_secret = "test_secret".to_string();
-        let app_state = create_app_state(db, jwt_secret.clone());
+        let app_state = create_app_state(db, jwt_secret.clone()).await;
 
         let token = crate::auth::jwt::generate_token(&user.id, &jwt_secret)
             .expect("Failed to generate token");
@@ -210,7 +212,7 @@ mod tests {
         let user = create_mock_user();
         let db = create_mock_db(&user);
         let jwt_secret = "test_secret".to_string();
-        let app_state = create_app_state(db, jwt_secret);
+        let app_state = create_app_state(db, jwt_secret).await;
 
         let mut parts = create_request_parts(None);
 

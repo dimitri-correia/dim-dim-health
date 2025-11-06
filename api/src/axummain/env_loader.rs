@@ -4,6 +4,7 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 pub struct Settings {
     pub database_url: String,
+    pub redis_url: String,
     pub jwt_secret: String,
     pub env_filter: String,
     pub listenner_addr: String,
