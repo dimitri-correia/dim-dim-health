@@ -857,7 +857,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "dimdim-health"
+name = "dimdim-health-api"
 version = "0.1.0"
 dependencies = [
  "async-once-cell",
@@ -869,7 +869,6 @@ dependencies = [
  "config",
  "entities",
  "jsonwebtoken",
- "lettre",
  "log",
  "migration",
  "once_cell",
@@ -877,6 +876,32 @@ dependencies = [
  "serde",
  "serde_json",
  "tests_helpers",
+ "tokio",
+ "tower",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+ "validator",
+]
+
+[[package]]
+name = "dimdim-health-worker"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "axum",
+ "bcrypt",
+ "chrono",
+ "config",
+ "entities",
+ "jsonwebtoken",
+ "lettre",
+ "log",
+ "migration",
+ "sea-orm",
+ "serde",
+ "serde_json",
  "tokio",
  "tower",
  "tower-http",
@@ -3399,7 +3424,7 @@ version = "0.1.0"
 dependencies = [
  "async-once-cell",
  "axum-test",
- "dimdim-health",
+ "dimdim-health-api",
  "sea-orm",
  "tokio",
 ]

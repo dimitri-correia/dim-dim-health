@@ -1,0 +1,35 @@
+[package]
+name = "dimdim-health-worker"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "dimdim_health_worker"
+path = "src/lib.rs"
+
+[[bin]]
+name = "dimdim-health_worker"
+path = "src/main.rs"
+
+[dependencies]
+migration = { path = "../migration" }
+entities = { path = "../entities" }
+
+async-trait = { workspace = true }
+axum = { workspace = true }
+tokio = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+log = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sea-orm = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+config = { workspace = true }
+validator = { workspace = true }
+bcrypt = { workspace = true }
+jsonwebtoken = { workspace = true }
+lettre = { workspace = true }

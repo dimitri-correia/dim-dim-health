@@ -1,5 +1,5 @@
 use axum::http::{HeaderValue, StatusCode};
-use dimdim_health::schemas::auth_schemas::UserResponse;
+use dimdim_health_api::schemas::auth_schemas::UserResponse;
 use serde_json::json;
 use tests_helpers::{app_paths::APP_PATHS, test_server::get_test_server};
 

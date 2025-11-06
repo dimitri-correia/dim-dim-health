@@ -2,8 +2,6 @@
 name = "tests_helpers"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85.0"
-publish = false
 
 [lib]
 name = "tests_helpers"
@@ -12,6 +10,6 @@ path = "src/lib.rs"
 [dependencies]
 async-once-cell = "0.5.4"
 axum-test = { version = "18.2.1", features = ["pretty-assertions"] }
-dimdim-health = { path = "../" }
+dimdim-health-api = { path = "../api" }
 sea-orm = { workspace = true }
 tokio = { workspace = true }

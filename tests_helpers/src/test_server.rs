@@ -1,6 +1,6 @@
 use async_once_cell::OnceCell;
 use axum_test::TestServer;
-use dimdim_health::axummain::{env_loader::Settings, router, state};
+use dimdim_health_api::axummain::{env_loader::Settings, router, state};
 
 static TEST_APP_STATE: OnceCell<state::AppState> = OnceCell::new();
 static DB_URL: &str = "postgres://test:test-db@localhost:5433/dimdimhealthtest";
