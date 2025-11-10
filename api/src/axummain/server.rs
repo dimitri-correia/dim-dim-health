@@ -11,7 +11,7 @@ pub async fn axum_main() {
 
     info!("Starting Axum server...");
 
-    let app_state = state::AppState::new(&settings)
+    let app_state = state::AppState::create_from_settings(&settings)
         .await
         .expect("Failed to create AppState");
 

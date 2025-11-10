@@ -1,6 +1,9 @@
 use axum::http::StatusCode;
 use serde_json::json;
-use tests_helpers::{app_paths::APP_PATHS, test_server::get_test_server};
+use tests_helpers::{
+    app_paths::APP_PATHS,
+    test_server::{get_app_state, get_test_server},
+};
 
 #[tokio::test]
 async fn test_server_health() {

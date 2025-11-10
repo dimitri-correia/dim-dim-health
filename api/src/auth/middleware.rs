@@ -33,6 +33,7 @@ where
         let user_id = Uuid::parse_str(&claims.sub).map_err(|_| StatusCode::UNAUTHORIZED)?;
 
         let user = app_state
+            .repositories
             .user_repository
             .find_by_id(&user_id)
             .await
@@ -70,6 +71,7 @@ where
         };
 
         let user = app_state
+            .repositories
             .user_repository
             .find_by_id(&user_id)
             .await
@@ -88,13 +90,9 @@ fn extract_token_from_headers(headers: &HeaderMap) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::repositories::{
-        email_verification_repository::EmailVerificationRepository, user_repository::UserRepository,
-    };
     use axum::http::{HeaderMap, Method, Request, Version, request::Parts};
     use chrono::{FixedOffset, Utc};
     use sea_orm::{DatabaseBackend, DatabaseConnection, MockDatabase};
-    use std::sync::Arc;
 
     fn create_mock_user() -> User {
         let fixed_offset = FixedOffset::east_opt(0).expect("Invalid timezone offset");
@@ -116,14 +114,12 @@ mod tests {
     }
 
     async fn create_app_state(db: DatabaseConnection, jwt_secret: String) -> AppState {
-        let client = redis::Client::open("redis://localhost:6379").unwrap();
-        AppState {
-            db: db.clone(),
-            redis: client.get_connection_manager().await.unwrap(),
-            user_repository: Arc::new(UserRepository::new(db.clone())),
-            email_verification_repository: Arc::new(EmailVerificationRepository::new(db.clone())),
-            jwt_secret,
-        }
+        let redis = redis::Client::open("redis://localhost:6379")
+            .unwrap()
+            .get_connection_manager()
+            .await
+            .unwrap();
+        AppState::new(db.clone(), redis, jwt_secret).await.unwrap()
     }
 
     fn create_request_parts(token: Option<&str>) -> Parts {

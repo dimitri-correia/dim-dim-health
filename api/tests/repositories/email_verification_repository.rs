@@ -16,6 +16,7 @@ async fn test_without_valid_user() {
     let app_state = get_app_state().await;
 
     let res = app_state
+        .repositories
         .email_verification_repository
         .create_token(&user_id, token, &EXPIRES_AT)
         .await;
@@ -23,6 +24,7 @@ async fn test_without_valid_user() {
     assert!(res.is_err());
 
     let res = app_state
+        .repositories
         .email_verification_repository
         .verify_user_email(&user_id)
         .await;
@@ -39,6 +41,7 @@ async fn test_email_verif_repo_create_and_get() {
     let app_state = get_app_state().await;
 
     let user = app_state
+        .repositories
         .user_repository
         .create(username, &email, password_hash)
         .await
@@ -49,6 +52,7 @@ async fn test_email_verif_repo_create_and_get() {
     let token = "token";
 
     let res = app_state
+        .repositories
         .email_verification_repository
         .create_token(&user.id, token, &EXPIRES_AT)
         .await
@@ -62,6 +66,7 @@ async fn test_email_verif_repo_create_and_get() {
     assert_eq!(res.user_id, user.id);
 
     let res = app_state
+        .repositories
         .email_verification_repository
         .find_by_token(token)
         .await
@@ -72,6 +77,7 @@ async fn test_email_verif_repo_create_and_get() {
     assert_eq!(res.token, token);
 
     let res = app_state
+        .repositories
         .email_verification_repository
         .delete_by_token(token)
         .await
@@ -79,6 +85,7 @@ async fn test_email_verif_repo_create_and_get() {
     assert!(res);
 
     let res = app_state
+        .repositories
         .email_verification_repository
         .find_by_token(token)
         .await
@@ -87,6 +94,7 @@ async fn test_email_verif_repo_create_and_get() {
 
     // delete on non existing
     let res = app_state
+        .repositories
         .email_verification_repository
         .delete_by_token(token)
         .await
@@ -97,6 +105,7 @@ async fn test_email_verif_repo_create_and_get() {
     let expired_token = "expiredtoken";
     let expires_at = EXPIRES_AT.fixed_offset() - Duration::days(3);
     let res = app_state
+        .repositories
         .email_verification_repository
         .create_token(&user.id, expired_token, &expires_at)
         .await
@@ -105,6 +114,7 @@ async fn test_email_verif_repo_create_and_get() {
     assert_eq!(res.token, expired_token);
 
     let res = app_state
+        .repositories
         .email_verification_repository
         .find_by_token(expired_token)
         .await

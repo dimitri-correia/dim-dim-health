@@ -1,11 +1,6 @@
 use std::sync::Arc;
 
-use crate::{
-    axummain::env_loader::Settings,
-    repositories::{
-        email_verification_repository::EmailVerificationRepository, user_repository::UserRepository,
-    },
-};
+use crate::{axummain::env_loader::Settings, jobs::Jobs, repositories::Repositories};
 use axum::extract::FromRef;
 use log::info;
 use migration::{Migrator, MigratorTrait};
@@ -17,30 +12,39 @@ pub struct AppState {
     pub db: DatabaseConnection,
     pub redis: ConnectionManager,
 
-    pub user_repository: Arc<UserRepository>,
-    pub email_verification_repository: Arc<EmailVerificationRepository>,
+    pub repositories: Arc<Repositories>,
+    pub jobs: Arc<Jobs>,
 
     pub jwt_secret: String,
 }
 
 impl AppState {
-    pub async fn new(settings: &Settings) -> anyhow::Result<Self> {
+    pub async fn create_from_settings(settings: &Settings) -> anyhow::Result<Self> {
         let db = get_db_pool(&settings.database_url).await?;
-
         info!("Running database migrations...");
         Migrator::up(&db, None).await?;
 
-        let user_repository = Arc::new(UserRepository::new(db.clone()));
-        let email_verification_repository = Arc::new(EmailVerificationRepository::new(db.clone()));
-
         let redis = get_redis_connection(&settings.redis_url).await?;
+
+        let jwt_secret = settings.jwt_secret.clone();
+
+        AppState::new(db, redis, jwt_secret).await
+    }
+
+    pub async fn new(
+        db: DatabaseConnection,
+        redis: ConnectionManager,
+        jwt_secret: String,
+    ) -> anyhow::Result<Self> {
+        let jobs = Arc::new(Jobs::new(redis.clone()));
+        let repositories = Arc::new(Repositories::new(db.clone()));
 
         Ok(Self {
             db,
             redis,
-            user_repository,
-            email_verification_repository,
-            jwt_secret: settings.jwt_secret.clone(),
+            repositories,
+            jobs,
+            jwt_secret,
         })
     }
 }

@@ -5,7 +5,6 @@ use crate::{
         password::{hash_password, verify_password},
     },
     axummain::state::AppState,
-    jobs::email::send_register_email,
     schemas::auth_schemas::*,
     utils::token_generator::generate_verification_token,
 };
@@ -28,6 +27,7 @@ pub async fn register(
     }
 
     if state
+        .repositories
         .user_repository
         .user_already_exists(&payload.user.email, &payload.user.username)
         .await
@@ -40,6 +40,7 @@ pub async fn register(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
     let user = state
+        .repositories
         .user_repository
         .create(&payload.user.username, &payload.user.email, &password_hash)
         .await
@@ -50,6 +51,7 @@ pub async fn register(
     let expires_at = Utc::now().with_timezone(&offset) + Duration::days(2);
 
     if let Err(err) = state
+        .repositories
         .email_verification_repository
         .create_token(&user.id, &verification_token, &expires_at)
         .await
@@ -58,13 +60,11 @@ pub async fn register(
         return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
     }
 
-    if let Err(err) = send_register_email(
-        &user.email,
-        &user.username,
-        &verification_token,
-        state.redis,
-    )
-    .await
+    if let Err(err) = state
+        .jobs
+        .email_job
+        .send_register_email(&user.email, &user.username, &verification_token)
+        .await
     {
         error!("err: {err}");
         return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
@@ -92,6 +92,7 @@ pub async fn login(
     }
 
     let user = state
+        .repositories
         .user_repository
         .find_by_email(&payload.user.email)
         .await

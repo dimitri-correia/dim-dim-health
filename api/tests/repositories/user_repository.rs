@@ -7,7 +7,7 @@ async fn test_user_repo_create_and_get() {
     let email = format!("{username}@test.fr");
     let password_hash = "securepassword";
 
-    let user_repo = &get_app_state().await.user_repository;
+    let user_repo = &get_app_state().await.repositories.user_repository;
 
     let res = user_repo
         .create(username, &email, password_hash)
@@ -79,7 +79,7 @@ async fn test_user_repo_create_and_update() {
     let email = format!("{username}@dimdim.fr");
     let password_hash = "securepassword";
 
-    let user_repo = &get_app_state().await.user_repository;
+    let user_repo = &get_app_state().await.repositories.user_repository;
     let res = user_repo
         .create(username, &email, password_hash)
         .await
@@ -139,7 +139,7 @@ async fn test_sql_injection() {
     let username = "test_sql_injection";
     let password_hash = "password";
 
-    let user_repo = &get_app_state().await.user_repository;
+    let user_repo = &get_app_state().await.repositories.user_repository;
     let res = user_repo
         .create(username, email, password_hash)
         .await

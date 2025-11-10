@@ -46,7 +46,9 @@ pub async fn get_app_state() -> &'static state::AppState {
                 listenner_addr: "127.0.0.1:0".to_string(),
             };
 
-            state::AppState::new(&settings).await.unwrap()
+            state::AppState::create_from_settings(&settings)
+                .await
+                .unwrap()
         })
         .await
 }
