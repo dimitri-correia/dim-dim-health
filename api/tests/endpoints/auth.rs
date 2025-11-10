@@ -1,7 +1,10 @@
 use axum::http::{HeaderValue, StatusCode};
 use dimdim_health_api::schemas::auth_schemas::UserResponse;
 use serde_json::json;
-use tests_helpers::{app_paths::APP_PATHS, test_server::get_test_server};
+use tests_helpers::{
+    app_paths::APP_PATHS,
+    test_server::{get_app_state, get_test_server},
+};
 
 #[tokio::test]
 async fn test_create_user() {
@@ -9,7 +12,8 @@ async fn test_create_user() {
     let email = format!("{username}@dimdim.fr");
     let password = "securepassword";
 
-    let server = get_test_server().await;
+    let app_test = get_app_state().await;
+    let server = get_test_server(app_test.clone()).await;
 
     let res = server
         .post(APP_PATHS.create_user)
@@ -63,7 +67,9 @@ async fn test_create_user_too_small_username() {
     let email = format!("{username}@dimdim.fr");
     let password = "securepassword";
 
-    let server = get_test_server().await;
+    let app_test = get_app_state().await;
+    let server = get_test_server(app_test.clone()).await;
+
     let res = server
         .post(APP_PATHS.create_user)
         .json(&json!({
@@ -84,7 +90,9 @@ async fn test_create_user_invalid_email() {
     let email = "invalid-email-format";
     let password = "securepassword";
 
-    let server = get_test_server().await;
+    let app_test = get_app_state().await;
+    let server = get_test_server(app_test.clone()).await;
+
     let res = server
         .post(APP_PATHS.create_user)
         .json(&json!({
@@ -105,7 +113,9 @@ async fn test_create_user_weak_password() {
     let email = format!("{username}@email.fr");
     let password = "123";
 
-    let server = get_test_server().await;
+    let app_test = get_app_state().await;
+    let server = get_test_server(app_test.clone()).await;
+
     let res = server
         .post(APP_PATHS.create_user)
         .json(&json!({
@@ -127,7 +137,8 @@ async fn test_create_user_duplicate_username() {
     let email2 = format!("{username}2@dimdim.fr");
     let password = "securepassword";
 
-    let server = get_test_server().await;
+    let app_test = get_app_state().await;
+    let server = get_test_server(app_test.clone()).await;
 
     let res1 = server
         .post(APP_PATHS.create_user)

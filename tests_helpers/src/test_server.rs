@@ -51,7 +51,6 @@ pub async fn get_app_state() -> &'static state::AppState {
         .await
 }
 
-pub async fn get_test_server() -> TestServer {
-    let app_state = get_app_state().await;
+pub async fn get_test_server(app_state: state::AppState) -> TestServer {
     TestServer::new(router::get_main_router(app_state.clone())).unwrap()
 }
