@@ -1,41 +1,38 @@
-use entities::Job;
-use redis::AsyncCommands;
+use entities::{Job, JobEmail, TaskType};
+use redis::{AsyncCommands, aio::ConnectionManager};
 use std::time::Duration;
 use tracing::{error, info};
 
+use crate::{
+    mail_jobs::mail_jobs::handle_mail_job,
+    worker_main::{
+        env_loader::Settings,
+        state::{self, WorkerState},
+    },
+};
+
 pub async fn worker_main() {
-    tracing_subscriber::fmt::init();
+    let settings = Settings::load_config().expect("Failed to load configuration");
 
-    let worker_id = std::env::var("WORKER_ID").unwrap_or_else(|_| "worker-1".to_string());
-    let num_workers = std::env::var("NUM_WORKERS")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(4);
+    tracing_subscriber::fmt()
+        .with_env_filter(&settings.env_filter)
+        .init();
 
-    info!(
-        "Starting {} with {} concurrent workers",
-        worker_id, num_workers
-    );
+    info!("Starting Worker...");
 
-    server_main(worker_id, num_workers).await
-}
-
-pub async fn server_main(worker_id: String, num_workers: usize) {
-    let client = redis::Client::open("redis://127.0.0.1:6379/").expect("redis not available");
-    let manager = client
-        .get_connection_manager()
+    let worker_state = state::WorkerState::create_from_settings(&settings)
         .await
-        .expect("redis connection impossible");
-
-    info!("Connected to Redis");
+        .expect("Failed to create Worker State");
 
     // Spawn multiple worker tasks
     let mut handles = vec![];
-    for i in 0..num_workers {
-        let manager = manager.clone();
-        let worker_id = format!("{}-{}", worker_id, i);
+    for i in 0..settings.number_workers {
+        let worker_id = format!("worker-{i}");
 
-        let handle = tokio::spawn(async move { worker_loop(manager, worker_id).await });
+        let worker_state = worker_state.clone();
+
+        let handle =
+            tokio::spawn(async move { worker_loop(worker_state.clone(), worker_id).await });
         handles.push(handle);
     }
 
@@ -47,15 +44,16 @@ pub async fn server_main(worker_id: String, num_workers: usize) {
     }
 }
 
-async fn worker_loop(mut con: redis::aio::ConnectionManager, worker_id: String) {
+async fn worker_loop(worker_state: WorkerState, worker_id: String) {
     info!("{}: Worker started", worker_id);
 
+    let mut redis = worker_state.redis.clone();
+
     loop {
-        match fetch_job(&mut con).await {
+        match fetch_job(&mut redis).await {
             Ok(Some(job)) => {
-                // info!("{}: Got job {}", worker_id, job.id);
-                if !process(job, &worker_id).await {
-                    error!("{}: Error processing job: {}", worker_id, "todo");
+                if let Err(err) = process(worker_state.clone(), job, &worker_id).await {
+                    error!("{worker_id}: Error processing with erorr {err}",);
                 }
             }
             Ok(None) => {
@@ -69,11 +67,9 @@ async fn worker_loop(mut con: redis::aio::ConnectionManager, worker_id: String) 
     }
 }
 
-async fn fetch_job(
-    con: &mut redis::aio::ConnectionManager,
-) -> Result<Option<Job>, redis::RedisError> {
+async fn fetch_job(redis: &mut ConnectionManager) -> Result<Option<Job>, redis::RedisError> {
     // BLPOP blocks until a job is available or timeout (5 seconds)
-    let result: Option<(String, String)> = con.blpop("jobs", 5.0).await?;
+    let result: Option<(String, String)> = redis.blpop("jobs", 5.0).await?;
 
     match result {
         Some((_queue, job_data)) => {
@@ -84,12 +80,16 @@ async fn fetch_job(
     }
 }
 
-async fn process(job: Job, worker_id: &str) -> bool {
-    // info!("{}: Processing job: {}", worker_id, job);
+async fn process(worker_state: WorkerState, job: Job, worker_id: &str) -> anyhow::Result<bool> {
+    info!("{}: Processing job: {}", worker_id, job);
 
-    // Simulate work
-    tokio::time::sleep(Duration::from_secs(2)).await;
+    let job_result = match job.task_type {
+        TaskType::Email => {
+            let job_email: JobEmail = serde_json::from_value(job.data)?;
+            handle_mail_job(worker_state, job_email).await
+        }
+    };
 
-    // info!("{}: Completed job: {}", worker_id, job);
-    true
+    info!("{}: Completed job: {}", worker_id, job.task_type);
+    job_result
 }
