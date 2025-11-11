@@ -4,6 +4,13 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 pub struct Settings {
     pub database_url: String,
+    pub redis_url: String,
+    pub env_filter: String,
+
+    pub number_workers: usize,
+
+    pub mailgun_key: String,
+    pub mailgun_domain: String,
 }
 
 impl Settings {

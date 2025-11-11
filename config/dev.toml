@@ -3,3 +3,4 @@ redis_url = "redis://localhost:6379/"
 jwt_secret = "dev_jwt_secret_key"
 env_filter = "dimdim_health=debug,tower_http=debug"
 listenner_addr = "0.0.0.0:3000"
+number_workers = 5
