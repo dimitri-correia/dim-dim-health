@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum TaskType {
@@ -27,4 +28,33 @@ pub struct JobEmailRegister {
     pub email: String,
     pub username: String,
     pub token: String,
+}
+
+impl fmt::Display for TaskType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TaskType::Email => write!(f, "Email"),
+        }
+    }
+}
+
+impl fmt::Display for EmailType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            EmailType::Registration => write!(f, "Registration"),
+        }
+    }
+}
+
+impl fmt::Display for Job {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Format the JSON data compactly. If serialization fails, fall back to Debug.
+        let data_str =
+            serde_json::to_string(&self.data).unwrap_or_else(|_| format!("{:?}", &self.data));
+        write!(
+            f,
+            "Job {{ task_type: {}, data: {} }}",
+            self.task_type, data_str
+        )
+    }
 }
