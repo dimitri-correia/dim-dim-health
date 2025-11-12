@@ -1,8 +1,8 @@
 use crate::{mail_jobs::register_mail::handle_registration_email, worker_main::state::WorkerState};
 use entities::{EmailType, JobEmail, JobEmailRegister};
 use lettre::{
-    message::header::ContentType, transport::smtp::authentication::Credentials, Message,
-    SmtpTransport, Transport,
+    Message, SmtpTransport, Transport, message::header::ContentType,
+    transport::smtp::authentication::Credentials,
 };
 use tracing::info;
 
