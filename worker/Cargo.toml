@@ -25,3 +25,4 @@ tracing-subscriber = { workspace = true }
 log = { workspace = true }
 anyhow = { workspace = true }
 reqwest = { workspace = true }
+lettre = "0.11"

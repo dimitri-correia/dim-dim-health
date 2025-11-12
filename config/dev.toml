@@ -4,3 +4,5 @@ jwt_secret = "dev_jwt_secret_key"
 env_filter = "dimdim_health=debug,tower_http=debug"
 listenner_addr = "0.0.0.0:3000"
 number_workers = 5
+gmail_email = "your-email@gmail.com"
+gmail_password = "your-app-password"

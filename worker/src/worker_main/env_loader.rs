@@ -9,8 +9,8 @@ pub struct Settings {
 
     pub number_workers: usize,
 
-    pub mailgun_key: String,
-    pub mailgun_domain: String,
+    pub gmail_email: String,
+    pub gmail_password: String,
 }
 
 impl Settings {
