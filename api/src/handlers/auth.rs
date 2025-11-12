@@ -170,3 +170,67 @@ pub async fn current_user(
 
     Ok(Json(response))
 }
+
+pub async fn verify_email(
+    State(state): State<AppState>,
+    axum::extract::Query(params): axum::extract::Query<std::collections::HashMap<String, String>>,
+) -> Result<Json<serde_json::Value>, StatusCode> {
+    info!("Verifying email with params: {:?}", params);
+
+    let token = params.get("token").ok_or(StatusCode::BAD_REQUEST)?;
+
+    let verification_token = state
+        .repositories
+        .email_verification_repository
+        .find_by_token(token)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let verification_token = match verification_token {
+        Some(token) => token,
+        None => {
+            info!("Verification token not found: {}", token);
+            return Err(StatusCode::NOT_FOUND);
+        }
+    };
+
+    // Should not happen due to query filter, but just in case
+    // We delete expired tokens
+    if verification_token.is_expired() {
+        error!(
+            "Verification token expired returned from DB: {} for user {}",
+            token, verification_token.user_id
+        );
+        state
+            .repositories
+            .email_verification_repository
+            .delete_by_token(token)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+        return Err(StatusCode::GONE);
+    }
+
+    debug!(
+        "Marking user {} email as verified",
+        verification_token.user_id
+    );
+    state
+        .repositories
+        .email_verification_repository
+        .verify_user_email(&verification_token.user_id)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    debug!("Deleting verification token: {}", token);
+    state
+        .repositories
+        .email_verification_repository
+        .delete_by_token(token)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(serde_json::json!({
+        "message": "Email verified successfully!"
+    })))
+}
