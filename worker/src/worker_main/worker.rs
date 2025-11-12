@@ -4,7 +4,7 @@ use std::time::Duration;
 use tracing::{error, info};
 
 use crate::{
-    mail_jobs::mail_jobs::handle_mail_job,
+    mail_jobs::common_mail_jobs::handle_mail_job,
     worker_main::{
         env_loader::Settings,
         state::{self, WorkerState},

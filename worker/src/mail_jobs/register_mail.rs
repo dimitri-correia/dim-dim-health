@@ -1,7 +1,7 @@
 use entities::JobEmailRegister;
 use tracing::info;
 
-use crate::{mail_jobs::mail_jobs::send_email, worker_main::state::WorkerState};
+use crate::{mail_jobs::common_mail_jobs::send_email, worker_main::state::WorkerState};
 
 pub async fn handle_registration_email(
     worker_state: WorkerState,
