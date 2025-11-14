@@ -233,4 +233,6 @@ pub async fn verify_email(
     Ok(Json(serde_json::json!({
         "message": "Email verified successfully!"
     })))
+
+    // TODO: Redirect to frontend verification success page
 }
