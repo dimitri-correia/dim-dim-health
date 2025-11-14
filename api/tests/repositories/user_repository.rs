@@ -71,6 +71,16 @@ async fn test_user_repo_create_and_get() {
         .await
         .unwrap();
     assert!(!res);
+
+    let new_secure_password = "newsecurepassword";
+    let res = user_repo
+        .update_password(&user_id, new_secure_password)
+        .await
+        .unwrap();
+    assert_eq!(res.password_hash, new_secure_password);
+
+    let res = user_repo.find_by_id(&user_id).await.unwrap();
+    assert_eq!(res.unwrap().password_hash, new_secure_password);
 }
 
 #[tokio::test]
