@@ -47,6 +47,7 @@ sea-orm-migration = { version = "2.0.0-rc", features = [
 # UUID and DateTime
 uuid = { version = "1.18.1", features = ["v4", "serde"] }
 chrono = { version = "0.4.42", features = ["serde"] }
+chrono-tz = "0.10.4"
 
 # Environment variable management
 config = "0.15.18"
