@@ -1,6 +1,6 @@
 use crate::{mail_jobs::register_mail::handle_registration_email, worker_main::state::WorkerState};
 use entities::{EmailType, JobEmail, JobEmailRegister};
-use reqwest::Client;
+use lettre::{Message, SmtpTransport, Transport, message::header::ContentType};
 use tracing::info;
 
 pub async fn handle_mail_job(worker_state: WorkerState, job: JobEmail) -> anyhow::Result<bool> {
@@ -18,43 +18,31 @@ pub async fn send_email(
     subject: String,
     content: String,
 ) -> anyhow::Result<bool> {
-    let client = Client::new();
+    info!("Sending email [{}] to: {}", subject, to);
 
-    info!("Sending email to: {}", to);
-    info!("Subject: {}", subject);
-    let res = client
-        .post(format!(
-            "https://api.mailgun.net/v3/{}/messages",
-            worker_state.mailgun_domain
-        ))
-        .basic_auth("api", Some(worker_state.mailgun_key))
-        .form(&[
-            (
-                "from",
-                format!(
-                    "Mailgun Sandbox <postmaster@{}>",
-                    worker_state.mailgun_domain
-                ),
-            ),
-            ("to", to),
-            ("subject", subject),
-            ("text", content),
-        ])
-        .send()
-        .await;
+    let email = Message::builder()
+        .from(worker_state.gmail_from.clone())
+        .to(to
+            .parse()
+            .map_err(|e| anyhow::anyhow!("Failed to parse to address: {}", e))?)
+        .subject(subject)
+        .header(ContentType::TEXT_PLAIN)
+        .body(content)
+        .map_err(|e| anyhow::anyhow!("Failed to build email: {}", e))?;
 
-    let res = match res {
-        Ok(response) => response,
-        Err(err) => {
-            info!("Failed to send email: {}", err);
-            return Ok(false);
+    let mailer = SmtpTransport::relay("smtp.gmail.com")
+        .map_err(|e| anyhow::anyhow!("Failed to create SMTP transport: {}", e))?
+        .credentials(worker_state.gmail_creds.clone())
+        .build();
+
+    match mailer.send(&email) {
+        Ok(_) => {
+            info!("Email sent successfully!");
+            Ok(true)
         }
-    };
-
-    info!("Email sent with status: {}", res.status());
-    if !res.status().is_success() {
-        info!("Email sending failed with response: {:?}", res.text().await);
+        Err(e) => {
+            info!("Failed to send email: {}", e);
+            Ok(false)
+        }
     }
-
-    Ok(true)
 }
