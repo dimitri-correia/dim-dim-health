@@ -1,5 +1,10 @@
-use crate::{mail_jobs::register_mail::handle_registration_email, worker_main::state::WorkerState};
-use entities::{EmailType, JobEmail, JobEmailRegister};
+use crate::{
+    mail_jobs::{
+        register_mail::handle_registration_email, reset_password_mail::handle_reset_password_email,
+    },
+    worker_main::state::WorkerState,
+};
+use entities::{EmailType, JobEmail, JobEmailRegister, JobEmailResetPassword};
 use lettre::{Message, SmtpTransport, Transport, message::header::ContentType};
 use tracing::info;
 
@@ -8,6 +13,10 @@ pub async fn handle_mail_job(worker_state: WorkerState, job: JobEmail) -> anyhow
         EmailType::Registration => {
             let payload: JobEmailRegister = serde_json::from_value(job.data)?;
             handle_registration_email(worker_state, payload).await
+        }
+        EmailType::ResetPassword => {
+            let payload: JobEmailResetPassword = serde_json::from_value(job.data)?;
+            handle_reset_password_email(worker_state, payload).await
         }
     }
 }
