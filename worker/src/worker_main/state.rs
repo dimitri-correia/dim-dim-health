@@ -11,6 +11,8 @@ pub struct WorkerState {
     pub db: DatabaseConnection,
     pub redis: ConnectionManager,
 
+    pub base_url: String,
+
     pub gmail_from: Mailbox,
     pub gmail_creds: Credentials,
 }
@@ -23,6 +25,7 @@ impl WorkerState {
         WorkerState::new(
             db,
             redis,
+            settings.base_url.clone(),
             settings.gmail_email.clone(),
             settings.gmail_password.clone(),
         )
@@ -32,6 +35,7 @@ impl WorkerState {
     pub async fn new(
         db: DatabaseConnection,
         redis: ConnectionManager,
+        base_url: String,
         gmail_email: String,
         gmail_password: String,
     ) -> anyhow::Result<Self> {
@@ -45,6 +49,7 @@ impl WorkerState {
         Ok(Self {
             db,
             redis,
+            base_url,
             gmail_from,
             gmail_creds,
         })

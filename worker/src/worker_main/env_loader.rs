@@ -5,6 +5,9 @@ use serde::Deserialize;
 pub struct Settings {
     pub database_url: String,
     pub redis_url: String,
+
+    pub base_url: String,
+
     pub env_filter: String,
 
     pub number_workers: usize,
