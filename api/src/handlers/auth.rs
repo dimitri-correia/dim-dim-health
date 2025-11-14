@@ -69,7 +69,7 @@ pub async fn register(
 
     let verification_token = generate_verification_token();
     let offset = FixedOffset::east_opt(0).unwrap();
-    let expires_at = Utc::now().with_timezone(&offset) + Duration::days(2);
+    let expires_at = Utc::now().with_timezone(&offset) + Duration::hours(2);
 
     debug!(
         "Generated email verification token for user {}: {}",
