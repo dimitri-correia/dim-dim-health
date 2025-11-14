@@ -2,11 +2,13 @@ use sea_orm::DatabaseConnection;
 
 use crate::repositories::{
     email_verification_repository::EmailVerificationRepository,
-    password_reset_repository::PasswordResetRepository, user_repository::UserRepository,
+    password_reset_repository::PasswordResetRepository,
+    refresh_token_repository::RefreshTokenRepository, user_repository::UserRepository,
 };
 
 pub mod email_verification_repository;
 pub mod password_reset_repository;
+pub mod refresh_token_repository;
 pub mod user_repository;
 
 #[derive(Clone)]
@@ -14,6 +16,7 @@ pub struct Repositories {
     pub user_repository: UserRepository,
     pub email_verification_repository: EmailVerificationRepository,
     pub password_reset_repository: PasswordResetRepository,
+    pub refresh_token_repository: RefreshTokenRepository,
 }
 
 impl Repositories {
@@ -21,11 +24,13 @@ impl Repositories {
         let user_repository = UserRepository::new(db.clone());
         let email_verification_repository = EmailVerificationRepository::new(db.clone());
         let password_reset_repository = PasswordResetRepository::new(db.clone());
+        let refresh_token_repository = RefreshTokenRepository::new(db.clone());
 
         Repositories {
             user_repository,
             email_verification_repository,
             password_reset_repository,
+            refresh_token_repository,
         }
     }
 }
