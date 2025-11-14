@@ -9,6 +9,7 @@ pub enum TaskType {
 #[derive(Debug, Serialize, Deserialize)]
 pub enum EmailType {
     Registration,
+    ResetPassword,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -30,6 +31,13 @@ pub struct JobEmailRegister {
     pub token: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct JobEmailResetPassword {
+    pub email: String,
+    pub username: String,
+    pub token: String,
+}
+
 impl fmt::Display for TaskType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -42,6 +50,7 @@ impl fmt::Display for EmailType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             EmailType::Registration => write!(f, "Registration"),
+            EmailType::ResetPassword => write!(f, "ResetPassword"),
         }
     }
 }
