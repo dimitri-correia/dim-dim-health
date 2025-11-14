@@ -101,4 +101,18 @@ impl UserRepository {
 
         active.update(&self.db).await
     }
+
+    pub async fn update_password(
+        &self,
+        id: &Uuid,
+        password_hash: &str,
+    ) -> Result<users::Model, sea_orm::DbErr> {
+        let active = users::ActiveModel {
+            id: Set(id.to_owned()),
+            password_hash: Set(password_hash.to_owned()),
+            ..Default::default()
+        };
+
+        active.update(&self.db).await
+    }
 }
