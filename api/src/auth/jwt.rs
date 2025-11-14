@@ -15,7 +15,7 @@ pub fn generate_token(user_id: &Uuid, secret: &str) -> Result<String, jsonwebtok
 
     let claims = Claims {
         sub: user_id.to_string(),
-        exp: (now + Duration::hours(24)).timestamp() as usize,
+        exp: (now + Duration::minutes(15)).timestamp() as usize,
         iat: now.timestamp() as usize,
     };
 

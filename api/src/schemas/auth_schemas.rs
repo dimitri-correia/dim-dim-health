@@ -36,6 +36,13 @@ pub struct LoginUserData {
     pub password: String,
 }
 
+#[derive(Debug, Serialize)]
+pub struct LoginResponse {
+    pub user: UserData,
+    pub access_token: String,
+    pub refresh_token: String,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserResponse {
     pub user: UserData,
@@ -44,15 +51,13 @@ pub struct UserResponse {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserData {
     pub email: String,
-    pub token: String,
     pub username: String,
 }
 
 impl UserData {
-    pub fn from_user_with_token(user: entities::users::Model, token: String) -> Self {
+    pub fn from_user(user: entities::users::Model) -> Self {
         Self {
             email: user.email,
-            token,
             username: user.username,
         }
     }

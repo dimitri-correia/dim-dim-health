@@ -3,6 +3,7 @@ use crate::{
         jwt::generate_token,
         middleware::RequireAuth,
         password::{hash_password, verify_password},
+        refresh_token::generate_refresh_token,
     },
     axummain::state::AppState,
     schemas::{
@@ -25,7 +26,7 @@ use validator::Validate;
 pub async fn register(
     State(state): State<AppState>,
     Json(payload): Json<RegisterUserRequest>,
-) -> Result<Json<UserResponse>, impl IntoResponse> {
+) -> Result<Json<LoginResponse>, impl IntoResponse> {
     info!(
         "Received registration request for: {} [email: {}]",
         payload.user.username, payload.user.email
@@ -106,11 +107,24 @@ pub async fn register(
         return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
     }
 
-    let token = generate_token(&user.id, &state.jwt_secret)
+    let access_token = generate_token(&user.id, &state.jwt_secret)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+    let refresh_token = generate_refresh_token();
+
+    debug!("Creating refresh token for user {}", user.id);
+    state
+        .repositories
+        .refresh_token_repository
+        .create_token(&user.id, &refresh_token)
+        .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
-    let user_data = UserData::from_user_with_token(user, token);
-    let response = UserResponse { user: user_data };
+    let user_data = UserData::from_user(user);
+    let response = LoginResponse {
+        user: user_data,
+        access_token,
+        refresh_token,
+    };
 
     Ok(Json(response))
 }
@@ -118,7 +132,7 @@ pub async fn register(
 pub async fn login(
     State(state): State<AppState>,
     Json(payload): Json<LoginUserRequest>,
-) -> Result<Json<UserResponse>, impl IntoResponse> {
+) -> Result<Json<LoginResponse>, impl IntoResponse> {
     info!("Received login request for email: {}", payload.user.email);
     if let Err(err) = payload.user.validate() {
         info!("Validation error during login: {}", err);
@@ -155,26 +169,34 @@ pub async fn login(
         return Err(StatusCode::UNAUTHORIZED.into_response());
     }
 
-    let token = generate_token(&user.id, &state.jwt_secret)
+    let access_token = generate_token(&user.id, &state.jwt_secret)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+    let refresh_token = generate_refresh_token();
+
+    debug!("Creating refresh token for user {}", user.id);
+    state
+        .repositories
+        .refresh_token_repository
+        .create_token(&user.id, &refresh_token)
+        .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
-    let user_data = UserData::from_user_with_token(user, token);
-    let response = UserResponse { user: user_data };
+    let user_data = UserData::from_user(user);
+    let response = LoginResponse {
+        user: user_data,
+        access_token,
+        refresh_token,
+    };
 
     Ok(Json(response))
 }
 
 pub async fn current_user(
-    State(state): State<AppState>,
     RequireAuth(user): RequireAuth,
 ) -> Result<Json<UserResponse>, StatusCode> {
     info!("Fetching current user: {}", user.email);
-    let token = generate_token(&user.id, &state.jwt_secret)
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    let user_data = UserData::from_user_with_token(user, token);
+    let user_data = UserData::from_user(user);
     let response = UserResponse { user: user_data };
-
     Ok(Json(response))
 }
 
