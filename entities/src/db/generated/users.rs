@@ -22,11 +22,19 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(has_many = "super::email_verification_token::Entity")]
     EmailVerificationToken,
+    #[sea_orm(has_many = "super::password_reset_token::Entity")]
+    PasswordResetToken,
 }
 
 impl Related<super::email_verification_token::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::EmailVerificationToken.def()
+    }
+}
+
+impl Related<super::password_reset_token::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::PasswordResetToken.def()
     }
 }
 
