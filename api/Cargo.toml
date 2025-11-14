@@ -28,6 +28,7 @@ serde_json = { workspace = true }
 sea-orm = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
+chrono-tz = { workspace = true }
 config = { workspace = true }
 validator = { workspace = true }
 bcrypt = { workspace = true }
