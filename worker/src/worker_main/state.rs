@@ -3,14 +3,16 @@ use migration::sea_orm::{self, ConnectOptions, Database, DatabaseConnection};
 use redis::{RedisError, aio::ConnectionManager};
 
 use crate::worker_main::env_loader::Settings;
+use anyhow::Context;
+use lettre::{message::Mailbox, transport::smtp::authentication::Credentials};
 
 #[derive(Clone)]
 pub struct WorkerState {
     pub db: DatabaseConnection,
     pub redis: ConnectionManager,
 
-    pub gmail_email: String,
-    pub gmail_password: String,
+    pub gmail_from: Mailbox,
+    pub gmail_creds: Credentials,
 }
 
 impl WorkerState {
@@ -33,11 +35,18 @@ impl WorkerState {
         gmail_email: String,
         gmail_password: String,
     ) -> anyhow::Result<Self> {
+        let from_str = format!("DimDim Health <{}>", gmail_email);
+        let gmail_from: Mailbox = from_str
+            .parse()
+            .with_context(|| format!("Failed to parse from address: {}", from_str))?;
+
+        let gmail_creds = Credentials::new(gmail_email.clone(), gmail_password.clone());
+
         Ok(Self {
             db,
             redis,
-            gmail_email,
-            gmail_password,
+            gmail_from,
+            gmail_creds,
         })
     }
 }
