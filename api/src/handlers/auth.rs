@@ -7,18 +7,19 @@ use crate::{
     axummain::state::AppState,
     schemas::{
         auth_schemas::*,
-        password_reset_schemas::{ForgotPasswordRequest, ForgotPasswordResponse},
+        password_reset_schemas::{
+            ForgotPasswordRequest, ForgotPasswordResponse, ResetPasswordRequest,
+            ResetPasswordResponse,
+        },
     },
     utils::{get_now_time_paris::now_paris_fixed, token_generator::generate_verification_token},
 };
 
 use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
-use chrono::{DateTime, Duration, FixedOffset, Utc};
-use chrono_tz::Europe::Paris;
+use chrono::Duration;
 use log::error;
 use serde_json::json;
 use tracing::{debug, info};
-use tracing_subscriber::field::debug;
 use validator::Validate;
 
 pub async fn register(
@@ -326,4 +327,77 @@ pub async fn forgot_password(
     };
 
     ok_response
+}
+
+pub async fn reset_password(
+    State(state): State<AppState>,
+    Json(payload): Json<ResetPasswordRequest>,
+) -> Result<Json<ResetPasswordResponse>, impl IntoResponse> {
+    info!(
+        "Received reset password request for token: {}",
+        payload.token
+    );
+    if let Err(err) = payload.validate() {
+        info!("Validation error during reset password: {}", err);
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": err.to_string()})),
+        )
+            .into_response());
+    }
+
+    let reset_token = state
+        .repositories
+        .password_reset_repository
+        .find_by_token(&payload.token)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+    let reset_token = match reset_token {
+        Some(token) => token,
+        None => {
+            info!("Password reset token not found: {}", payload.token);
+            return Err(StatusCode::NOT_FOUND.into_response());
+        }
+    };
+
+    // Should not happen due to query filter, but just in case
+    // We delete expired tokens
+    if reset_token.is_expired() {
+        error!(
+            "Password reset token expired returned from DB: {} for user {}",
+            payload.token, reset_token.user_id
+        );
+        state
+            .repositories
+            .password_reset_repository
+            .delete_by_token(&payload.token)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+
+        return Err(StatusCode::GONE.into_response());
+    }
+
+    let new_password_hash = hash_password(&payload.new_password, None)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+
+    debug!("Updating password for user {}", reset_token.user_id);
+    state
+        .repositories
+        .user_repository
+        .update_password(&reset_token.user_id, &new_password_hash)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+
+    // Delete ALL reset tokens for this user (invalidate any other pending requests)
+    state
+        .repositories
+        .password_reset_repository
+        .delete_all_user_tokens(&reset_token.user_id)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+
+    Ok(Json(ResetPasswordResponse {
+        message: "Password has been reset successfully. You can now login with your new password."
+            .to_string(),
+    }))
 }
