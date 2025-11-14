@@ -5,14 +5,20 @@ use crate::{
         password::{hash_password, verify_password},
     },
     axummain::state::AppState,
-    schemas::auth_schemas::*,
-    utils::token_generator::generate_verification_token,
+    schemas::{
+        auth_schemas::*,
+        password_reset_schemas::{ForgotPasswordRequest, ForgotPasswordResponse},
+    },
+    utils::{get_now_time_paris::now_paris_fixed, token_generator::generate_verification_token},
 };
+
 use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
-use chrono::{Duration, FixedOffset, Utc};
+use chrono::{DateTime, Duration, FixedOffset, Utc};
+use chrono_tz::Europe::Paris;
 use log::error;
 use serde_json::json;
 use tracing::{debug, info};
+use tracing_subscriber::field::debug;
 use validator::Validate;
 
 pub async fn register(
@@ -68,8 +74,8 @@ pub async fn register(
     };
 
     let verification_token = generate_verification_token();
-    let offset = FixedOffset::east_opt(0).unwrap();
-    let expires_at = Utc::now().with_timezone(&offset) + Duration::hours(2);
+    // If updated, need to be changed in the mail too
+    let expires_at = now_paris_fixed(Duration::hours(2));
 
     debug!(
         "Generated email verification token for user {}: {}",
@@ -235,4 +241,89 @@ pub async fn verify_email(
     })))
 
     // TODO: Redirect to frontend verification success page
+}
+
+pub async fn forgot_password(
+    State(state): State<AppState>,
+    Json(payload): Json<ForgotPasswordRequest>,
+) -> Result<Json<ForgotPasswordResponse>, impl IntoResponse> {
+    info!(
+        "Received forgot password request for email: {}",
+        payload.email
+    );
+
+    let ok_response = Ok(Json(ForgotPasswordResponse {
+        message: "If that email exists, a password reset link has been sent.".to_string(),
+    }));
+
+    if let Err(err) = payload.validate() {
+        info!("Validation error during forgot password: {}", err);
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": err.to_string()})),
+        )
+            .into_response());
+    }
+
+    let user = state
+        .repositories
+        .user_repository
+        .find_by_email(&payload.email)
+        .await;
+
+    let user = match user {
+        Ok(user) => user,
+        Err(err) => {
+            error!("Failed to query user by email because: {err}");
+            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
+        }
+    };
+
+    // Always return success even if email doesn't exist
+    // This prevents attackers from discovering which emails are registered
+    // Would be good to take some time here to mitigate timing attacks
+    let user = match user {
+        Some(user) => user,
+        None => {
+            info!(
+                "Forgot password request for non-existing email: {}",
+                payload.email
+            );
+            return ok_response;
+        }
+    };
+
+    let reset_token = generate_verification_token();
+    // If updated, need to be changed in the mail too
+    let expires_at = now_paris_fixed(Duration::hours(1));
+
+    debug!(
+        "Generated password reset token for user {}: {}",
+        user.id, reset_token
+    );
+    if let Err(err) = state
+        .repositories
+        .password_reset_repository
+        .create_token(&user.id, &reset_token, &expires_at)
+        .await
+    {
+        error!("Failed to create password reset token because: {err}");
+        return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
+    };
+
+    debug!(
+        "Sending password reset email to {}: {}",
+        user.email, reset_token
+    );
+    if let Err(err) = state
+        .jobs
+        .email_job
+        .send_password_reset_email(&user.email, &user.username, &reset_token)
+        .await
+    {
+        error!("Failed to send password reset email: {err}");
+        return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
+    };
+
+    ok_response
 }
