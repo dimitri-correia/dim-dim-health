@@ -3,7 +3,9 @@ use axum::{Router, routing::get};
 use tower_http::trace::TraceLayer;
 
 use crate::axummain::state::AppState;
-use crate::handlers::auth::{current_user, forgot_password, login, register, verify_email};
+use crate::handlers::auth::{
+    current_user, forgot_password, login, register, reset_password, verify_email,
+};
 use crate::handlers::server_health::server_health_check;
 
 pub fn get_main_router(app_state: AppState) -> Router {
@@ -16,6 +18,7 @@ pub fn get_main_router(app_state: AppState) -> Router {
         .route("/api/user", get(current_user))
         .route("/api/auth/verify-email", get(verify_email))
         .route("/api/auth/forgot-password", post(forgot_password))
+        .route("/api/auth/reset-password", post(reset_password))
         // Set application state
         .with_state(app_state)
         .layer(TraceLayer::new_for_http())
