@@ -4,3 +4,6 @@ jwt_secret = "dev_jwt_secret_key"
 env_filter = "dimdim_health=debug,tower_http=debug"
 listenner_addr = "0.0.0.0:3000"
 number_workers = 5
+
+gmail_email = "dimdimhealth@gmail.com"
+# gmail_password is defined in common.toml
