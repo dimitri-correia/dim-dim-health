@@ -8,11 +8,15 @@ pub async fn handle_registration_email(
     data: JobEmailRegister,
 ) -> anyhow::Result<bool> {
     info!("Handling registration email for: {}", data.email);
-    let subject = "DimDim Health - Verify your email";
-    let base_url = worker_state.base_url.to_string();
-    let verification_link = format!("{}/api/auth/verify-email?token={}", base_url, data.token);
-    let content =
-        format!("Please verify your email by clicking the following link: {verification_link}");
+    let subject = format!("DimDim Health - Verify your email {}", data.username);
+    let verification_link = format!(
+        "{}/api/auth/verify-email?token={}",
+        worker_state.base_url, data.token
+    );
+    let content = format!(
+        "Hey {}.\n Thanks for registering!\n Please verify your email by clicking the following link: {verification_link}",
+        data.username
+    );
 
     send_email(
         worker_state,
