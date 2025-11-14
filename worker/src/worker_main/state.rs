@@ -9,8 +9,8 @@ pub struct WorkerState {
     pub db: DatabaseConnection,
     pub redis: ConnectionManager,
 
-    pub mailgun_key: String,
-    pub mailgun_domain: String,
+    pub gmail_email: String,
+    pub gmail_password: String,
 }
 
 impl WorkerState {
@@ -21,8 +21,8 @@ impl WorkerState {
         WorkerState::new(
             db,
             redis,
-            settings.mailgun_key.clone(),
-            settings.mailgun_domain.clone(),
+            settings.gmail_email.clone(),
+            settings.gmail_password.clone(),
         )
         .await
     }
@@ -30,14 +30,14 @@ impl WorkerState {
     pub async fn new(
         db: DatabaseConnection,
         redis: ConnectionManager,
-        mailgun_key: String,
-        mailgun_domain: String,
+        gmail_email: String,
+        gmail_password: String,
     ) -> anyhow::Result<Self> {
         Ok(Self {
             db,
             redis,
-            mailgun_key,
-            mailgun_domain,
+            gmail_email,
+            gmail_password,
         })
     }
 }
