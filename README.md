@@ -4,7 +4,18 @@ A health tracking application with API and background worker services.
 
 ## Quick Start
 
-For production deployment on Raspberry Pi, see [DEPLOYMENT.md](DEPLOYMENT.md).
+### Production Deployment (Raspberry Pi)
+
+For a quick production setup, see [QUICKSTART.md](QUICKSTART.md).
+
+For detailed deployment documentation, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+One-command setup:
+```bash
+./scripts/quick-start.sh
+```
+
+### Development Setup
 
 For development setup:
 
@@ -19,20 +30,27 @@ cargo run --bin dimdim-health_api
 cargo run --bin dimdim-health_worker
 ```
 
-## Production Deployment
+## Production Features
 
 We provide a complete production deployment solution with:
-- Docker Compose setup for all services (PostgreSQL, Redis, API, Worker)
-- Graceful shutdown for zero data loss
-- Rolling update deployment strategy
-- Health checks and auto-restart
-- Optimized for Raspberry Pi (ARM64)
+- ✅ Docker Compose setup for all services (PostgreSQL, Redis, API, Worker)
+- ✅ Graceful shutdown for zero data loss
+- ✅ Rolling update deployment strategy
+- ✅ Health checks and auto-restart
+- ✅ Optimized for Raspberry Pi (ARM64)
+- ✅ Backup and restore scripts
+- ✅ Optional nginx reverse proxy with SSL
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for complete instructions.
-
-Quick production setup:
+Quick deployment:
 ```bash
+# Initial setup
 ./scripts/quick-start.sh
+
+# Deploy updates
+./scripts/deploy-production.sh
+
+# Backup data
+./scripts/backup.sh
 ```
 
 ## Development
@@ -56,6 +74,11 @@ Set environment variable `APP_ENV=prod` to use production config.
 - **Worker** (`worker/`) - Background job processor
 - **Entities** (`entities/`) - Database models
 - **Migration** (`migration/`) - Database migrations
+
+## Documentation
+
+- [QUICKSTART.md](QUICKSTART.md) - Quick reference for common tasks
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Comprehensive deployment guide
 
 ## todo
 
