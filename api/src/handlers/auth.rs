@@ -12,6 +12,7 @@ use crate::{
             ForgotPasswordRequest, ForgotPasswordResponse, ResetPasswordRequest,
             ResetPasswordResponse,
         },
+        token_schemas::{RefreshTokenRequest, RefreshTokenResponse},
     },
     utils::{get_now_time_paris::now_paris_fixed, token_generator::generate_verification_token},
 };
@@ -422,4 +423,33 @@ pub async fn reset_password(
         message: "Password has been reset successfully. You can now login with your new password."
             .to_string(),
     }))
+}
+
+pub async fn refresh_token(
+    State(state): State<AppState>,
+    Json(payload): Json<RefreshTokenRequest>,
+) -> Result<Json<RefreshTokenResponse>, StatusCode> {
+    info!(
+        "Received refresh token request for token: {}",
+        payload.refresh_token
+    );
+    let refresh_token = state
+        .repositories
+        .refresh_token_repository
+        .find_by_token(&payload.refresh_token)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+        .ok_or(StatusCode::UNAUTHORIZED)?;
+
+    state
+        .repositories
+        .refresh_token_repository
+        .update_last_used(&payload.refresh_token)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let access_token = generate_token(&refresh_token.user_id, &state.jwt_secret)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(RefreshTokenResponse { access_token }))
 }
