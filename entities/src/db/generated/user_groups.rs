@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 #[sea_orm(table_name = "user_groups")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub id: Uuid,
     pub user_id: Uuid,
+    #[sea_orm(primary_key, auto_increment = false)]
     pub group: UserGroup,
     pub created_at: DateTimeWithTimeZone,
 }
