@@ -7,4 +7,5 @@ pub mod password_reset_token;
 pub mod refresh_token;
 pub mod sea_orm_active_enums;
 pub mod user_additional_infos;
+pub mod user_groups;
 pub mod users;

@@ -13,3 +13,11 @@ pub enum GenderEnum {
     #[sea_orm(string_value = "other")]
     Other,
 }
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "user_group")]
+pub enum UserGroup {
+    #[sea_orm(string_value = "admin_group")]
+    AdminGroup,
+    #[sea_orm(string_value = "public_group")]
+    PublicGroup,
+}
