@@ -41,3 +41,4 @@ async-once-cell = "0.5.4"
 once_cell = "1.21.3"
 axum-test = { version = "18.2.1", features = ["pretty-assertions"] }
 tests_helpers = { path = "../tests_helpers" }
+serial_test = { workspace = true }

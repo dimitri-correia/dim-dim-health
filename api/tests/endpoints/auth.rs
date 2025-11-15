@@ -1,12 +1,14 @@
 use axum::http::{HeaderValue, StatusCode};
 use dimdim_health_api::schemas::auth_schemas::{LoginResponse, UserResponse};
 use serde_json::json;
+use serial_test::serial;
 use tests_helpers::{
     app_paths::APP_PATHS,
     test_server::{get_app_state, get_test_server},
 };
 
 #[tokio::test]
+#[serial]
 async fn test_create_user() {
     let username = "testcreateuser";
     let email = format!("{username}@dimdim.fr");
@@ -62,6 +64,7 @@ async fn test_create_user() {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_create_user_too_small_username() {
     let username = "t";
     let email = format!("{username}@dimdim.fr");
@@ -85,6 +88,7 @@ async fn test_create_user_too_small_username() {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_create_user_invalid_email() {
     let username = "testinvalidemail";
     let email = "invalid-email-format";
@@ -108,6 +112,7 @@ async fn test_create_user_invalid_email() {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_create_user_weak_password() {
     let username = "testweakpassword";
     let email = format!("{username}@email.fr");
@@ -131,6 +136,7 @@ async fn test_create_user_weak_password() {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_create_user_duplicate_username() {
     let username = "duplicateuser";
     let email1 = format!("{username}1@dimdim.fr");

@@ -1,11 +1,13 @@
 use axum::http::StatusCode;
 use serde_json::json;
+use serial_test::serial;
 use tests_helpers::{
     app_paths::APP_PATHS,
     test_server::{get_app_state, get_test_server},
 };
 
 #[tokio::test]
+#[serial]
 async fn test_server_health() {
     let app_test = get_app_state().await;
     let server = get_test_server(app_test.clone()).await;
@@ -20,6 +22,7 @@ async fn test_server_health() {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_bad_route() {
     let app_test = get_app_state().await;
     let server = get_test_server(app_test.clone()).await;

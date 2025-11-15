@@ -1,7 +1,9 @@
+use serial_test::serial;
 use tests_helpers::test_server::get_app_state;
 use uuid::Uuid;
 
 #[tokio::test]
+#[serial]
 async fn test_user_repo_create_and_get() {
     let username = "testrepocreateuser";
     let email = format!("{username}@test.fr");
@@ -84,6 +86,7 @@ async fn test_user_repo_create_and_get() {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_user_repo_create_and_update() {
     let username = "testrepoupdateuser";
     let email = format!("{username}@dimdim.fr");
@@ -144,6 +147,7 @@ async fn test_user_repo_create_and_update() {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_sql_injection() {
     let email: &str = "attacker@attack.fr'); DROP TABLE users; --";
     let username = "test_sql_injection";

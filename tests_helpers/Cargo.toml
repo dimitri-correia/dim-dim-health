@@ -13,3 +13,4 @@ axum-test = { version = "18.2.1", features = ["pretty-assertions"] }
 dimdim-health-api = { path = "../api" }
 sea-orm = { workspace = true }
 tokio = { workspace = true }
+uuid = { workspace = true }
