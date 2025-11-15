@@ -32,10 +32,15 @@ impl MigrationTrait for Migration {
                             .default(Expr::current_timestamp()),
                     )
                     .col(
-                        ColumnDef::new(RefreshToken::LastUsedAt)
+                        ColumnDef::new(RefreshToken::ExpiresAt)
                             .timestamp_with_time_zone()
                             .not_null()
-                            .default(Expr::current_timestamp()),
+                            .extra("DEFAULT (NOW() + INTERVAL '7 days')"),
+                    )
+                    .col(
+                        ColumnDef::new(RefreshToken::UsedAt)
+                            .null()
+                            .timestamp_with_time_zone(),
                     )
                     .foreign_key(
                         ForeignKey::create()
@@ -69,6 +74,26 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_refresh_tokens_expires_at")
+                    .table(RefreshToken::Table)
+                    .col(RefreshToken::ExpiresAt)
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_refresh_tokens_used_at")
+                    .table(RefreshToken::Table)
+                    .col(RefreshToken::UsedAt)
+                    .to_owned(),
+            )
+            .await?;
+
         Ok(())
     }
 
@@ -86,7 +111,8 @@ enum RefreshToken {
     UserId,
     Token,
     CreatedAt,
-    LastUsedAt,
+    ExpiresAt,
+    UsedAt,
 }
 
 #[derive(DeriveIden)]

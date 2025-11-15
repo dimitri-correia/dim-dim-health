@@ -12,7 +12,8 @@ pub struct Model {
     #[sea_orm(unique)]
     pub token: String,
     pub created_at: DateTimeWithTimeZone,
-    pub last_used_at: DateTimeWithTimeZone,
+    pub expires_at: DateTimeWithTimeZone,
+    pub used_at: Option<DateTimeWithTimeZone>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
