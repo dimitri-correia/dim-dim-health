@@ -16,6 +16,7 @@ impl FoodItemRepository {
         Self { db }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn create(
         &self,
         name: &str,
@@ -81,6 +82,7 @@ impl FoodItemRepository {
             .await
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn update(
         &self,
         id: &Uuid,
