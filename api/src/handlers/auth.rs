@@ -12,7 +12,7 @@ use crate::{
             ForgotPasswordRequest, ForgotPasswordResponse, ResetPasswordRequest,
             ResetPasswordResponse,
         },
-        token_schemas::{RefreshTokenRequest, RefreshTokenResponse},
+        token_schemas::{LogoutRequest, LogoutResponse, RefreshTokenRequest, RefreshTokenResponse},
     },
     utils::{get_now_time_paris::now_paris_fixed, token_generator::generate_verification_token},
 };
@@ -491,5 +491,21 @@ pub async fn refresh_token(
     Ok(Json(RefreshTokenResponse {
         access_token,
         refresh_token: new_refresh_token,
+    }))
+}
+
+pub async fn logout(
+    State(state): State<AppState>,
+    Json(payload): Json<LogoutRequest>,
+) -> Result<Json<LogoutResponse>, StatusCode> {
+    state
+        .repositories
+        .refresh_token_repository
+        .delete_by_token(&payload.refresh_token)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(LogoutResponse {
+        message: "Logged out successfully".to_string(),
     }))
 }
