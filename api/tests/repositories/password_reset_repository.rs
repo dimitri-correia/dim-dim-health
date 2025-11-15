@@ -26,7 +26,7 @@ async fn test_without_valid_user() {
 
 #[tokio::test]
 async fn test_password_reset_repo_create_and_get() {
-    let username = "testrepopasswordreset";
+    let username = "testpassreset";
     let email = format!("{username}@test.fr");
     let password_hash = "securepassword";
 
@@ -115,7 +115,7 @@ async fn test_password_reset_repo_create_and_get() {
 
 #[tokio::test]
 async fn test_delete_all_user_tokens() {
-    let username = "testdeleteallpasswordreset";
+    let username = "testdelalltokens";
     let email = format!("{username}@test.fr");
     let password_hash = "securepassword";
 

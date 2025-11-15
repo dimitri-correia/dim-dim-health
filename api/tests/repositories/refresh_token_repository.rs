@@ -103,7 +103,7 @@ async fn test_refresh_token_repo_create_and_get() {
 
 #[tokio::test]
 async fn test_delete_all_user_tokens() {
-    let username = "testdeleteallrefreshtoken";
+    let username = "testdelrefresh";
     let email = format!("{username}@test.fr");
     let password_hash = "securepassword";
 

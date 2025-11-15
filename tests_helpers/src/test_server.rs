@@ -9,13 +9,9 @@ static REDIS_URL: &str = "redis://localhost:6379";
 use sea_orm::{Database, DbErr};
 
 async fn init_test_db() {
-    let status = tokio::process::Command::new("../scripts/test-db/run_test_db.sh")
-        .status()
-        .await
-        .expect("failed to run test DB script");
-
-    assert!(status.success());
-
+    // Skip running the script since database should already be running
+    // (either from manual setup or CI environment)
+    
     // wait for Postgres to actually accept SQL queries
     for _ in 0..30 {
         match Database::connect(DB_URL).await {
