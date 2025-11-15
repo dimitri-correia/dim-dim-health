@@ -57,6 +57,16 @@ impl MigrationTrait for Migration {
                     )
                     .to_owned(),
             )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_meal_user_id")
+                    .table(Meal::Table)
+                    .col(Meal::UserId)
+                    .to_owned(),
+            )
             .await
     }
 

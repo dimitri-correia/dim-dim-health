@@ -56,6 +56,26 @@ impl MigrationTrait for Migration {
                     )
                     .to_owned(),
             )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_user_watch_permissions_user_watched_id")
+                    .table(UserWatchPermissions::Table)
+                    .col(UserWatchPermissions::UserWatchedId)
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_user_watch_permissions_user_watching_id")
+                    .table(UserWatchPermissions::Table)
+                    .col(UserWatchPermissions::UserWatchingId)
+                    .to_owned(),
+            )
             .await
     }
 

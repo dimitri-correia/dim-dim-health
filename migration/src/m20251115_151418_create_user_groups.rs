@@ -49,6 +49,16 @@ impl MigrationTrait for Migration {
                     )
                     .to_owned(),
             )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_user_groups_user_id")
+                    .table(UserGroups::Table)
+                    .col(UserGroups::UserId)
+                    .to_owned(),
+            )
             .await
     }
 

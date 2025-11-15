@@ -61,6 +61,36 @@ impl MigrationTrait for Migration {
                     )
                     .to_owned(),
             )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_food_item_added_by")
+                    .table(FoodItem::Table)
+                    .col(FoodItem::AddedBy)
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_food_item_scan_code")
+                    .table(FoodItem::Table)
+                    .col(FoodItem::ScanCode)
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_food_item_name")
+                    .table(FoodItem::Table)
+                    .col(FoodItem::Name)
+                    .to_owned(),
+            )
             .await
     }
 
