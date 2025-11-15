@@ -22,19 +22,40 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(has_many = "super::email_verification_token::Entity")]
     EmailVerificationToken,
+    #[sea_orm(has_many = "super::food_item::Entity")]
+    FoodItem,
+    #[sea_orm(has_many = "super::meal::Entity")]
+    Meal,
     #[sea_orm(has_many = "super::password_reset_token::Entity")]
     PasswordResetToken,
     #[sea_orm(has_many = "super::refresh_token::Entity")]
     RefreshToken,
-    #[sea_orm(has_many = "super::user_additional_infos::Entity")]
+    #[sea_orm(
+        has_many = "super::user_additional_infos::Entity",
+        has_one = "super::user_additional_infos::Entity"
+    )]
     UserAdditionalInfos,
     #[sea_orm(has_many = "super::user_groups::Entity")]
     UserGroups,
+    #[sea_orm(has_many = "super::user_weight::Entity")]
+    UserWeight,
 }
 
 impl Related<super::email_verification_token::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::EmailVerificationToken.def()
+    }
+}
+
+impl Related<super::food_item::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::FoodItem.def()
+    }
+}
+
+impl Related<super::meal::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Meal.def()
     }
 }
 
@@ -59,6 +80,12 @@ impl Related<super::user_additional_infos::Entity> for Entity {
 impl Related<super::user_groups::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::UserGroups.def()
+    }
+}
+
+impl Related<super::user_weight::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::UserWeight.def()
     }
 }
 

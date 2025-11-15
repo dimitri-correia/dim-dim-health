@@ -14,6 +14,18 @@ pub enum GenderEnum {
     Other,
 }
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "meal_type_enum")]
+pub enum MealTypeEnum {
+    #[sea_orm(string_value = "breakfast")]
+    Breakfast,
+    #[sea_orm(string_value = "lunch")]
+    Lunch,
+    #[sea_orm(string_value = "snack")]
+    Snack,
+    #[sea_orm(string_value = "dinner")]
+    Dinner,
+}
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "user_group")]
 pub enum UserGroup {
     #[sea_orm(string_value = "admin_group")]

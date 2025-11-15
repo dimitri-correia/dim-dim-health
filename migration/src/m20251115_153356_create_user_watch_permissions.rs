@@ -12,6 +12,13 @@ impl MigrationTrait for Migration {
                     .table(UserWatchPermissions::Table)
                     .if_not_exists()
                     .col(
+                        ColumnDef::new(UserWatchPermissions::Id)
+                            .uuid()
+                            .not_null()
+                            .primary_key()
+                            .default(Expr::cust("gen_random_uuid()")),
+                    )
+                    .col(
                         ColumnDef::new(UserWatchPermissions::UserWatchedId)
                             .uuid()
                             .not_null(),
@@ -19,6 +26,12 @@ impl MigrationTrait for Migration {
                     .col(
                         ColumnDef::new(UserWatchPermissions::UserWatchingId)
                             .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(UserWatchPermissions::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .default(Expr::current_timestamp())
                             .not_null(),
                     )
                     .foreign_key(
@@ -58,8 +71,10 @@ impl MigrationTrait for Migration {
 #[derive(DeriveIden)]
 enum UserWatchPermissions {
     Table,
+    Id,
     UserWatchedId,
     UserWatchingId,
+    CreatedAt,
 }
 
 #[derive(DeriveIden)]

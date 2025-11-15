@@ -23,6 +23,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(
                         ColumnDef::new(UserAdditionalInfos::UserId)
+                            .primary_key()
                             .uuid()
                             .not_null(),
                     )
@@ -34,7 +35,11 @@ impl MigrationTrait for Migration {
                     .col(
                         ColumnDef::new(UserAdditionalInfos::HeightInCm)
                             .integer()
-                            .not_null(),
+                            .not_null()
+                            .check(Expr::col(UserAdditionalInfos::HeightInCm).gte(Expr::value(100)))
+                            .check(
+                                Expr::col(UserAdditionalInfos::HeightInCm).lte(Expr::value(300)),
+                            ),
                     )
                     .col(
                         ColumnDef::new(UserAdditionalInfos::Gender)
@@ -43,8 +48,14 @@ impl MigrationTrait for Migration {
                     )
                     .col(
                         ColumnDef::new(UserAdditionalInfos::ActivityLevel)
-                            .integer()
-                            .not_null(),
+                            .decimal_len(4, 3)
+                            .not_null()
+                            .check(
+                                Expr::col(UserAdditionalInfos::ActivityLevel).gte(Expr::value(1.0)),
+                            )
+                            .check(
+                                Expr::col(UserAdditionalInfos::ActivityLevel).lte(Expr::value(2.0)),
+                            ),
                     )
                     .col(
                         ColumnDef::new(UserAdditionalInfos::UpdatedAt)
