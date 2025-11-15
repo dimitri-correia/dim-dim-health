@@ -21,10 +21,23 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(UserGroups::Table)
                     .if_not_exists()
+                    .col(
+                        ColumnDef::new(UserGroups::Id)
+                            .uuid()
+                            .not_null()
+                            .primary_key()
+                            .default(Expr::cust("gen_random_uuid()")),
+                    )
                     .col(ColumnDef::new(UserGroups::UserId).uuid().not_null())
                     .col(
                         ColumnDef::new(UserGroups::Group)
                             .custom(Alias::new(USER_GROUP_ENUM))
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(UserGroups::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .default(Expr::current_timestamp())
                             .not_null(),
                     )
                     .foreign_key(
@@ -56,8 +69,10 @@ impl MigrationTrait for Migration {
 #[derive(DeriveIden)]
 enum UserGroups {
     Table,
+    Id,
     UserId,
     Group,
+    CreatedAt,
 }
 
 #[derive(DeriveIden)]

@@ -10,6 +10,10 @@ mod m20251114_234540_pg_cron_delete_expired_token;
 mod m20251115_143529_create_user_info;
 mod m20251115_151418_create_user_groups;
 mod m20251115_153356_create_user_watch_permissions;
+mod m20251115_154743_create_weight_table;
+mod m20251115_160046_create_food_item;
+mod m20251115_160750_create_meal;
+mod m20251115_161449_create_meal_item;
 
 pub struct Migrator;
 
@@ -27,6 +31,10 @@ impl MigratorTrait for Migrator {
             Box::new(m20251115_143529_create_user_info::Migration),
             Box::new(m20251115_151418_create_user_groups::Migration),
             Box::new(m20251115_153356_create_user_watch_permissions::Migration),
+            Box::new(m20251115_154743_create_weight_table::Migration),
+            Box::new(m20251115_160046_create_food_item::Migration),
+            Box::new(m20251115_160750_create_meal::Migration),
+            Box::new(m20251115_161449_create_meal_item::Migration),
         ]
     }
 }

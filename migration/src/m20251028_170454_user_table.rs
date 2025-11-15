@@ -6,13 +6,6 @@ pub struct Migration;
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        // Enable uuid-ossp extension
-        manager
-            .get_connection()
-            .execute_unprepared(r#"CREATE EXTENSION IF NOT EXISTS "uuid-ossp";"#)
-            .await?;
-
-        // Create users table
         manager
             .create_table(
                 Table::create()
@@ -23,7 +16,7 @@ impl MigrationTrait for Migration {
                             .uuid()
                             .not_null()
                             .primary_key()
-                            .extra("DEFAULT uuid_generate_v4()"),
+                            .default(Expr::cust("gen_random_uuid()")),
                     )
                     .col(
                         ColumnDef::new(Users::Username)

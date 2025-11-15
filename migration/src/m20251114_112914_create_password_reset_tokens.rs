@@ -16,7 +16,7 @@ impl MigrationTrait for Migration {
                             .uuid()
                             .not_null()
                             .primary_key()
-                            .extra("DEFAULT uuid_generate_v4()"),
+                            .default(Expr::cust("gen_random_uuid()")),
                     )
                     .col(ColumnDef::new(PasswordResetToken::UserId).uuid().not_null())
                     .col(
