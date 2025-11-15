@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/user_model.dart';
+import '../utils/config.dart';
 
 class ApiService {
-  // Update this to your backend URL
-  static const String baseUrl = 'http://localhost:3000';
+  // Use base URL from config
+  static const String baseUrl = AppConfig.apiBaseUrl;
 
   // Register a new user
   static Future<AuthResponse> register({

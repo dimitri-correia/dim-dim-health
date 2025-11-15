@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
+import '../utils/config.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -11,7 +12,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('DimDim Health'),
+        title: Text(AppConfig.appName),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
