@@ -31,7 +31,8 @@ impl RefreshTokenRepository {
             user_id: Set(user_id.to_owned()),
             token: Set(token.to_owned()),
             created_at: NotSet,
-            last_used_at: NotSet,
+            expires_at: NotSet,
+            used_at: NotSet,
         };
         let refresh_token = refresh_token.insert(&self.db).await?;
 
@@ -48,17 +49,16 @@ impl RefreshTokenRepository {
             .await
     }
 
-    pub async fn update_last_used(&self, token: &str) -> Result<(), sea_orm::DbErr> {
+    pub async fn mark_token_as_used(&self, token: &str) -> Result<(), sea_orm::DbErr> {
         let now = now_paris_fixed(Duration::zero());
         refresh_token::Entity::update_many()
             .col_expr(
-                refresh_token::Column::LastUsedAt,
+                refresh_token::Column::UsedAt,
                 Expr::value(Value::ChronoDateTimeWithTimeZone(Some(now))),
             )
             .filter(refresh_token::Column::Token.eq(token))
             .exec(&self.db)
             .await?;
-
         Ok(())
     }
 

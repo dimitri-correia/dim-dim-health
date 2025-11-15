@@ -441,15 +441,55 @@ pub async fn refresh_token(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
         .ok_or(StatusCode::UNAUTHORIZED)?;
 
+    if refresh_token.is_expired() {
+        info!("Refresh token expired: {}", payload.refresh_token);
+        state
+            .repositories
+            .refresh_token_repository
+            .delete_by_token(&payload.refresh_token)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+
+    if refresh_token.used_at.is_some() {
+        // SECURITY BREACH DETECTED!
+        // Someone is trying to use an old token
+        // This means the token was likely stolen (or error in the client logic)
+        error!(
+            "[NOT SUPPOSED TO HAPPEN] Refresh token already used: {}",
+            payload.refresh_token
+        );
+        state
+            .repositories
+            .refresh_token_repository
+            .delete_all_user_tokens(&refresh_token.user_id)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+
     state
         .repositories
         .refresh_token_repository
-        .update_last_used(&payload.refresh_token)
+        .mark_token_as_used(&payload.refresh_token)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let new_refresh_token = generate_refresh_token();
+
+    state
+        .repositories
+        .refresh_token_repository
+        .create_token(&refresh_token.user_id, &new_refresh_token)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     let access_token = generate_token(&refresh_token.user_id, &state.jwt_secret)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    Ok(Json(RefreshTokenResponse { access_token }))
+    Ok(Json(RefreshTokenResponse {
+        access_token,
+        refresh_token: new_refresh_token,
+    }))
 }
