@@ -52,6 +52,7 @@ pub struct UserResponse {
 pub struct UserData {
     pub email: String,
     pub username: String,
+    pub email_verified: bool,
 }
 
 impl UserData {
@@ -59,6 +60,7 @@ impl UserData {
         Self {
             email: user.email,
             username: user.username,
+            email_verified: user.email_verified,
         }
     }
 }
