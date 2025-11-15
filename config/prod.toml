@@ -1,0 +1,17 @@
+# Production configuration for Raspberry Pi deployment
+# Override these values using environment variables or a config/common.toml file
+
+database_url = "postgresql://dimdimhealth:changeme@db:5432/dimdimhealth"
+redis_url = "redis://redis:6379/"
+
+base_url = "http://localhost:3000"
+listenner_addr = "0.0.0.0:3000"
+
+env_filter = "dimdim_health=info,tower_http=info"
+
+jwt_secret = "CHANGE_ME_IN_COMMON_TOML"
+
+number_workers = 3
+
+gmail_email = "dimdimhealth@gmail.com"
+# gmail_password should be defined in common.toml (not tracked in git)

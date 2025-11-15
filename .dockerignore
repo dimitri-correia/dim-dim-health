@@ -1,0 +1,46 @@
+# Git
+.git
+.gitignore
+
+# Target directory (build artifacts)
+target/
+**/target/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentation
+*.md
+!DEPLOYMENT.md
+docs/
+
+# Test files
+tests/
+**/tests/
+
+# Scripts (not needed in container)
+scripts/dev-db/
+scripts/test-db/
+scripts/curl-tests/
+
+# Config files (mounted as volumes)
+config/common.toml
+
+# Mobile app
+app/
+
+# Images
+images/
+
+# Temp files
+tmp/
+.DS_Store
+
+# Docker files themselves
+Dockerfile*
+docker-compose*.yml
+.dockerignore
