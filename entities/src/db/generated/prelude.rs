@@ -5,4 +5,5 @@ pub use super::password_reset_token::Entity as PasswordResetToken;
 pub use super::refresh_token::Entity as RefreshToken;
 pub use super::user_additional_infos::Entity as UserAdditionalInfos;
 pub use super::user_groups::Entity as UserGroups;
+pub use super::user_watch_permissions::Entity as UserWatchPermissions;
 pub use super::users::Entity as Users;
