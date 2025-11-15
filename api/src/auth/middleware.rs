@@ -14,6 +14,10 @@ pub struct RequireAuth(pub User);
 #[derive(Debug)]
 pub struct OptionalAuth(pub Option<User>);
 
+// For protected routes with mail validated
+#[derive(Debug)]
+pub struct RequireVerifiedAuth(pub User);
+
 impl<S> FromRequestParts<S> for RequireAuth
 where
     AppState: FromRef<S>,
@@ -78,6 +82,40 @@ where
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
         Ok(OptionalAuth(user))
+    }
+}
+
+impl<S> FromRequestParts<S> for RequireVerifiedAuth
+where
+    AppState: FromRef<S>,
+    S: Send + Sync,
+{
+    type Rejection = StatusCode;
+
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let app_state = AppState::from_ref(state);
+
+        let headers = &parts.headers;
+        let token = extract_token_from_headers(headers).ok_or(StatusCode::UNAUTHORIZED)?;
+
+        let claims =
+            validate_token(&token, &app_state.jwt_secret).map_err(|_| StatusCode::UNAUTHORIZED)?;
+
+        let user_id = Uuid::parse_str(&claims.sub).map_err(|_| StatusCode::UNAUTHORIZED)?;
+
+        let user = app_state
+            .repositories
+            .user_repository
+            .find_by_id(&user_id)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+            .ok_or(StatusCode::UNAUTHORIZED)?;
+
+        if !user.email_verified {
+            return Err(StatusCode::FORBIDDEN);
+        }
+
+        Ok(RequireVerifiedAuth(user))
     }
 }
 
