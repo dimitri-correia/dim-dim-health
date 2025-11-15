@@ -4,8 +4,13 @@ redis_url = "redis://localhost:6379/"
 base_url = "http://localhost:3000"
 listenner_addr = "0.0.0.0:3000"
 
+# Frontend origin for CORS (update this for production)
+frontend_origin = "http://localhost:3000"
+
 env_filter = "dimdim_health=debug,tower_http=debug"
 
+# WARNING: This is a development secret only. NEVER use this in production.
+# In production, use a strong randomly generated secret stored in environment variables.
 jwt_secret = "dev_jwt_secret_key"
 
 number_workers = 5
