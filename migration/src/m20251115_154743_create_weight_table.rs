@@ -47,6 +47,16 @@ impl MigrationTrait for Migration {
                     )
                     .to_owned(),
             )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_user_weight_user_id")
+                    .table(UserWeight::Table)
+                    .col(UserWeight::UserId)
+                    .to_owned(),
+            )
             .await
     }
 
