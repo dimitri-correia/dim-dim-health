@@ -10,6 +10,7 @@ use crate::repositories::{
 pub mod email_verification_repository;
 pub mod password_reset_repository;
 pub mod refresh_token_repository;
+pub mod user_group_repository;
 pub mod user_info_repository;
 pub mod user_repository;
 
