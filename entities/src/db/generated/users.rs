@@ -28,6 +28,8 @@ pub enum Relation {
     RefreshToken,
     #[sea_orm(has_many = "super::user_additional_infos::Entity")]
     UserAdditionalInfos,
+    #[sea_orm(has_many = "super::user_groups::Entity")]
+    UserGroups,
 }
 
 impl Related<super::email_verification_token::Entity> for Entity {
@@ -51,6 +53,12 @@ impl Related<super::refresh_token::Entity> for Entity {
 impl Related<super::user_additional_infos::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::UserAdditionalInfos.def()
+    }
+}
+
+impl Related<super::user_groups::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::UserGroups.def()
     }
 }
 
