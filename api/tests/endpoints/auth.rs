@@ -4,14 +4,15 @@ use serde_json::json;
 use serial_test::serial;
 use tests_helpers::{
     app_paths::APP_PATHS,
+    test_data::{unique_email, unique_username},
     test_server::{get_app_state, get_test_server},
 };
 
 #[tokio::test]
 #[serial]
 async fn test_create_user() {
-    let username = "testcreateuser";
-    let email = format!("{username}@dimdim.fr");
+    let username = unique_username(Some("testcreate"));
+    let email = unique_email(Some(&username), Some("dimdim.fr"));
     let password = "securepassword";
 
     let app_test = get_app_state().await;

@@ -1,18 +1,19 @@
 use serial_test::serial;
+use tests_helpers::test_data::{unique_email, unique_username};
 use tests_helpers::test_server::get_app_state;
 use uuid::Uuid;
 
 #[tokio::test]
 #[serial]
 async fn test_user_repo_create_and_get() {
-    let username = "testrepocreateuser";
-    let email = format!("{username}@test.fr");
+    let username = unique_username(Some("testrepocreate"));
+    let email = unique_email(Some(&username), Some("test.fr"));
     let password_hash = "securepassword";
 
     let user_repo = &get_app_state().await.repositories.user_repository;
 
     let res = user_repo
-        .create(username, &email, password_hash)
+        .create(&username, &email, password_hash)
         .await
         .unwrap();
     assert_eq!(res.username, username);
@@ -23,7 +24,7 @@ async fn test_user_repo_create_and_get() {
 
     let user_id = res.id;
 
-    let res = user_repo.create(username, &email, password_hash).await;
+    let res = user_repo.create(&username, &email, password_hash).await;
     assert!(res.is_err());
 
     let res = user_repo.find_by_id(&user_id).await.unwrap();
@@ -40,7 +41,7 @@ async fn test_user_repo_create_and_get() {
     let res = user_repo.find_by_email("notexisitingemail").await.unwrap();
     assert!(res.is_none());
 
-    let res = user_repo.find_by_username(username).await.unwrap();
+    let res = user_repo.find_by_username(&username).await.unwrap();
     assert!(res.is_some());
     assert_eq!(res.unwrap().email, email);
 
@@ -51,7 +52,7 @@ async fn test_user_repo_create_and_get() {
     assert!(res.is_none());
 
     let res = user_repo
-        .user_already_exists(&email, username)
+        .user_already_exists(&email, &username)
         .await
         .unwrap();
     assert!(res);
@@ -63,7 +64,7 @@ async fn test_user_repo_create_and_get() {
     assert!(res);
 
     let res = user_repo
-        .user_already_exists("notexistingemail", username)
+        .user_already_exists("notexistingemail", &username)
         .await
         .unwrap();
     assert!(res);
@@ -88,13 +89,13 @@ async fn test_user_repo_create_and_get() {
 #[tokio::test]
 #[serial]
 async fn test_user_repo_create_and_update() {
-    let username = "testrepoupdateuser";
-    let email = format!("{username}@dimdim.fr");
+    let username = unique_username(Some("testrepoupdate"));
+    let email = unique_email(Some(&username), Some("dimdim.fr"));
     let password_hash = "securepassword";
 
     let user_repo = &get_app_state().await.repositories.user_repository;
     let res = user_repo
-        .create(username, &email, password_hash)
+        .create(&username, &email, password_hash)
         .await
         .unwrap();
 
@@ -150,12 +151,12 @@ async fn test_user_repo_create_and_update() {
 #[serial]
 async fn test_sql_injection() {
     let email: &str = "attacker@attack.fr'); DROP TABLE users; --";
-    let username = "test_sql_injection";
+    let username = unique_username(Some("test_sql_injection"));
     let password_hash = "password";
 
     let user_repo = &get_app_state().await.repositories.user_repository;
     let res = user_repo
-        .create(username, email, password_hash)
+        .create(&username, email, password_hash)
         .await
         .unwrap();
 

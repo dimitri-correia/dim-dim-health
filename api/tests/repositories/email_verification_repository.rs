@@ -1,6 +1,7 @@
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 use once_cell::sync::Lazy;
 use serial_test::serial;
+use tests_helpers::test_data::{unique_email, unique_username};
 use tests_helpers::test_server::get_app_state;
 use uuid::Uuid;
 
@@ -37,8 +38,8 @@ async fn test_without_valid_user() {
 #[tokio::test]
 #[serial]
 async fn test_email_verif_repo_create_and_get() {
-    let username = "testrepoemailverif";
-    let email = format!("{username}@test.fr");
+    let username = unique_username(Some("testrepoemailverif"));
+    let email = unique_email(Some(&username), Some("test.fr"));
     let password_hash = "securepassword";
 
     let app_state = get_app_state().await;
@@ -46,7 +47,7 @@ async fn test_email_verif_repo_create_and_get() {
     let user = app_state
         .repositories
         .user_repository
-        .create(username, &email, password_hash)
+        .create(&username, &email, password_hash)
         .await
         .unwrap();
 
