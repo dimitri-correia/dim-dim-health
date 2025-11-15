@@ -7,6 +7,7 @@ mod m20251105_173226_pg_cron_delete_expired_token;
 mod m20251114_112914_create_password_reset_tokens;
 mod m20251114_222407_create_refresh_tokens;
 mod m20251114_234540_pg_cron_delete_expired_token;
+mod m20251115_143529_create_user_info;
 
 pub struct Migrator;
 
@@ -21,6 +22,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20251114_112914_create_password_reset_tokens::Migration),
             Box::new(m20251114_222407_create_refresh_tokens::Migration),
             Box::new(m20251114_234540_pg_cron_delete_expired_token::Migration),
+            Box::new(m20251115_143529_create_user_info::Migration),
         ]
     }
 }
