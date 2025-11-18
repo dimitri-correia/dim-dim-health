@@ -1,6 +1,9 @@
 use axum::routing::post;
 use axum::{Router, routing::get};
+use axum::http::{header, HeaderValue, Method};
 use tower_http::trace::TraceLayer;
+use tower_http::cors::CorsLayer;
+use tower_http::set_header::SetResponseHeaderLayer;
 
 use crate::axummain::state::AppState;
 use crate::handlers::auth::{
@@ -10,6 +13,13 @@ use crate::handlers::auth::{
 use crate::handlers::server_health::server_health_check;
 
 pub fn get_main_router(app_state: AppState) -> Router {
+    // Configure CORS - adjust allowed origins for production
+    let cors = CorsLayer::new()
+        .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
+        .allow_headers([header::AUTHORIZATION, header::CONTENT_TYPE])
+        .allow_credentials(true);
+
     Router::new()
         // Health check route
         .route("/health", get(server_health_check))
@@ -24,5 +34,21 @@ pub fn get_main_router(app_state: AppState) -> Router {
         .route("/api/auth/logout", post(logout))
         // Set application state
         .with_state(app_state)
+        // Security headers
+        .layer(SetResponseHeaderLayer::overriding(
+            header::X_CONTENT_TYPE_OPTIONS,
+            HeaderValue::from_static("nosniff"),
+        ))
+        .layer(SetResponseHeaderLayer::overriding(
+            header::X_FRAME_OPTIONS,
+            HeaderValue::from_static("DENY"),
+        ))
+        .layer(SetResponseHeaderLayer::overriding(
+            header::STRICT_TRANSPORT_SECURITY,
+            HeaderValue::from_static("max-age=31536000; includeSubDomains"),
+        ))
+        // Apply CORS
+        .layer(cors)
+        // Apply tracing
         .layer(TraceLayer::new_for_http())
 }
