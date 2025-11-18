@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["api", "worker", "entities", "migration", "tests_helpers"]
+members = ["api", "worker", "entities", "migration"]
 
 
 [workspace.dependencies]

@@ -1,4 +1,4 @@
-use tests_helpers::test_server::get_app_state;
+use crate::helpers::test_server::get_app_state;
 use uuid::Uuid;
 
 #[tokio::test]
