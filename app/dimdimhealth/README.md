@@ -1,16 +1,37 @@
-# dimdimhealth
+# DimDim Health - Flutter Web App
 
-A new Flutter project.
+This is the Flutter web application for DimDim Health.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+### Installation
 
-A few resources to get you started if this is your first Flutter project:
+1. Install dependencies:
+```bash
+flutter pub get
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+2. Generate JSON serialization code:
+```bash
+flutter pub run build_runner build --delete-conflicting-outputs
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Running the App
+
+For web development:
+```bash
+flutter run -d chrome --web-port 8081 --dart-define=API_URL=http://your-api-url:8080
+```
+
+### Building for Production
+
+```bash
+flutter build web --release --dart-define=API_URL=https://your-production-api.com
+```
+
+### Build Runner Issues
+If JSON serialization fails, try:
+```bash
+flutter pub run build_runner clean
+flutter pub run build_runner build --delete-conflicting-outputs
+```
