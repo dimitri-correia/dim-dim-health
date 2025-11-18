@@ -1,6 +1,6 @@
 use axum::http::StatusCode;
 use serde_json::json;
-use tests_helpers::{
+use crate::helpers::{
     app_paths::APP_PATHS,
     test_server::{get_app_state, get_test_server},
 };

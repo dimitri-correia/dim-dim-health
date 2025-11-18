@@ -1,6 +1,6 @@
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 use once_cell::sync::Lazy;
-use tests_helpers::test_server::get_app_state;
+use crate::helpers::test_server::get_app_state;
 use uuid::Uuid;
 
 static EXPIRES_AT: Lazy<DateTime<FixedOffset>> = Lazy::new(|| {
