@@ -1,5 +1,5 @@
 use axum::http::{HeaderValue, StatusCode};
-use dimdim_health_api::schemas::auth_schemas::UserResponse;
+use dimdim_health_api::schemas::auth_schemas::{LoginResponse, UserResponse};
 use serde_json::json;
 use crate::helpers::{
     app_paths::APP_PATHS,
@@ -28,15 +28,15 @@ async fn test_create_user() {
 
     res.assert_status(StatusCode::OK);
 
-    let user_data = res.json::<UserResponse>().user;
-    assert_eq!(user_data.username, username);
-    assert_eq!(user_data.email, email);
+    let login_response = res.json::<LoginResponse>();
+    assert_eq!(login_response.user.username, username);
+    assert_eq!(login_response.user.email, email);
 
     let res = server
         .get(APP_PATHS.current_user)
         .add_header(
             "Authorization",
-            HeaderValue::from_str(format!("Token {}", user_data.token).as_str()).unwrap(),
+            HeaderValue::from_str(format!("Token {}", login_response.access_token).as_str()).unwrap(),
         )
         .await;
 

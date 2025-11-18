@@ -36,7 +36,7 @@ pub struct LoginUserData {
     pub password: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct LoginResponse {
     pub user: UserData,
     pub access_token: String,
