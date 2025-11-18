@@ -32,4 +32,6 @@ pub enum UserGroup {
     AdminGroup,
     #[sea_orm(string_value = "public_group")]
     PublicGroup,
+    #[sea_orm(string_value = "guest_group")]
+    GuestGroup,
 }

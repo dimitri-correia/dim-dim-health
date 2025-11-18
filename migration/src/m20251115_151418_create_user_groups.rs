@@ -11,7 +11,7 @@ impl MigrationTrait for Migration {
         manager
             .get_connection()
             .execute_unprepared(&format!(
-                "CREATE TYPE {} AS ENUM ('admin_group', 'public_group');",
+                "CREATE TYPE {} AS ENUM ('admin_group', 'public_group', 'guest_group');",
                 USER_GROUP_ENUM
             ))
             .await?;
