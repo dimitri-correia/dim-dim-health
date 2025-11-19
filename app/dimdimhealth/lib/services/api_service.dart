@@ -113,4 +113,26 @@ class ApiService {
       throw ApiException('Guest login failed', statusCode: response.statusCode);
     }
   }
+
+  Future<User> getCurrentUser(String accessToken) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/user'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return User.fromJson(data['user']);
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else {
+      throw ApiException(
+        'Failed to fetch user data',
+        statusCode: response.statusCode,
+      );
+    }
+  }
 }
