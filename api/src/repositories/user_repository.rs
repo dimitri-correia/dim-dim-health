@@ -22,6 +22,7 @@ impl UserRepository {
         username: &str,
         email: &str,
         password_hash: &str,
+        is_guest: bool,
     ) -> Result<users::Model, sea_orm::DbErr> {
         let user = users::ActiveModel {
             id: NotSet,
@@ -30,7 +31,7 @@ impl UserRepository {
             password_hash: Set(password_hash.to_owned()),
             created_at: NotSet,
             updated_at: NotSet,
-            email_verified: NotSet,
+            email_verified: if is_guest { Set(true) } else { NotSet },
         };
         let user = user.insert(&self.db).await?;
 

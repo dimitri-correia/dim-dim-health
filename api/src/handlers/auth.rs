@@ -58,14 +58,41 @@ pub async fn register(
     let password_hash = hash_password(&payload.user.password, None)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
-    debug!(
-        "Creating user: {} [email: {}]",
-        payload.user.username, payload.user.email
-    );
+    common_register_logic(
+        state,
+        payload.user.username,
+        payload.user.email,
+        password_hash,
+        false,
+    )
+    .await
+    .map_err(|e| e.into_response())
+}
+
+pub async fn register_guest(
+    State(state): State<AppState>,
+) -> Result<Json<LoginResponse>, impl IntoResponse> {
+    let username = crate::utils::guest_name_generator::generate_guest_name();
+    let email = format!("{}@dimdim.guest", username);
+    let passwrod_hash = hash_password("password", Some(4))
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+    common_register_logic(state, username, email, passwrod_hash, true)
+        .await
+        .map_err(|e| e.into_response())
+}
+
+async fn common_register_logic(
+    state: AppState,
+    username: String,
+    email: String,
+    password_hash: String,
+    is_guest: bool,
+) -> Result<Json<LoginResponse>, impl IntoResponse> {
+    debug!("Creating user: {} [email: {}]", username, email);
     let user = state
         .repositories
         .user_repository
-        .create(&payload.user.username, &payload.user.email, &password_hash)
+        .create(&username, &email, &password_hash, is_guest)
         .await;
 
     let user = match user {
@@ -76,43 +103,45 @@ pub async fn register(
         }
     };
 
-    let verification_token = generate_verification_token();
-    // If updated, need to be changed in the mail too
-    let expires_at = now_paris_fixed(Duration::hours(2));
+    if !is_guest {
+        let verification_token = generate_verification_token();
+        // If updated, need to be changed in the mail too
+        let expires_at = now_paris_fixed(Duration::hours(2));
 
-    debug!(
-        "Generated email verification token for user {}: {}",
-        user.id, verification_token
-    );
-    if let Err(err) = state
-        .repositories
-        .email_verification_repository
-        .create_token(&user.id, &verification_token, &expires_at)
-        .await
-    {
-        error!("Failed to register token because: {err}");
-        return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-    }
+        debug!(
+            "Generated email verification token for user {}: {}",
+            user.id, verification_token
+        );
+        if let Err(err) = state
+            .repositories
+            .email_verification_repository
+            .create_token(&user.id, &verification_token, &expires_at)
+            .await
+        {
+            error!("Failed to register token because: {err}");
+            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
+        }
 
-    debug!(
-        "Sending verification email to {}: {}",
-        user.email, verification_token
-    );
-    if let Err(err) = state
-        .jobs
-        .email_job
-        .send_register_email(&user.email, &user.username, &verification_token)
-        .await
-    {
-        error!("Failed to send verification email: {err}");
-        return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
+        debug!(
+            "Sending verification email to {}: {}",
+            user.email, verification_token
+        );
+        if let Err(err) = state
+            .jobs
+            .email_job
+            .send_register_email(&user.email, &user.username, &verification_token)
+            .await
+        {
+            error!("Failed to send verification email: {err}");
+            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
+        }
     }
 
     let access_token = generate_token(&user.id, &state.jwt_secret)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
     let refresh_token = generate_refresh_token();
 
-    debug!("Creating refresh token for user {}", user.id);
+    debug!("Creating refresh token for user {}", &user.id);
     state
         .repositories
         .refresh_token_repository
@@ -120,12 +149,25 @@ pub async fn register(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
+    let user_id = user.id;
     let user_data = UserData::from_user(user);
     let response = LoginResponse {
         user: user_data,
         access_token,
         refresh_token,
     };
+
+    if is_guest {
+        state
+            .repositories
+            .user_group_repository
+            .create(
+                &user_id,
+                entities::sea_orm_active_enums::UserGroup::GuestGroup,
+            )
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+    }
 
     Ok(Json(response))
 }

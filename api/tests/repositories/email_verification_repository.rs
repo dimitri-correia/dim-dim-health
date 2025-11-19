@@ -43,7 +43,7 @@ async fn test_email_verif_repo_create_and_get() {
     let user = app_state
         .repositories
         .user_repository
-        .create(username, &email, password_hash)
+        .create(username, &email, password_hash, false)
         .await
         .unwrap();
 

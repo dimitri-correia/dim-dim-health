@@ -35,6 +35,7 @@ bcrypt = { workspace = true }
 jsonwebtoken = { workspace = true }
 redis = { workspace = true }
 anyhow = { workspace = true }
+rand = { workspace = true }
 
 [dev-dependencies]
 async-once-cell = "0.5.4"
