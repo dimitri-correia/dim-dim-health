@@ -35,6 +35,8 @@ migrate_working_dir/
 
 # JSON serialization generated files
 *.g.dart
+# Exception: Include user.g.dart until Flutter environment is available
+!lib/models/user.g.dart
 
 # Symbolication related
 app.*.symbols
