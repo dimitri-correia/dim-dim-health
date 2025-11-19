@@ -9,7 +9,17 @@ static REDIS_URL: &str = "redis://localhost:6379";
 use sea_orm::{Database, DbErr};
 
 async fn init_test_db() {
-    let status = tokio::process::Command::new("../scripts/test-db/run_test_db.sh")
+    let script_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .join("scripts/test-db/run_test_db.sh");
+
+    let status = tokio::process::Command::new(script_path)
+        .current_dir(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .parent()
+                .unwrap(),
+        )
         .status()
         .await
         .expect("failed to run test DB script");
