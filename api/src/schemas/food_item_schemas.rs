@@ -5,7 +5,11 @@ use validator::Validate;
 
 #[derive(Debug, Deserialize, Validate)]
 pub struct CreateFoodItemRequest {
-    #[validate(length(min = 1, max = 200, message = "Name must be between 1 and 200 characters"))]
+    #[validate(length(
+        min = 1,
+        max = 200,
+        message = "Name must be between 1 and 200 characters"
+    ))]
     pub name: String,
     #[validate(length(max = 1000, message = "Description must be less than 1000 characters"))]
     pub description: Option<String>,
@@ -22,7 +26,11 @@ pub struct CreateFoodItemRequest {
 
 #[derive(Debug, Deserialize, Validate)]
 pub struct UpdateFoodItemRequest {
-    #[validate(length(min = 1, max = 200, message = "Name must be between 1 and 200 characters"))]
+    #[validate(length(
+        min = 1,
+        max = 200,
+        message = "Name must be between 1 and 200 characters"
+    ))]
     pub name: Option<String>,
     #[validate(length(max = 1000, message = "Description must be less than 1000 characters"))]
     pub description: Option<Option<String>>,

@@ -48,13 +48,21 @@ impl From<entities::meal::Model> for MealResponse {
 #[derive(Debug, Deserialize, Validate)]
 pub struct AddMealItemRequest {
     pub food_item_id: Uuid,
-    #[validate(range(min = 1, max = 100000, message = "Quantity must be between 1 and 100000 grams"))]
+    #[validate(range(
+        min = 1,
+        max = 100000,
+        message = "Quantity must be between 1 and 100000 grams"
+    ))]
     pub quantity_in_grams: i32,
 }
 
 #[derive(Debug, Deserialize, Validate)]
 pub struct UpdateMealItemRequest {
-    #[validate(range(min = 1, max = 100000, message = "Quantity must be between 1 and 100000 grams"))]
+    #[validate(range(
+        min = 1,
+        max = 100000,
+        message = "Quantity must be between 1 and 100000 grams"
+    ))]
     pub quantity_in_grams: i32,
 }
 

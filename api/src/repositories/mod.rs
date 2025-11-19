@@ -2,17 +2,18 @@ use sea_orm::DatabaseConnection;
 
 use crate::repositories::{
     email_verification_repository::EmailVerificationRepository,
-    password_reset_repository::PasswordResetRepository,
+    food_item_repository::FoodItemRepository, meal_item_repository::MealItemRepository,
+    meal_repository::MealRepository, password_reset_repository::PasswordResetRepository,
     refresh_token_repository::RefreshTokenRepository, user_group_repository::UserGroupsRepository,
     user_info_repository::UserInfoRepository, user_repository::UserRepository,
     user_watch_permission_repository::UserWatchPermissionRepository,
     user_weight_repository::UserWeightRepository,
-    food_item_repository::FoodItemRepository,
-    meal_repository::MealRepository,
-    meal_item_repository::MealItemRepository,
 };
 
 pub mod email_verification_repository;
+pub mod food_item_repository;
+pub mod meal_item_repository;
+pub mod meal_repository;
 pub mod password_reset_repository;
 pub mod refresh_token_repository;
 pub mod user_group_repository;
@@ -20,9 +21,6 @@ pub mod user_info_repository;
 pub mod user_repository;
 pub mod user_watch_permission_repository;
 pub mod user_weight_repository;
-pub mod food_item_repository;
-pub mod meal_repository;
-pub mod meal_item_repository;
 
 #[derive(Clone)]
 pub struct Repositories {

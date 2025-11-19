@@ -1,13 +1,9 @@
-use crate::{
-    auth::middleware::RequireAuth,
-    axummain::state::AppState,
-    schemas::meal_schemas::*,
-};
+use crate::{auth::middleware::RequireAuth, axummain::state::AppState, schemas::meal_schemas::*};
 use axum::{
+    Json,
     extract::{Path, Query, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
 };
 use chrono::NaiveDate;
 use serde::Deserialize;
@@ -234,7 +230,7 @@ pub async fn add_meal_item(
                 StatusCode::BAD_REQUEST,
                 Json(json!({"error": "Food item not found"})),
             )
-                .into_response())
+                .into_response());
         }
         Err(err) => {
             error!("Failed to fetch food item: {}", err);
@@ -289,10 +285,8 @@ pub async fn get_meal_items(
         .await
     {
         Ok(meal_items) => {
-            let response: Vec<MealItemResponse> = meal_items
-                .into_iter()
-                .map(MealItemResponse::from)
-                .collect();
+            let response: Vec<MealItemResponse> =
+                meal_items.into_iter().map(MealItemResponse::from).collect();
             Ok(Json(response))
         }
         Err(err) => {

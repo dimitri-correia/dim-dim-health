@@ -1,7 +1,7 @@
 pub mod auth_schemas;
+pub mod food_item_schemas;
+pub mod meal_schemas;
 pub mod password_reset_schemas;
 pub mod token_schemas;
 pub mod user_schema;
 pub mod user_weight_schemas;
-pub mod food_item_schemas;
-pub mod meal_schemas;

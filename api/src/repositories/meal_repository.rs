@@ -38,9 +38,7 @@ impl MealRepository {
     }
 
     pub async fn find_by_id(&self, id: &Uuid) -> Result<Option<meal::Model>, sea_orm::DbErr> {
-        meal::Entity::find_by_id(id.to_owned())
-            .one(&self.db)
-            .await
+        meal::Entity::find_by_id(id.to_owned()).one(&self.db).await
     }
 
     pub async fn find_by_user_id(

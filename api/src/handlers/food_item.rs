@@ -1,13 +1,11 @@
 use crate::{
-    auth::middleware::RequireAuth,
-    axummain::state::AppState,
-    schemas::food_item_schemas::*,
+    auth::middleware::RequireAuth, axummain::state::AppState, schemas::food_item_schemas::*,
 };
 use axum::{
+    Json,
     extract::{Path, Query, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
 };
 use serde::Deserialize;
 use serde_json::json;
@@ -39,16 +37,7 @@ pub async fn create_food_item(
     match state
         .repositories
         .food_item_repository
-        .create(
-            payload.name,
-            payload.description,
-            payload.scan_code,
-            payload.calories_per100g,
-            payload.protein_per100g,
-            payload.carbs_per100g,
-            payload.fat_per100g,
-            user.id,
-        )
+        .create(payload, user.id)
         .await
     {
         Ok(food_item) => Ok(Json(FoodItemResponse::from(food_item))),
@@ -103,10 +92,8 @@ pub async fn get_food_items(
         }
     };
 
-    let response: Vec<FoodItemResponse> = food_items
-        .into_iter()
-        .map(FoodItemResponse::from)
-        .collect();
+    let response: Vec<FoodItemResponse> =
+        food_items.into_iter().map(FoodItemResponse::from).collect();
     Ok(Json(response))
 }
 
@@ -170,16 +157,7 @@ pub async fn update_food_item(
     match state
         .repositories
         .food_item_repository
-        .update(
-            id,
-            payload.name,
-            payload.description,
-            payload.scan_code,
-            payload.calories_per100g,
-            payload.protein_per100g,
-            payload.carbs_per100g,
-            payload.fat_per100g,
-        )
+        .update(id, payload)
         .await
     {
         Ok(food_item) => Ok(Json(FoodItemResponse::from(food_item))),
@@ -216,12 +194,7 @@ pub async fn delete_food_item(
         }
     }
 
-    match state
-        .repositories
-        .food_item_repository
-        .delete(&id)
-        .await
-    {
+    match state.repositories.food_item_repository.delete(&id).await {
         Ok(_) => Ok(StatusCode::NO_CONTENT),
         Err(err) => {
             error!("Failed to delete food item: {}", err);

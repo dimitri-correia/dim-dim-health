@@ -1,19 +1,14 @@
+use axum::http::{HeaderValue, Method, header};
 use axum::routing::{delete, post, put};
 use axum::{Router, routing::get};
-use axum::http::{header, HeaderValue, Method};
-use tower_http::trace::TraceLayer;
 use tower_http::cors::CorsLayer;
 use tower_http::set_header::SetResponseHeaderLayer;
+use tower_http::trace::TraceLayer;
 
 use crate::axummain::state::AppState;
 use crate::handlers::auth::{
     current_user, forgot_password, login, logout, refresh_token, register, register_guest,
     reset_password, verify_email,
-};
-use crate::handlers::server_health::server_health_check;
-use crate::handlers::user_weight::{
-    create_user_weight, delete_user_weight, get_user_weight_by_id, get_user_weights,
-    update_user_weight,
 };
 use crate::handlers::food_item::{
     create_food_item, delete_food_item, get_food_item_by_id, get_food_items, update_food_item,
@@ -21,6 +16,11 @@ use crate::handlers::food_item::{
 use crate::handlers::meal::{
     add_meal_item, create_meal, delete_meal, delete_meal_item, get_meal_by_id, get_meal_items,
     get_meals, update_meal, update_meal_item,
+};
+use crate::handlers::server_health::server_health_check;
+use crate::handlers::user_weight::{
+    create_user_weight, delete_user_weight, get_user_weight_by_id, get_user_weights,
+    update_user_weight,
 };
 
 pub fn get_main_router(app_state: AppState) -> Router {
@@ -69,7 +69,10 @@ pub fn get_main_router(app_state: AppState) -> Router {
         .route("/api/meals/:meal_id/items", post(add_meal_item))
         .route("/api/meals/:meal_id/items", get(get_meal_items))
         .route("/api/meals/:meal_id/items/:item_id", put(update_meal_item))
-        .route("/api/meals/:meal_id/items/:item_id", delete(delete_meal_item))
+        .route(
+            "/api/meals/:meal_id/items/:item_id",
+            delete(delete_meal_item),
+        )
         // Set application state
         .with_state(app_state)
         // Security headers

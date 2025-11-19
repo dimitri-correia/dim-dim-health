@@ -1,9 +1,9 @@
-use axum::http::StatusCode;
-use serde_json::json;
 use crate::helpers::{
     app_paths::APP_PATHS,
     test_server::{get_app_state, get_test_server},
 };
+use axum::http::StatusCode;
+use serde_json::json;
 
 #[tokio::test]
 async fn test_server_health() {

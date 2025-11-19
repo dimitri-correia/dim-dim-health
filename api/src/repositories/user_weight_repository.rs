@@ -1,9 +1,9 @@
 use entities::user_weight;
 use sea_orm::{
-    prelude::Decimal,
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
     ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder,
+    prelude::Decimal,
 };
 use uuid::Uuid;
 

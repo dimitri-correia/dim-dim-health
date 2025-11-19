@@ -1,13 +1,11 @@
 use crate::{
-    auth::middleware::RequireAuth,
-    axummain::state::AppState,
-    schemas::user_weight_schemas::*,
+    auth::middleware::RequireAuth, axummain::state::AppState, schemas::user_weight_schemas::*,
 };
 use axum::{
+    Json,
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
 };
 use serde_json::json;
 use tracing::{error, info};
@@ -170,12 +168,7 @@ pub async fn delete_user_weight(
         }
     }
 
-    match state
-        .repositories
-        .user_weight_repository
-        .delete(&id)
-        .await
-    {
+    match state.repositories.user_weight_repository.delete(&id).await {
         Ok(_) => Ok(StatusCode::NO_CONTENT),
         Err(err) => {
             error!("Failed to delete user weight: {}", err);
