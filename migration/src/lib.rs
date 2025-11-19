@@ -14,7 +14,7 @@ mod m20251115_154743_create_weight_table;
 mod m20251115_160046_create_food_item;
 mod m20251115_160750_create_meal;
 mod m20251115_161449_create_meal_item;
-mod m20251119_163331_clean_guest_users;
+mod m20251119_163331_pg_cron_clean_guest_users;
 
 pub struct Migrator;
 
@@ -36,7 +36,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20251115_160046_create_food_item::Migration),
             Box::new(m20251115_160750_create_meal::Migration),
             Box::new(m20251115_161449_create_meal_item::Migration),
-            Box::new(m20251119_163331_clean_guest_users::Migration),
+            Box::new(m20251119_163331_pg_cron_clean_guest_users::Migration),
         ]
     }
 }
