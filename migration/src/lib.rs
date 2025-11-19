@@ -15,6 +15,7 @@ mod m20251115_160046_create_food_item;
 mod m20251115_160750_create_meal;
 mod m20251115_161449_create_meal_item;
 mod m20251119_163331_clean_guest_users;
+mod m20251119_170512_add_cascade_delete_to_foreign_keys;
 
 pub struct Migrator;
 
@@ -37,6 +38,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20251115_160750_create_meal::Migration),
             Box::new(m20251115_161449_create_meal_item::Migration),
             Box::new(m20251119_163331_clean_guest_users::Migration),
+            Box::new(m20251119_170512_add_cascade_delete_to_foreign_keys::Migration),
         ]
     }
 }
