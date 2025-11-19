@@ -21,6 +21,7 @@ impl MigrationTrait for Migration {
             );
         "#
         );
+        // Schedule the cron job to run every day at midnight
         manager
             .get_connection()
             .execute_unprepared(&format!(
@@ -28,7 +29,7 @@ impl MigrationTrait for Migration {
                 CREATE EXTENSION IF NOT EXISTS pg_cron;
                  SELECT cron.schedule(
                     '{CRON_NAME}',
-                    '0 * * * *',
+                    '0 0 * * *', 
                     '{clean_cmd}'
                 );
                 "#,

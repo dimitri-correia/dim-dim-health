@@ -9,6 +9,7 @@ static EMAIL_VERIFICATION_TABLE: &str = "email_verification_token";
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        // Schedule the cron job to run every day at 02:00 AM
         manager
             .get_connection()
             .execute_unprepared(&format!(
@@ -16,7 +17,7 @@ impl MigrationTrait for Migration {
                 CREATE EXTENSION IF NOT EXISTS pg_cron;
                  SELECT cron.schedule(
                     '{CRON_NAME}',
-                    '0 * * * *',
+                    '0 2 * * *',
                     'DELETE FROM {EMAIL_VERIFICATION_TABLE} WHERE expires_at < NOW()'
                 );
                 "#,
