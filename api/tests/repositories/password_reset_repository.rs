@@ -36,7 +36,7 @@ async fn test_password_reset_repo_create_and_get() {
     let user = app_state
         .repositories
         .user_repository
-        .create(username, &email, password_hash)
+        .create(username, &email, password_hash, false)
         .await
         .unwrap();
 
@@ -125,7 +125,7 @@ async fn test_delete_all_user_tokens() {
     let user = app_state
         .repositories
         .user_repository
-        .create(username, &email, password_hash)
+        .create(username, &email, password_hash, false)
         .await
         .unwrap();
 

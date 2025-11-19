@@ -106,7 +106,7 @@ async fn common_register_logic(
         }
     };
 
-    if is_guest {
+    if !is_guest {
         let verification_token = generate_verification_token();
         // If updated, need to be changed in the mail too
         let expires_at = now_paris_fixed(Duration::hours(2));

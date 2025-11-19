@@ -164,3 +164,106 @@ async fn test_create_user_duplicate_username() {
         .await;
     res2.assert_status(StatusCode::CONFLICT);
 }
+
+#[tokio::test]
+async fn test_create_guest_user() {
+    let username = "testguestuser";
+    let email = format!("{username}@dimdim.fr");
+    let password = "securepassword";
+
+    let app_test = get_app_state().await;
+    let server = get_test_server(app_test.clone()).await;
+
+    let res = server
+        .post(APP_PATHS.create_guest_user)
+        .json(&json!({
+            "user": {
+                "username": username,
+                "email": email,
+                "password": password
+            }
+        }))
+        .await;
+
+    res.assert_status(StatusCode::OK);
+
+    let login_response = res.json::<LoginResponse>();
+    assert_eq!(login_response.user.username, username);
+    assert_eq!(login_response.user.email, email);
+    assert!(login_response.user.email_verified); // Guest users should have verified email
+
+    // Verify guest user can access current_user endpoint
+    let res = server
+        .get(APP_PATHS.current_user)
+        .add_header(
+            "Authorization",
+            HeaderValue::from_str(format!("Token {}", login_response.access_token).as_str()).unwrap(),
+        )
+        .await;
+
+    res.assert_status(StatusCode::OK);
+    let current_user_data = res.json::<UserResponse>().user;
+    assert_eq!(current_user_data.username, username);
+    assert_eq!(current_user_data.email, email);
+    assert!(current_user_data.email_verified);
+
+    // Verify guest user can login
+    let res = server
+        .post(APP_PATHS.login_user)
+        .json(&json!({
+            "user": {
+                "email": email,
+                "password": password
+            }
+        }))
+        .await;
+
+    res.assert_status(StatusCode::OK);
+    let login_user_data = res.json::<UserResponse>().user;
+    assert_eq!(login_user_data.username, username);
+    assert_eq!(login_user_data.email, email);
+    assert!(login_user_data.email_verified);
+}
+
+#[tokio::test]
+async fn test_regular_user_email_not_verified() {
+    let username = "testregularemailverif";
+    let email = format!("{username}@dimdim.fr");
+    let password = "securepassword";
+
+    let app_test = get_app_state().await;
+    let server = get_test_server(app_test.clone()).await;
+
+    let res = server
+        .post(APP_PATHS.create_user)
+        .json(&json!({
+            "user": {
+                "username": username,
+                "email": email,
+                "password": password
+            }
+        }))
+        .await;
+
+    res.assert_status(StatusCode::OK);
+
+    let login_response = res.json::<LoginResponse>();
+    assert_eq!(login_response.user.username, username);
+    assert_eq!(login_response.user.email, email);
+    assert!(!login_response.user.email_verified); // Regular users should NOT have verified email initially
+
+    // Verify via current_user endpoint
+    let res = server
+        .get(APP_PATHS.current_user)
+        .add_header(
+            "Authorization",
+            HeaderValue::from_str(format!("Token {}", login_response.access_token).as_str()).unwrap(),
+        )
+        .await;
+
+    res.assert_status(StatusCode::OK);
+    let current_user_data = res.json::<UserResponse>().user;
+    assert_eq!(current_user_data.username, username);
+    assert_eq!(current_user_data.email, email);
+    assert!(!current_user_data.email_verified);
+}
