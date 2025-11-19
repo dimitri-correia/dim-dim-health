@@ -58,14 +58,44 @@ pub async fn register(
     let password_hash = hash_password(&payload.user.password, None)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
-    debug!(
-        "Creating user: {} [email: {}]",
-        payload.user.username, payload.user.email
-    );
+    common_register_logic(
+        state,
+        payload.user.username,
+        payload.user.email,
+        password_hash,
+        false,
+    )
+    .await
+    .map_err(|e| e.into_response())
+}
+
+pub async fn register_guest(
+    State(state): State<AppState>,
+    Json(payload): Json<RegisterUserRequest>,
+) -> Result<Json<LoginResponse>, impl IntoResponse> {
+    common_register_logic(
+        state,
+        payload.user.username,
+        payload.user.email,
+        payload.user.password,
+        true,
+    )
+    .await
+    .map_err(|e| e.into_response())
+}
+
+async fn common_register_logic(
+    state: AppState,
+    username: String,
+    email: String,
+    password_hash: String,
+    is_guest: bool,
+) -> Result<Json<LoginResponse>, impl IntoResponse> {
+    debug!("Creating user: {} [email: {}]", username, email);
     let user = state
         .repositories
         .user_repository
-        .create(&payload.user.username, &payload.user.email, &password_hash)
+        .create(&username, &email, &password_hash, is_guest)
         .await;
 
     let user = match user {
@@ -76,36 +106,38 @@ pub async fn register(
         }
     };
 
-    let verification_token = generate_verification_token();
-    // If updated, need to be changed in the mail too
-    let expires_at = now_paris_fixed(Duration::hours(2));
+    if is_guest {
+        let verification_token = generate_verification_token();
+        // If updated, need to be changed in the mail too
+        let expires_at = now_paris_fixed(Duration::hours(2));
 
-    debug!(
-        "Generated email verification token for user {}: {}",
-        user.id, verification_token
-    );
-    if let Err(err) = state
-        .repositories
-        .email_verification_repository
-        .create_token(&user.id, &verification_token, &expires_at)
-        .await
-    {
-        error!("Failed to register token because: {err}");
-        return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-    }
+        debug!(
+            "Generated email verification token for user {}: {}",
+            user.id, verification_token
+        );
+        if let Err(err) = state
+            .repositories
+            .email_verification_repository
+            .create_token(&user.id, &verification_token, &expires_at)
+            .await
+        {
+            error!("Failed to register token because: {err}");
+            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
+        }
 
-    debug!(
-        "Sending verification email to {}: {}",
-        user.email, verification_token
-    );
-    if let Err(err) = state
-        .jobs
-        .email_job
-        .send_register_email(&user.email, &user.username, &verification_token)
-        .await
-    {
-        error!("Failed to send verification email: {err}");
-        return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
+        debug!(
+            "Sending verification email to {}: {}",
+            user.email, verification_token
+        );
+        if let Err(err) = state
+            .jobs
+            .email_job
+            .send_register_email(&user.email, &user.username, &verification_token)
+            .await
+        {
+            error!("Failed to send verification email: {err}");
+            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
+        }
     }
 
     let access_token = generate_token(&user.id, &state.jwt_secret)
