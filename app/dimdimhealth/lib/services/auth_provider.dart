@@ -165,6 +165,26 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> refreshUser() async {
+    if (_accessToken == null) {
+      return false;
+    }
+
+    try {
+      final updatedUser = await _apiService.getCurrentUser(_accessToken!);
+      _user = updatedUser;
+
+      // Save updated user to storage
+      await _storage.write(key: 'user', value: updatedUser.toJson().toString());
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      // If refresh fails, don't update anything
+      return false;
+    }
+  }
+
   Future<void> _saveAuth() async {
     if (_accessToken != null) {
       await _storage.write(key: 'access_token', value: _accessToken);
