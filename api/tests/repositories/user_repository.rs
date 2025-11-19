@@ -10,7 +10,7 @@ async fn test_user_repo_create_and_get() {
     let user_repo = &get_app_state().await.repositories.user_repository;
 
     let res = user_repo
-        .create(username, &email, password_hash)
+        .create(username, &email, password_hash, false)
         .await
         .unwrap();
     assert_eq!(res.username, username);
@@ -21,7 +21,7 @@ async fn test_user_repo_create_and_get() {
 
     let user_id = res.id;
 
-    let res = user_repo.create(username, &email, password_hash).await;
+    let res = user_repo.create(username, &email, password_hash, false).await;
     assert!(res.is_err());
 
     let res = user_repo.find_by_id(&user_id).await.unwrap();
@@ -91,7 +91,7 @@ async fn test_user_repo_create_and_update() {
 
     let user_repo = &get_app_state().await.repositories.user_repository;
     let res = user_repo
-        .create(username, &email, password_hash)
+        .create(username, &email, password_hash, false)
         .await
         .unwrap();
 
@@ -151,7 +151,7 @@ async fn test_sql_injection() {
 
     let user_repo = &get_app_state().await.repositories.user_repository;
     let res = user_repo
-        .create(username, email, password_hash)
+        .create(username, email, password_hash, false)
         .await
         .unwrap();
 
@@ -161,4 +161,58 @@ async fn test_sql_injection() {
     let res = user_repo.find_by_id(&res.id).await.unwrap().unwrap();
     assert_eq!(res.username, username);
     assert_eq!(res.email, email);
+}
+
+#[tokio::test]
+async fn test_user_repo_create_guest_user() {
+    let username = "testguestuser";
+    let email = format!("{username}@test.fr");
+    let password_hash = "securepassword";
+
+    let user_repo = &get_app_state().await.repositories.user_repository;
+
+    let res = user_repo
+        .create(username, &email, password_hash, true)
+        .await
+        .unwrap();
+    assert_eq!(res.username, username);
+    assert_eq!(res.email, email);
+    assert_eq!(res.password_hash, password_hash);
+    assert_eq!(res.created_at, res.updated_at);
+    assert!(res.email_verified); // Guest users should have email_verified = true
+
+    let user_id = res.id;
+
+    let res = user_repo.find_by_id(&user_id).await.unwrap();
+    assert!(res.is_some());
+    let user = res.unwrap();
+    assert_eq!(user.username, username);
+    assert!(user.email_verified); // Verify it persists
+}
+
+#[tokio::test]
+async fn test_user_repo_create_regular_user() {
+    let username = "testregularuser";
+    let email = format!("{username}@test.fr");
+    let password_hash = "securepassword";
+
+    let user_repo = &get_app_state().await.repositories.user_repository;
+
+    let res = user_repo
+        .create(username, &email, password_hash, false)
+        .await
+        .unwrap();
+    assert_eq!(res.username, username);
+    assert_eq!(res.email, email);
+    assert_eq!(res.password_hash, password_hash);
+    assert_eq!(res.created_at, res.updated_at);
+    assert!(!res.email_verified); // Regular users should have email_verified = false
+
+    let user_id = res.id;
+
+    let res = user_repo.find_by_id(&user_id).await.unwrap();
+    assert!(res.is_some());
+    let user = res.unwrap();
+    assert_eq!(user.username, username);
+    assert!(!user.email_verified); // Verify it persists
 }

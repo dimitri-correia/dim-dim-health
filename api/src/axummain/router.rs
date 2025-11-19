@@ -7,8 +7,8 @@ use tower_http::set_header::SetResponseHeaderLayer;
 
 use crate::axummain::state::AppState;
 use crate::handlers::auth::{
-    current_user, forgot_password, login, logout, refresh_token, register, reset_password,
-    verify_email,
+    current_user, forgot_password, login, logout, refresh_token, register, register_guest,
+    reset_password, verify_email,
 };
 use crate::handlers::server_health::server_health_check;
 
@@ -28,6 +28,7 @@ pub fn get_main_router(app_state: AppState) -> Router {
         .route("/health", get(server_health_check))
         // Auth routes
         .route("/api/users", post(register))
+        .route("/api/users/guest", post(register_guest))
         .route("/api/users/login", post(login))
         .route("/api/user", get(current_user))
         .route("/api/auth/verify-email", get(verify_email))

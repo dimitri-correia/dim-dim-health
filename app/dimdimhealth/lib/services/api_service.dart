@@ -97,4 +97,20 @@ class ApiService {
       throw ApiException('Request failed', statusCode: response.statusCode);
     }
   }
+
+  Future<LoginResponse> loginAsGuest() async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/users/guest'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      return LoginResponse.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
+    } else {
+      throw ApiException('Guest login failed', statusCode: response.statusCode);
+    }
+  }
 }

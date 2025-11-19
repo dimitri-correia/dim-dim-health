@@ -1,10 +1,10 @@
-use axum::http::{HeaderValue, StatusCode};
-use dimdim_health_api::schemas::auth_schemas::{LoginResponse, UserResponse};
-use serde_json::json;
 use crate::helpers::{
     app_paths::APP_PATHS,
     test_server::{get_app_state, get_test_server},
 };
+use axum::http::{HeaderValue, StatusCode};
+use dimdim_health_api::schemas::auth_schemas::{LoginResponse, UserResponse};
+use serde_json::json;
 
 #[tokio::test]
 async fn test_create_user() {
@@ -36,7 +36,8 @@ async fn test_create_user() {
         .get(APP_PATHS.current_user)
         .add_header(
             "Authorization",
-            HeaderValue::from_str(format!("Token {}", login_response.access_token).as_str()).unwrap(),
+            HeaderValue::from_str(format!("Token {}", login_response.access_token).as_str())
+                .unwrap(),
         )
         .await;
 
@@ -163,4 +164,35 @@ async fn test_create_user_duplicate_username() {
         }))
         .await;
     res2.assert_status(StatusCode::CONFLICT);
+}
+
+#[tokio::test]
+async fn test_create_guest_user() {
+    let app_test = get_app_state().await;
+    let server = get_test_server(app_test.clone()).await;
+
+    let res = server.post(APP_PATHS.create_guest_user).await;
+
+    res.assert_status(StatusCode::OK);
+
+    let login_response = res.json::<LoginResponse>();
+    assert!(login_response.user.username.starts_with("guest_"));
+    assert!(login_response.user.email.ends_with("@dimdim.guest"));
+    assert!(login_response.user.email_verified); // Guest users should have verified email
+
+    // Verify guest user can access current_user endpoint
+    let res = server
+        .get(APP_PATHS.current_user)
+        .add_header(
+            "Authorization",
+            HeaderValue::from_str(format!("Token {}", login_response.access_token).as_str())
+                .unwrap(),
+        )
+        .await;
+
+    res.assert_status(StatusCode::OK);
+    let current_user_data = res.json::<UserResponse>().user;
+    assert!(current_user_data.username.starts_with("guest_"));
+    assert!(current_user_data.email.ends_with("@dimdim.guest"));
+    assert!(current_user_data.email_verified);
 }
