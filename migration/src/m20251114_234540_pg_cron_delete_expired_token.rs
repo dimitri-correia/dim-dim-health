@@ -14,7 +14,6 @@ impl MigrationTrait for Migration {
             .get_connection()
             .execute_unprepared(&format!(
                 r#"
-                CREATE EXTENSION IF NOT EXISTS pg_cron;
                  SELECT cron.schedule(
                     '{CRON_NAME}',
                     '0 1 * * *',
