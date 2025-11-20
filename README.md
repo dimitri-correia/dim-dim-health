@@ -64,7 +64,12 @@ The project consists of three main components:
 - **Queue**: Redis
 - **Email**: Lettre
 - **Authentication**: JWT with jsonwebtoken
+- **Logging**: Tracing with structured logging
 
 ### Frontend
 - **Framework**: Flutter
 - **Platforms**: Web, Android, iOS
+
+## 📚 Documentation
+
+- **[Logging System Guide](LOGGING.md)** - Comprehensive guide to the structured logging system

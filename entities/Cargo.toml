@@ -7,6 +7,18 @@ edition = "2024"
 name = "entities"
 path = "src/lib.rs"
 
+[[example]]
+name = "logging_demo"
+path = "../examples/logging_demo.rs"
+
+[[example]]
+name = "logging_demo_json"
+path = "../examples/logging_demo_json.rs"
+
+[[example]]
+name = "logging_demo_compact"
+path = "../examples/logging_demo_compact.rs"
+
 [dependencies]
 sea-orm = { workspace = true }
 serde = { workspace = true }
@@ -15,3 +27,6 @@ uuid = { workspace = true }
 chrono = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+
+[dev-dependencies]
+toml = "0.9.8"
