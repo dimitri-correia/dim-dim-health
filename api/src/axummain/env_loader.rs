@@ -1,4 +1,5 @@
 use config::{Config, File};
+use entities::LoggingConfig;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -6,7 +7,11 @@ pub struct Settings {
     pub database_url: String,
     pub redis_url: String,
     pub jwt_secret: String,
-    pub env_filter: String,
+    #[serde(default)]
+    pub logging: LoggingConfig,
+    /// Deprecated: use logging.env_filter instead
+    #[serde(default)]
+    pub env_filter: Option<String>,
     pub listenner_addr: String,
 }
 
@@ -21,6 +26,13 @@ impl Settings {
             // Override with env-specific file
             .add_source(File::with_name(&format!("config/{}.toml", env)).required(false));
 
-        builder.build()?.try_deserialize()
+        let mut settings: Settings = builder.build()?.try_deserialize()?;
+        
+        // Backward compatibility: if env_filter is provided, use it
+        if let Some(env_filter) = &settings.env_filter {
+            settings.logging.env_filter = env_filter.clone();
+        }
+        
+        Ok(settings)
     }
 }

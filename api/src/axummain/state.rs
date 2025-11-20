@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{axummain::env_loader::Settings, jobs::Jobs, repositories::Repositories};
 use axum::extract::FromRef;
-use log::info;
+use tracing::info;
 use migration::{Migrator, MigratorTrait};
 use redis::{RedisError, aio::ConnectionManager};
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};

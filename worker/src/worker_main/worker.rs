@@ -14,9 +14,10 @@ use crate::{
 pub async fn worker_main() {
     let settings = Settings::load_config().expect("Failed to load configuration");
 
-    tracing_subscriber::fmt()
-        .with_env_filter(&settings.env_filter)
-        .init();
+    settings
+        .logging
+        .init()
+        .expect("Failed to initialize logging");
 
     info!("Starting Worker...");
 

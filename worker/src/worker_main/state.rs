@@ -1,4 +1,4 @@
-use log::info;
+use tracing::info;
 use migration::sea_orm::{self, ConnectOptions, Database, DatabaseConnection};
 use redis::{RedisError, aio::ConnectionManager};
 

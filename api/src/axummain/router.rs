@@ -5,6 +5,7 @@ use tower_http::trace::TraceLayer;
 use tower_http::cors::CorsLayer;
 use tower_http::set_header::SetResponseHeaderLayer;
 
+use crate::axummain::request_tracing::{MakeRequestSpan, OnRequestLog, OnResponseLog};
 use crate::axummain::state::AppState;
 use crate::handlers::auth::{
     current_user, forgot_password, login, logout, refresh_token, register, register_guest,
@@ -53,6 +54,11 @@ pub fn get_main_router(app_state: AppState) -> Router {
         ))
         // Apply CORS
         .layer(cors)
-        // Apply tracing
-        .layer(TraceLayer::new_for_http())
+        // Apply enhanced tracing with request IDs and detailed logging
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(MakeRequestSpan)
+                .on_request(OnRequestLog)
+                .on_response(OnResponseLog),
+        )
 }

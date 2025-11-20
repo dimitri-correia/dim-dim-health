@@ -19,9 +19,8 @@ use crate::{
 
 use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
 use chrono::Duration;
-use log::error;
 use serde_json::json;
-use tracing::{debug, info};
+use tracing::{debug, error, info};
 use validator::Validate;
 
 pub async fn register(

@@ -6,7 +6,18 @@ listenner_addr = "0.0.0.0:3000"
 
 frontend_origin = "http://localhost:3000"
 
+# Legacy env_filter - will be used if [logging] section is not present
 env_filter = "dimdim_health=debug,tower_http=debug"
+
+# Modern structured logging configuration
+[logging]
+env_filter = "dimdim_health=debug,tower_http=debug"
+format = "pretty"  # Options: "pretty", "json", "compact"
+show_file = true
+show_line_number = true
+show_thread_ids = false
+show_thread_names = false
+show_span_events = false
 
 jwt_secret = "dev_jwt_secret_key"
 

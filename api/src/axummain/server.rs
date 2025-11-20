@@ -1,13 +1,14 @@
-use log::info;
+use tracing::info;
 
 use crate::axummain::{env_loader::Settings, router, state};
 
 pub async fn axum_main() {
     let settings = Settings::load_config().expect("Failed to load configuration");
 
-    tracing_subscriber::fmt()
-        .with_env_filter(&settings.env_filter)
-        .init();
+    settings
+        .logging
+        .init()
+        .expect("Failed to initialize logging");
 
     info!("Starting Axum server...");
 
