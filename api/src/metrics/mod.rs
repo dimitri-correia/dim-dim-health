@@ -6,6 +6,12 @@ use prometheus::{
     TextEncoder,
 };
 
+/// Default histogram buckets for HTTP request duration in seconds
+/// Ranges from 1ms to 10s to capture typical web request patterns
+const DEFAULT_DURATION_BUCKETS: &[f64] = &[
+    0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0,
+];
+
 lazy_static! {
     /// HTTP request counter by method, path and status
     pub static ref HTTP_REQUESTS_TOTAL: IntCounterVec = register_int_counter_vec!(
@@ -20,7 +26,7 @@ lazy_static! {
         "http_request_duration_seconds",
         "HTTP request duration in seconds",
         &["method", "path"],
-        vec![0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+        DEFAULT_DURATION_BUCKETS.to_vec()
     )
     .expect("Failed to create HTTP_REQUEST_DURATION_SECONDS metric");
 }

@@ -42,7 +42,8 @@ pub fn get_main_router(app_state: AppState) -> Router {
         .route("/api/auth/logout", post(logout))
         // Set application state
         .with_state(app_state)
-        // Metrics middleware
+        // Metrics middleware - positioned here to capture full request/response cycle
+        // including all middleware overhead (security headers, CORS, tracing)
         .layer(middleware::from_fn(metrics_middleware))
         // Security headers
         .layer(SetResponseHeaderLayer::overriding(
