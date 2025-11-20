@@ -64,8 +64,13 @@ impl Default for LoggingConfig {
 impl LoggingConfig {
     /// Initialize the global tracing subscriber with this configuration
     pub fn init(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let env_filter = EnvFilter::try_new(&self.env_filter)
-            .or_else(|_| EnvFilter::try_new("info"))?;
+        let env_filter = EnvFilter::try_new(&self.env_filter).or_else(|err| {
+            eprintln!(
+                "Warning: Failed to parse env_filter '{}': {}. Falling back to 'info' level.",
+                self.env_filter, err
+            );
+            EnvFilter::try_new("info")
+        })?;
 
         let subscriber = tracing_subscriber::registry().with(env_filter);
 
