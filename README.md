@@ -45,6 +45,11 @@ The project consists of three main components:
 - [x] Automated migration system
 - [x] Background job cleanup (expired tokens via pg_cron)
 
+#### Monitoring & Observability
+- [x] Prometheus metrics integration
+- [x] HTTP request tracking (count, duration, status codes)
+- [x] `/metrics` endpoint for metrics collection
+
 ### 🔨 TODO - Pending Implementation
 
 #### Weight Tracking
@@ -64,7 +69,26 @@ The project consists of three main components:
 - **Queue**: Redis
 - **Email**: Lettre
 - **Authentication**: JWT with jsonwebtoken
+- **Metrics**: Prometheus
 
 ### Frontend
 - **Framework**: Flutter
 - **Platforms**: Web, Android, iOS
+
+## 📊 Metrics
+
+The API server exposes metrics in Prometheus format at the `/metrics` endpoint.
+
+### Available Metrics
+
+- **`http_requests_total`**: Counter tracking total HTTP requests by method, path, and status code
+- **`http_request_duration_seconds`**: Histogram tracking request duration by method and path
+
+### Usage
+
+Access the metrics endpoint:
+```bash
+curl http://localhost:8080/metrics
+```
+
+The metrics can be scraped by Prometheus or any compatible monitoring system. The metrics middleware automatically tracks all HTTP requests to the API.
