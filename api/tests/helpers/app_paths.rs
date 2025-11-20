@@ -1,6 +1,8 @@
 pub struct TestAppPaths {
     // health check
     pub health_check: &'static str,
+    // metrics
+    pub metrics: &'static str,
     // auth
     pub create_user: &'static str,
     pub create_guest_user: &'static str,
@@ -10,6 +12,7 @@ pub struct TestAppPaths {
 
 pub const APP_PATHS: TestAppPaths = TestAppPaths {
     health_check: "/health",
+    metrics: "/metrics",
     create_user: "/api/users",
     create_guest_user: "/api/users/guest",
     current_user: "/api/user",

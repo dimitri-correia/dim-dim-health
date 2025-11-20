@@ -1,5 +1,5 @@
 use axum::routing::post;
-use axum::{Router, routing::get};
+use axum::{middleware, Router, routing::get};
 use axum::http::{header, HeaderValue, Method};
 use tower_http::trace::TraceLayer;
 use tower_http::cors::CorsLayer;
@@ -10,7 +10,9 @@ use crate::handlers::auth::{
     current_user, forgot_password, login, logout, refresh_token, register, register_guest,
     reset_password, verify_email,
 };
+use crate::handlers::metrics::metrics_handler;
 use crate::handlers::server_health::server_health_check;
+use crate::metrics::middleware::metrics_middleware;
 
 pub fn get_main_router(app_state: AppState) -> Router {
     // Configure CORS - adjust allowed origins for production
@@ -26,6 +28,8 @@ pub fn get_main_router(app_state: AppState) -> Router {
     Router::new()
         // Health check route
         .route("/health", get(server_health_check))
+        // Metrics route
+        .route("/metrics", get(metrics_handler))
         // Auth routes
         .route("/api/users", post(register))
         .route("/api/users/guest", post(register_guest))
@@ -38,6 +42,8 @@ pub fn get_main_router(app_state: AppState) -> Router {
         .route("/api/auth/logout", post(logout))
         // Set application state
         .with_state(app_state)
+        // Metrics middleware
+        .layer(middleware::from_fn(metrics_middleware))
         // Security headers
         .layer(SetResponseHeaderLayer::overriding(
             header::X_CONTENT_TYPE_OPTIONS,
