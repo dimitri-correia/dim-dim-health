@@ -36,3 +36,18 @@ impl From<entities::user_weight::Model> for UserWeightResponse {
         }
     }
 }
+
+#[derive(Debug, Serialize)]
+pub struct UserWeightInfosResponse {
+    pub last_3_weights: Vec<UserWeightResponse>,
+    pub average_weight: Decimal,
+    pub number_of_weight_entries: i64,
+    pub average_weight_last_7_days: Decimal,
+    pub number_of_weight_entries_last_7_days: i64,
+    pub average_weight_last_30_days: Decimal,
+    pub number_of_weight_entries_last_30_days: i64,
+    pub max_weight: Decimal,
+    pub max_weight_date: DateTime<FixedOffset>,
+    pub min_weight: Decimal,
+    pub min_weight_date: DateTime<FixedOffset>,
+}
