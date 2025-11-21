@@ -11,6 +11,7 @@ use crate::handlers::auth::{
     reset_password, verify_email,
 };
 use crate::handlers::server_health::server_health_check;
+use crate::handlers::user_group::join_public_group;
 
 pub fn get_main_router(app_state: AppState) -> Router {
     // Configure CORS - adjust allowed origins for production
@@ -36,6 +37,8 @@ pub fn get_main_router(app_state: AppState) -> Router {
         .route("/api/auth/reset-password", post(reset_password))
         .route("/api/auth/refresh-token", post(refresh_token))
         .route("/api/auth/logout", post(logout))
+        // User group routes
+        .route("/api/user-groups/join-public", post(join_public_group))
         // Set application state
         .with_state(app_state)
         // Security headers

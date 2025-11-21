@@ -6,6 +6,8 @@ pub struct TestAppPaths {
     pub create_guest_user: &'static str,
     pub current_user: &'static str,
     pub login_user: &'static str,
+    // user groups
+    pub join_public_group: &'static str,
 }
 
 pub const APP_PATHS: TestAppPaths = TestAppPaths {
@@ -14,4 +16,5 @@ pub const APP_PATHS: TestAppPaths = TestAppPaths {
     create_guest_user: "/api/users/guest",
     current_user: "/api/user",
     login_user: "/api/users/login",
+    join_public_group: "/api/user-groups/join-public",
 };
