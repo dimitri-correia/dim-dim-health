@@ -8,6 +8,7 @@ pub struct Settings {
     pub jwt_secret: String,
     pub env_filter: String,
     pub listenner_addr: String,
+    pub openobserve_endpoint: Option<String>,
 }
 
 impl Settings {

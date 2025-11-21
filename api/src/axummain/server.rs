@@ -1,13 +1,17 @@
 use log::info;
 
-use crate::axummain::{env_loader::Settings, router, state};
+use crate::axummain::{env_loader::Settings, router, state, telemetry};
 
 pub async fn axum_main() {
     let settings = Settings::load_config().expect("Failed to load configuration");
 
-    tracing_subscriber::fmt()
-        .with_env_filter(&settings.env_filter)
-        .init();
+    // Initialize telemetry with OpenObserve if configured
+    telemetry::init_telemetry(
+        "dimdim-health-api",
+        settings.openobserve_endpoint.as_deref(),
+        &settings.env_filter,
+    )
+    .expect("Failed to initialize telemetry");
 
     info!("Starting Axum server...");
 
@@ -23,5 +27,21 @@ pub async fn axum_main() {
 
     info!("Server listening on {}", &settings.listenner_addr);
 
-    axum::serve(listener, app).await.unwrap();
+    // Setup graceful shutdown
+    let shutdown_signal = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("Failed to install CTRL+C signal handler");
+    };
+
+    // Run server with graceful shutdown
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal)
+        .await
+        .unwrap();
+
+    info!("Server shutting down...");
+    
+    // Shutdown telemetry gracefully
+    telemetry::shutdown_telemetry();
 }
