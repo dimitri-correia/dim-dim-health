@@ -40,6 +40,7 @@ class MyApp extends StatelessWidget {
               const GuestGuard(child: ForgotPasswordScreen()),
           '/home': (context) => const AuthGuard(child: HomeScreen()),
         },
+        debugShowCheckedModeBanner: false,
       ),
     );
   }

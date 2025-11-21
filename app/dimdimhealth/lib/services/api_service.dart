@@ -15,6 +15,9 @@ class ApiException implements Exception {
 
 class ApiService {
   final String baseUrl = AppConfig.apiUrl;
+  
+  // Singleton HTTP client for better performance
+  static final http.Client _client = http.Client();
 
   Future<LoginResponse> register({
     required String username,
@@ -29,7 +32,7 @@ class ApiService {
       ),
     );
 
-    final response = await http.post(
+    final response = await _client.post(
       Uri.parse('$baseUrl/api/users'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(request.toJson()),
@@ -61,7 +64,7 @@ class ApiService {
       user: LoginUserData(email: email, password: password),
     );
 
-    final response = await http.post(
+    final response = await _client.post(
       Uri.parse('$baseUrl/api/users/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(request.toJson()),
@@ -82,7 +85,7 @@ class ApiService {
   Future<ForgotPasswordResponse> forgotPassword({required String email}) async {
     final request = ForgotPasswordRequest(email: email);
 
-    final response = await http.post(
+    final response = await _client.post(
       Uri.parse('$baseUrl/api/auth/forgot-password'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(request.toJson()),
@@ -99,7 +102,7 @@ class ApiService {
   }
 
   Future<LoginResponse> loginAsGuest() async {
-    final response = await http.post(
+    final response = await _client.post(
       Uri.parse('$baseUrl/api/users/guest'),
       headers: {'Content-Type': 'application/json'},
     );
@@ -115,7 +118,7 @@ class ApiService {
   }
 
   Future<User> getCurrentUser(String accessToken) async {
-    final response = await http.get(
+    final response = await _client.get(
       Uri.parse('$baseUrl/api/user'),
       headers: {
         'Content-Type': 'application/json',
@@ -134,5 +137,10 @@ class ApiService {
         statusCode: response.statusCode,
       );
     }
+  }
+  
+  // Clean up HTTP client when service is disposed
+  void dispose() {
+    _client.close();
   }
 }

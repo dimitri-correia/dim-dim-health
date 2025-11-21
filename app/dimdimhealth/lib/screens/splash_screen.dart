@@ -30,6 +30,8 @@ class SplashScreen extends StatelessWidget {
                   width: 200,
                   height: 200,
                   fit: BoxFit.cover,
+                  cacheWidth: 200,
+                  cacheHeight: 200,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
                       width: 200,

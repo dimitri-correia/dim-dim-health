@@ -18,9 +18,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final user = authProvider.user;
+    return Selector<AuthProvider, User?>(
+      selector: (_, authProvider) => authProvider.user,
+      builder: (context, user, _) => _buildScaffold(context, user),
+    );
+  }
 
+  Widget _buildScaffold(BuildContext context, User? user) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: Text('Welcome ${user?.username ?? 'User'}'),
@@ -68,30 +73,28 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisCount: 2,
                             mainAxisSpacing: 16,
                             crossAxisSpacing: 16,
-                            children: [
-                              _buildActionCard(
-                                context,
+                            childAspectRatio: 1.0,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: const [
+                              _ActionCard(
                                 icon: Icons.monitor_weight,
                                 title: 'Weight',
                                 subtitle: 'Track your weight',
                                 color: AppConfig.blueColor,
                               ),
-                              _buildActionCard(
-                                context,
+                              _ActionCard(
                                 icon: Icons.restaurant,
                                 title: 'Meals',
                                 subtitle: 'Log your meals',
                                 color: AppConfig.redColor,
                               ),
-                              _buildActionCard(
-                                context,
+                              _ActionCard(
                                 icon: Icons.fitness_center,
                                 title: 'Workouts',
                                 subtitle: 'Plan workouts',
                                 color: AppConfig.goldColor,
                               ),
-                              _buildActionCard(
-                                context,
+                              _ActionCard(
                                 icon: Icons.person,
                                 title: 'Profile',
                                 subtitle: 'View profile',
@@ -125,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.email_outlined,
                     size: 80,
                     color: AppConfig.blueColor,
@@ -155,11 +158,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 32),
                   const Divider(),
                   const SizedBox(height: 16),
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.refresh, size: 20, color: AppConfig.blueColor),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         'Pull down to refresh after verifying',
                         style: TextStyle(
@@ -178,60 +181,71 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+}
 
-  Widget _buildActionCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-  }) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('$title feature coming soon!'),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [color.withOpacity(0.8), color],
-            ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 48, color: AppConfig.whiteColor),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppConfig.whiteColor,
-                ),
+class _ActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+
+  const _ActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: InkWell(
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('$title feature coming soon!'),
+                duration: const Duration(seconds: 2),
               ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppConfig.whiteColor.withOpacity(0.9),
-                ),
-                textAlign: TextAlign.center,
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [color.withOpacity(0.8), color],
               ),
-            ],
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 48, color: AppConfig.whiteColor),
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppConfig.whiteColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppConfig.whiteColor.withOpacity(0.9),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       ),
