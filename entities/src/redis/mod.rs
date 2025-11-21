@@ -10,6 +10,7 @@ pub enum TaskType {
 pub enum EmailType {
     Registration,
     ResetPassword,
+    EmailChange,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -51,6 +52,7 @@ impl fmt::Display for EmailType {
         match self {
             EmailType::Registration => write!(f, "Registration"),
             EmailType::ResetPassword => write!(f, "ResetPassword"),
+            EmailType::EmailChange => write!(f, "EmailChange"),
         }
     }
 }

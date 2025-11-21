@@ -20,6 +20,8 @@ pub struct RegisterUserData {
 
     #[validate(length(min = 8, message = "Password must be at least 8 characters"))]
     pub password: String,
+
+    pub profile_image: Option<entities::sea_orm_active_enums::UserProfileImage>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -53,6 +55,7 @@ pub struct UserData {
     pub email: String,
     pub username: String,
     pub email_verified: bool,
+    pub profile_image: entities::sea_orm_active_enums::UserProfileImage,
 }
 
 impl UserData {
@@ -61,6 +64,7 @@ impl UserData {
             email: user.email,
             username: user.username,
             email_verified: user.email_verified,
+            profile_image: user.profile_image,
         }
     }
 }

@@ -16,6 +16,7 @@ pub struct Model {
     pub created_at: DateTimeWithTimeZone,
     pub updated_at: DateTimeWithTimeZone,
     pub email_verified: bool,
+    pub profile_image: super::sea_orm_active_enums::UserProfileImage,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
