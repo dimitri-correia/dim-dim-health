@@ -57,24 +57,38 @@ pub async fn get_watchers(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    let mut watchers = Vec::new();
-    for permission in permissions {
-        // Get user details for each watcher
-        let watcher_user = state
-            .repositories
-            .user_repository
-            .find_by_id(&permission.user_watching_id)
-            .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    // Batch load all watcher users
+    let watcher_ids: Vec<_> = permissions
+        .iter()
+        .map(|p| p.user_watching_id)
+        .collect();
 
-        if let Some(watcher_user) = watcher_user {
-            watchers.push(WatchPermissionWithUser {
-                user_id: watcher_user.id,
-                username: watcher_user.username,
-                created_at: permission.created_at,
-            });
-        }
-    }
+    let users = state
+        .repositories
+        .user_repository
+        .find_by_ids(&watcher_ids)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Create a map for quick lookup
+    let user_map: std::collections::HashMap<_, _> = users
+        .into_iter()
+        .map(|u| (u.id, u))
+        .collect();
+
+    // Build the response
+    let watchers: Vec<_> = permissions
+        .into_iter()
+        .filter_map(|permission| {
+            user_map.get(&permission.user_watching_id).map(|watcher_user| {
+                WatchPermissionWithUser {
+                    user_id: watcher_user.id,
+                    username: watcher_user.username.clone(),
+                    created_at: permission.created_at,
+                }
+            })
+        })
+        .collect();
 
     Ok(Json(WatchersResponse { watchers }))
 }
@@ -93,24 +107,38 @@ pub async fn get_watching(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    let mut watching = Vec::new();
-    for permission in permissions {
-        // Get user details for each watched user
-        let watched_user = state
-            .repositories
-            .user_repository
-            .find_by_id(&permission.user_watched_id)
-            .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    // Batch load all watched users
+    let watched_ids: Vec<_> = permissions
+        .iter()
+        .map(|p| p.user_watched_id)
+        .collect();
 
-        if let Some(watched_user) = watched_user {
-            watching.push(WatchPermissionWithUser {
-                user_id: watched_user.id,
-                username: watched_user.username,
-                created_at: permission.created_at,
-            });
-        }
-    }
+    let users = state
+        .repositories
+        .user_repository
+        .find_by_ids(&watched_ids)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Create a map for quick lookup
+    let user_map: std::collections::HashMap<_, _> = users
+        .into_iter()
+        .map(|u| (u.id, u))
+        .collect();
+
+    // Build the response
+    let watching: Vec<_> = permissions
+        .into_iter()
+        .filter_map(|permission| {
+            user_map.get(&permission.user_watched_id).map(|watched_user| {
+                WatchPermissionWithUser {
+                    user_id: watched_user.id,
+                    username: watched_user.username.clone(),
+                    created_at: permission.created_at,
+                }
+            })
+        })
+        .collect();
 
     Ok(Json(WatchingResponse { watching }))
 }

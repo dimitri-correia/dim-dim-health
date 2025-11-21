@@ -127,4 +127,14 @@ impl UserRepository {
             .all(&self.db)
             .await
     }
+
+    pub async fn find_by_ids(
+        &self,
+        ids: &[Uuid],
+    ) -> Result<Vec<users::Model>, sea_orm::DbErr> {
+        users::Entity::find()
+            .filter(users::Column::Id.is_in(ids.iter().cloned()))
+            .all(&self.db)
+            .await
+    }
 }
