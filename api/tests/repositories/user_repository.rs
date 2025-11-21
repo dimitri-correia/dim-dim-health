@@ -21,7 +21,9 @@ async fn test_user_repo_create_and_get() {
 
     let user_id = res.id;
 
-    let res = user_repo.create(username, &email, password_hash, false).await;
+    let res = user_repo
+        .create(username, &email, password_hash, false)
+        .await;
     assert!(res.is_err());
 
     let res = user_repo.find_by_id(&user_id).await.unwrap();
