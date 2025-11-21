@@ -53,10 +53,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Guest Account Banner
-                        if (user?.isGuest == true) 
+                        if (user?.isGuest == true) ...[
                           _buildGuestAccountBanner(context, user!),
-                        if (user?.isGuest == true) 
                           const SizedBox(height: 16),
+                        ],
                         
                         // Quick Actions
                         const Text(
@@ -247,19 +247,42 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildGuestAccountBanner(BuildContext context, User user) {
     // Calculate hours remaining until expiration (24 hours from creation)
-    final createdAt = DateTime.parse(user.createdAt);
+    final createdAt = DateTime.tryParse(user.createdAt);
+    if (createdAt == null) {
+      // If we can't parse the date, show a generic message
+      return Card(
+        elevation: 6,
+        color: AppConfig.goldColor.withOpacity(0.95),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: AppConfig.redColor, width: 2),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'Guest Account - Limited Access',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppConfig.blueColor,
+            ),
+          ),
+        ),
+      );
+    }
+    
     final expiresAt = createdAt.add(const Duration(hours: 24));
     final now = DateTime.now();
     final hoursRemaining = expiresAt.difference(now).inHours;
-    final daysRemaining = (hoursRemaining / 24).ceil();
     
     String expirationText;
     if (hoursRemaining <= 0) {
       expirationText = 'This account has expired';
-    } else if (hoursRemaining < 24) {
-      expirationText = 'This guest account will expire in $hoursRemaining ${hoursRemaining == 1 ? 'hour' : 'hours'}';
+    } else if (hoursRemaining < 1) {
+      final minutesRemaining = expiresAt.difference(now).inMinutes;
+      expirationText = 'This guest account will expire in $minutesRemaining ${minutesRemaining == 1 ? 'minute' : 'minutes'}';
     } else {
-      expirationText = 'This guest account will expire in $daysRemaining ${daysRemaining == 1 ? 'day' : 'days'}';
+      expirationText = 'This guest account will expire in $hoursRemaining ${hoursRemaining == 1 ? 'hour' : 'hours'}';
     }
 
     return Card(
