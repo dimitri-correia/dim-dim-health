@@ -68,8 +68,8 @@ pub fn init_telemetry(
 
     // Initialize tracing subscriber with both console and OpenTelemetry layers
     tracing_subscriber::registry()
-        .with(filter)
-        .with(tracing_subscriber::fmt::layer().with_filter(EnvFilter::new(env_filter)))
+        .with(filter.clone())
+        .with(tracing_subscriber::fmt::layer().with_filter(filter))
         .with(telemetry)
         .init();
 
