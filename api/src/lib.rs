@@ -5,3 +5,4 @@ pub mod jobs;
 pub mod repositories;
 pub mod schemas;
 pub mod utils;
+pub mod weight;
