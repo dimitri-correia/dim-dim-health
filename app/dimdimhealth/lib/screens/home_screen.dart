@@ -25,7 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildScaffold(BuildContext context, User? user) {
-
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
