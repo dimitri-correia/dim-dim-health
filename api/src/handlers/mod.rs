@@ -1,4 +1,6 @@
 pub mod auth;
+pub mod food_item;
+pub mod meal;
 pub mod server_health;
 pub mod settings;
 pub mod user_group;
