@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, FromQueryResult)]
 pub struct UserAuthModel {
     pub id: Uuid,
+    pub username: String,
     pub email: String,
     pub password_hash: String,
     pub email_verified: bool,

@@ -132,6 +132,7 @@ impl UserRepository {
             .filter(users::Column::Email.eq(email.to_owned()))
             .select_only()
             .column(users::Column::Id)
+            .column(users::Column::Username)
             .column(users::Column::Email)
             .column(users::Column::PasswordHash)
             .column(users::Column::EmailVerified)

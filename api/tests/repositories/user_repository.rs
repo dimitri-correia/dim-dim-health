@@ -239,6 +239,7 @@ async fn test_user_repo_partial_models() {
         .unwrap()
         .expect("User should exist");
     assert_eq!(auth_model.id, user_id);
+    assert_eq!(auth_model.username, username);
     assert_eq!(auth_model.email, email);
     assert_eq!(auth_model.password_hash, password_hash);
     assert_eq!(auth_model.email_verified, false);

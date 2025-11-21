@@ -63,4 +63,20 @@ impl UserData {
             email_verified: user.email_verified,
         }
     }
+
+    pub fn from_auth_model(user: entities::users_partial::UserAuthModel) -> Self {
+        Self {
+            email: user.email,
+            username: user.username,
+            email_verified: user.email_verified,
+        }
+    }
+
+    pub fn from_public_model(user: entities::users_partial::UserPublicModel) -> Self {
+        Self {
+            email: user.email,
+            username: user.username,
+            email_verified: user.email_verified,
+        }
+    }
 }

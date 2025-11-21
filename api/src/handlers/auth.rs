@@ -189,7 +189,7 @@ pub async fn login(
     let user = state
         .repositories
         .user_repository
-        .find_by_email(&payload.user.email)
+        .find_by_email_for_auth(&payload.user.email)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
@@ -224,7 +224,7 @@ pub async fn login(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
-    let user_data = UserData::from_user(user);
+    let user_data = UserData::from_auth_model(user);
     let response = LoginResponse {
         user: user_data,
         access_token,
@@ -254,7 +254,7 @@ pub async fn verify_email(
     let verification_token = state
         .repositories
         .email_verification_repository
-        .find_by_token(token)
+        .find_by_token_for_validation(token)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
@@ -334,7 +334,7 @@ pub async fn forgot_password(
     let user = state
         .repositories
         .user_repository
-        .find_by_email(&payload.email)
+        .find_by_email_basic(&payload.email)
         .await;
 
     let user = match user {
@@ -478,7 +478,7 @@ pub async fn refresh_token(
     let refresh_token = state
         .repositories
         .refresh_token_repository
-        .find_by_token(&payload.refresh_token)
+        .find_by_token_for_validation(&payload.refresh_token)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
         .ok_or(StatusCode::UNAUTHORIZED)?;

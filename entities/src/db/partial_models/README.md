@@ -27,6 +27,7 @@ Used for authentication operations. Contains only the fields needed for login va
 
 **Fields:**
 - `id: Uuid`
+- `username: String`
 - `email: String`
 - `password_hash: String`
 - `email_verified: bool`
@@ -102,6 +103,7 @@ pub async fn find_by_email_for_auth(
         .filter(users::Column::Email.eq(email.to_owned()))
         .select_only()
         .column(users::Column::Id)
+        .column(users::Column::Username)
         .column(users::Column::Email)
         .column(users::Column::PasswordHash)
         .column(users::Column::EmailVerified)
@@ -124,11 +126,12 @@ let user = users::Entity::find()
 
 **Partial Model Query:**
 ```rust
-// Fetches only 4 columns: id, email, password_hash, email_verified
+// Fetches only 5 columns: id, username, email, password_hash, email_verified
 let user = users::Entity::find()
     .filter(users::Column::Email.eq(email))
     .select_only()
     .column(users::Column::Id)
+    .column(users::Column::Username)
     .column(users::Column::Email)
     .column(users::Column::PasswordHash)
     .column(users::Column::EmailVerified)

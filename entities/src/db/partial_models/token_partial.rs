@@ -10,10 +10,22 @@ pub struct RefreshTokenValidationModel {
     pub used_at: Option<DateTimeWithTimeZone>,
 }
 
+impl RefreshTokenValidationModel {
+    pub fn is_expired(&self) -> bool {
+        self.expires_at <= chrono::Utc::now()
+    }
+}
+
 /// Partial email verification token model for validation
 /// Contains only the fields needed for token validation
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, FromQueryResult)]
 pub struct EmailVerificationTokenValidationModel {
     pub user_id: Uuid,
     pub expires_at: DateTimeWithTimeZone,
+}
+
+impl EmailVerificationTokenValidationModel {
+    pub fn is_expired(&self) -> bool {
+        self.expires_at <= chrono::Utc::now()
+    }
 }
