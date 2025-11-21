@@ -2,7 +2,7 @@ use entities::users;
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
-    ColumnTrait, DatabaseConnection, EntityTrait, ExprTrait, PaginatorTrait, QueryFilter,
+    ColumnTrait, DatabaseConnection, EntityTrait, ExprTrait, PaginatorTrait, QueryFilter, QuerySelect,
 };
 
 use uuid::Uuid;
@@ -115,5 +115,16 @@ impl UserRepository {
         };
 
         active.update(&self.db).await
+    }
+
+    pub async fn search_by_username(
+        &self,
+        query: &str,
+    ) -> Result<Vec<users::Model>, sea_orm::DbErr> {
+        users::Entity::find()
+            .filter(users::Column::Username.contains(query))
+            .limit(20)
+            .all(&self.db)
+            .await
     }
 }

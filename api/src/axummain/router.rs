@@ -11,6 +11,9 @@ use crate::handlers::auth::{
     reset_password, verify_email,
 };
 use crate::handlers::server_health::server_health_check;
+use crate::handlers::user_watch_permissions::{
+    search_users, get_watchers, get_watching, grant_watch_permission, revoke_watch_permission,
+};
 
 pub fn get_main_router(app_state: AppState) -> Router {
     // Configure CORS - adjust allowed origins for production
@@ -36,6 +39,12 @@ pub fn get_main_router(app_state: AppState) -> Router {
         .route("/api/auth/reset-password", post(reset_password))
         .route("/api/auth/refresh-token", post(refresh_token))
         .route("/api/auth/logout", post(logout))
+        // User watch permissions routes
+        .route("/api/users/search", get(search_users))
+        .route("/api/watch-permissions/watchers", get(get_watchers))
+        .route("/api/watch-permissions/watching", get(get_watching))
+        .route("/api/watch-permissions/grant", post(grant_watch_permission))
+        .route("/api/watch-permissions/revoke", post(revoke_watch_permission))
         // Set application state
         .with_state(app_state)
         // Security headers
