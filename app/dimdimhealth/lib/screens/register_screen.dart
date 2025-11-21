@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:email_validator/email_validator.dart';
 import '../services/auth_provider.dart';
 import '../utils/app_config.dart';
+import '../models/user_profile_image.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -19,6 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  UserProfileImage _selectedAvatar = UserProfileImage.avatar1;
 
   @override
   void dispose() {
@@ -37,6 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         username: _usernameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
+        profileImage: _selectedAvatar.toJson(),
       );
 
       if (mounted) {
