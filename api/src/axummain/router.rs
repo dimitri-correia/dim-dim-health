@@ -49,26 +49,29 @@ pub fn get_main_router(app_state: AppState) -> Router {
         // User weight routes
         .route("/api/user/weights", post(create_user_weight))
         .route("/api/user/weights", get(get_user_weights))
-        .route("/api/user/weights/:id", put(update_user_weight))
-        .route("/api/user/weights/:id", delete(delete_user_weight))
+        .route("/api/user/weights/{id}", put(update_user_weight))
+        .route("/api/user/weights/{id}", delete(delete_user_weight))
         // Food item routes
         .route("/api/food-items", post(create_food_item))
         .route("/api/food-items", get(get_food_items))
-        .route("/api/food-items/:id", get(get_food_item_by_id))
-        .route("/api/food-items/:id", put(update_food_item))
-        .route("/api/food-items/:id", delete(delete_food_item))
+        .route("/api/food-items/{id}", get(get_food_item_by_id))
+        .route("/api/food-items/{id}", put(update_food_item))
+        .route("/api/food-items/{id}", delete(delete_food_item))
         // Meal routes
         .route("/api/meals", post(create_meal))
         .route("/api/meals", get(get_meals))
-        .route("/api/meals/:id", get(get_meal_by_id))
-        .route("/api/meals/:id", put(update_meal))
-        .route("/api/meals/:id", delete(delete_meal))
+        .route("/api/meals/{id}", get(get_meal_by_id))
+        .route("/api/meals/{id}", put(update_meal))
+        .route("/api/meals/{id}", delete(delete_meal))
         // Meal item routes
-        .route("/api/meals/:meal_id/items", post(add_meal_item))
-        .route("/api/meals/:meal_id/items", get(get_meal_items))
-        .route("/api/meals/:meal_id/items/:item_id", put(update_meal_item))
+        .route("/api/meals/{meal_id}/items", post(add_meal_item))
+        .route("/api/meals/{meal_id}/items", get(get_meal_items))
         .route(
-            "/api/meals/:meal_id/items/:item_id",
+            "/api/meals/{meal_id}/items/{item_id}",
+            put(update_meal_item),
+        )
+        .route(
+            "/api/meals/{meal_id}/items/{item_id}",
             delete(delete_meal_item),
         )
         // Set application state
