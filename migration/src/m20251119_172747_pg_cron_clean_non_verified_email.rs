@@ -19,6 +19,10 @@ impl MigrationTrait for Migration {
             AND created_at < NOW() - INTERVAL '5 days';
         "#
         );
+
+        // Escape quotes for cron.schedule
+        let clean_cmd = clean_cmd.replace('\'', "''");
+
         // Schedule the cron job to run every day at 00:30 AM
         manager
             .get_connection()
