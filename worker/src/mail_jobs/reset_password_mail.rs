@@ -18,11 +18,5 @@ pub async fn handle_reset_password_email(
         data.username
     );
 
-    send_email(
-        worker_state,
-        data.email.to_string(),
-        subject.to_string(),
-        content.to_string(),
-    )
-    .await
+    send_email(worker_state, data.email, subject, content).await
 }
