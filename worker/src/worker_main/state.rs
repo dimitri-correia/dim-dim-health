@@ -44,7 +44,7 @@ impl WorkerState {
             .parse()
             .with_context(|| format!("Failed to parse from address: {}", from_str))?;
 
-        let gmail_creds = Credentials::new(gmail_email.clone(), gmail_password.clone());
+        let gmail_creds = Credentials::new(gmail_email, gmail_password);
 
         Ok(Self {
             db,

@@ -11,7 +11,7 @@ pub struct Jobs {
 
 impl Jobs {
     pub fn new(redis: ConnectionManager) -> Self {
-        let email_job = EmailJob::new(redis.clone());
+        let email_job = EmailJob::new(redis);
         Jobs { email_job }
     }
 }
