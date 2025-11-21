@@ -198,4 +198,10 @@ class AuthProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+  
+  @override
+  void dispose() {
+    _apiService.dispose();
+    super.dispose();
+  }
 }
