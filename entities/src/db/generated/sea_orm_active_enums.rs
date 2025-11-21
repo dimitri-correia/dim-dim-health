@@ -26,6 +26,16 @@ pub enum MealTypeEnum {
     Dinner,
 }
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "sub_app_type_enum")]
+pub enum SubAppTypeEnum {
+    #[sea_orm(string_value = "weight")]
+    Weight,
+    #[sea_orm(string_value = "diet")]
+    Diet,
+    #[sea_orm(string_value = "workout")]
+    Workout,
+}
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "user_group")]
 pub enum UserGroup {
     #[sea_orm(string_value = "admin_group")]
