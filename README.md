@@ -64,7 +64,37 @@ The project consists of three main components:
 - **Queue**: Redis
 - **Email**: Lettre
 - **Authentication**: JWT with jsonwebtoken
+- **Observability**: OpenTelemetry + OpenObserve (optional)
 
 ### Frontend
 - **Framework**: Flutter
 - **Platforms**: Web, Android, iOS
+
+## 📊 Observability with OpenObserve
+
+DimDim Health integrates with **OpenObserve**, a free and open-source observability platform for logs, metrics, and traces.
+
+### Why OpenObserve?
+- ✅ **Completely Free**: Open-source (Apache 2.0) and self-hosted
+- ✅ **140x Lower Storage Cost**: Compared to Elasticsearch
+- ✅ **Easy Setup**: Single binary deployment
+- ✅ **High Performance**: Built in Rust, uses 1/4th the resources
+- ✅ **Built-in UI**: No need for separate visualization tools
+
+### Quick Start
+
+1. Start OpenObserve with Docker Compose:
+   ```bash
+   docker-compose up -d openobserve
+   ```
+
+2. Enable in your config file (`config/dev.toml`):
+   ```toml
+   openobserve_endpoint = "http://localhost:5080/api/default"
+   ```
+
+3. Access the UI at `http://localhost:5080`
+   - **Email**: admin@example.com
+   - **Password**: Complexpass#123
+
+📖 **Full Documentation**: See [OPENOBSERVE.md](OPENOBSERVE.md) for detailed setup and usage instructions.

@@ -8,15 +8,20 @@ use crate::{
     worker_main::{
         env_loader::Settings,
         state::{self, WorkerState},
+        telemetry,
     },
 };
 
 pub async fn worker_main() {
     let settings = Settings::load_config().expect("Failed to load configuration");
 
-    tracing_subscriber::fmt()
-        .with_env_filter(&settings.env_filter)
-        .init();
+    // Initialize telemetry with OpenObserve if configured
+    telemetry::init_telemetry(
+        "dimdim-health-worker",
+        settings.openobserve_endpoint.as_deref(),
+        &settings.env_filter,
+    )
+    .expect("Failed to initialize telemetry");
 
     info!("Starting Worker...");
 
@@ -42,6 +47,9 @@ pub async fn worker_main() {
             error!("Worker task panicked: {}", e);
         }
     }
+    
+    // Shutdown telemetry gracefully
+    telemetry::shutdown_telemetry();
 }
 
 async fn worker_loop(worker_state: WorkerState, worker_id: String) {
