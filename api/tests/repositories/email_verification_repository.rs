@@ -122,3 +122,72 @@ async fn test_email_verif_repo_create_and_get() {
 
     assert!(res.is_none())
 }
+
+#[tokio::test]
+async fn test_email_verif_repo_partial_models() {
+    let username = "testpartialemailverif";
+    let email = format!("{username}@test.fr");
+    let password_hash = "securepassword";
+
+    let app_state = get_app_state().await;
+
+    // Create a test user
+    let user = app_state
+        .repositories
+        .user_repository
+        .create(username, &email, password_hash, false)
+        .await
+        .unwrap();
+
+    let token = "validationtoken";
+
+    // Create verification token
+    app_state
+        .repositories
+        .email_verification_repository
+        .create_token(&user.id, token, &EXPIRES_AT)
+        .await
+        .unwrap();
+
+    // Test find_by_token_for_validation - should only return validation fields
+    let validation_model = app_state
+        .repositories
+        .email_verification_repository
+        .find_by_token_for_validation(token)
+        .await
+        .unwrap()
+        .expect("Token should exist");
+
+    assert_eq!(validation_model.user_id, user.id);
+    assert_eq!(
+        validation_model.expires_at.timestamp_micros(),
+        EXPIRES_AT.timestamp_micros()
+    );
+
+    // Test with non-existing token
+    let result = app_state
+        .repositories
+        .email_verification_repository
+        .find_by_token_for_validation("nonexistingtoken")
+        .await
+        .unwrap();
+    assert!(result.is_none());
+
+    // Test with expired token
+    let expired_token = "expiredpartialtoken";
+    let expires_at = EXPIRES_AT.fixed_offset() - Duration::days(3);
+    app_state
+        .repositories
+        .email_verification_repository
+        .create_token(&user.id, expired_token, &expires_at)
+        .await
+        .unwrap();
+
+    let result = app_state
+        .repositories
+        .email_verification_repository
+        .find_by_token_for_validation(expired_token)
+        .await
+        .unwrap();
+    assert!(result.is_none());
+}

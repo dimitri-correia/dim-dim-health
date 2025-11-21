@@ -1,8 +1,12 @@
-use entities::users;
+use entities::{
+    users,
+    users_partial::{UserAuthModel, UserBasicModel, UserEmailVerificationModel, UserPublicModel},
+};
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
     ColumnTrait, DatabaseConnection, EntityTrait, ExprTrait, PaginatorTrait, QueryFilter,
+    QuerySelect,
 };
 
 use uuid::Uuid;
@@ -115,5 +119,71 @@ impl UserRepository {
         };
 
         active.update(&self.db).await
+    }
+
+    // Partial model queries for optimized database access
+
+    /// Find user by email for authentication - returns only fields needed for login
+    pub async fn find_by_email_for_auth(
+        &self,
+        email: &str,
+    ) -> Result<Option<UserAuthModel>, sea_orm::DbErr> {
+        users::Entity::find()
+            .filter(users::Column::Email.eq(email.to_owned()))
+            .select_only()
+            .column(users::Column::Id)
+            .column(users::Column::Email)
+            .column(users::Column::PasswordHash)
+            .column(users::Column::EmailVerified)
+            .into_model::<UserAuthModel>()
+            .one(&self.db)
+            .await
+    }
+
+    /// Find user by ID with only public information
+    pub async fn find_by_id_public(
+        &self,
+        id: &Uuid,
+    ) -> Result<Option<UserPublicModel>, sea_orm::DbErr> {
+        users::Entity::find_by_id(id.to_owned())
+            .select_only()
+            .column(users::Column::Id)
+            .column(users::Column::Username)
+            .column(users::Column::Email)
+            .column(users::Column::EmailVerified)
+            .into_model::<UserPublicModel>()
+            .one(&self.db)
+            .await
+    }
+
+    /// Find user by email with only basic information
+    pub async fn find_by_email_basic(
+        &self,
+        email: &str,
+    ) -> Result<Option<UserBasicModel>, sea_orm::DbErr> {
+        users::Entity::find()
+            .filter(users::Column::Email.eq(email.to_owned()))
+            .select_only()
+            .column(users::Column::Id)
+            .column(users::Column::Username)
+            .column(users::Column::Email)
+            .into_model::<UserBasicModel>()
+            .one(&self.db)
+            .await
+    }
+
+    /// Check email verification status for a user
+    pub async fn find_email_verification_status(
+        &self,
+        user_id: &Uuid,
+    ) -> Result<Option<UserEmailVerificationModel>, sea_orm::DbErr> {
+        users::Entity::find_by_id(user_id.to_owned())
+            .select_only()
+            .column(users::Column::Id)
+            .column(users::Column::Email)
+            .column(users::Column::EmailVerified)
+            .into_model::<UserEmailVerificationModel>()
+            .one(&self.db)
+            .await
     }
 }

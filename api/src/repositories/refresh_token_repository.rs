@@ -1,10 +1,10 @@
 use chrono::Duration;
-use entities::refresh_token;
+use entities::{refresh_token, token_partial::RefreshTokenValidationModel};
 use migration::Expr;
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
-    ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Value,
+    ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect, Value,
 };
 
 use uuid::Uuid;
@@ -84,5 +84,23 @@ impl RefreshTokenRepository {
             .await?;
 
         Ok(true)
+    }
+
+    // Partial model queries for optimized database access
+
+    /// Find token for validation - returns only fields needed for validation
+    pub async fn find_by_token_for_validation(
+        &self,
+        token: &str,
+    ) -> Result<Option<RefreshTokenValidationModel>, sea_orm::DbErr> {
+        refresh_token::Entity::find()
+            .filter(refresh_token::Column::Token.eq(token))
+            .select_only()
+            .column(refresh_token::Column::UserId)
+            .column(refresh_token::Column::ExpiresAt)
+            .column(refresh_token::Column::UsedAt)
+            .into_model::<RefreshTokenValidationModel>()
+            .one(&self.db)
+            .await
     }
 }

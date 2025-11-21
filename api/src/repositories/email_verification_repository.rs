@@ -1,9 +1,9 @@
 use chrono::Utc;
-use entities::{email_verification_token, users};
+use entities::{email_verification_token, token_partial::EmailVerificationTokenValidationModel, users};
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
-    ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
+    ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect,
 };
 
 use uuid::Uuid;
@@ -73,5 +73,25 @@ impl EmailVerificationRepository {
         active.email_verified = Set(true);
 
         active.update(&self.db).await
+    }
+
+    // Partial model queries for optimized database access
+
+    /// Find token for validation - returns only fields needed for validation
+    pub async fn find_by_token_for_validation(
+        &self,
+        token: &str,
+    ) -> Result<Option<EmailVerificationTokenValidationModel>, sea_orm::DbErr> {
+        // Note: the expired token won't be returned
+        let now = Utc::now();
+        email_verification_token::Entity::find()
+            .filter(email_verification_token::Column::Token.eq(token))
+            .filter(email_verification_token::Column::ExpiresAt.gte(now))
+            .select_only()
+            .column(email_verification_token::Column::UserId)
+            .column(email_verification_token::Column::ExpiresAt)
+            .into_model::<EmailVerificationTokenValidationModel>()
+            .one(&self.db)
+            .await
     }
 }

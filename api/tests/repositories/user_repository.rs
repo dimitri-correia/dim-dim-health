@@ -216,3 +216,75 @@ async fn test_user_repo_create_regular_user() {
     assert_eq!(user.username, username);
     assert!(!user.email_verified); // Verify it persists
 }
+
+#[tokio::test]
+async fn test_user_repo_partial_models() {
+    let username = "testpartialuser";
+    let email = format!("{username}@test.fr");
+    let password_hash = "securepassword";
+
+    let user_repo = &get_app_state().await.repositories.user_repository;
+
+    // Create a test user
+    let user = user_repo
+        .create(username, &email, password_hash, false)
+        .await
+        .unwrap();
+    let user_id = user.id;
+
+    // Test find_by_email_for_auth - should only return auth fields
+    let auth_model = user_repo
+        .find_by_email_for_auth(&email)
+        .await
+        .unwrap()
+        .expect("User should exist");
+    assert_eq!(auth_model.id, user_id);
+    assert_eq!(auth_model.email, email);
+    assert_eq!(auth_model.password_hash, password_hash);
+    assert_eq!(auth_model.email_verified, false);
+
+    // Test find_by_id_public - should only return public fields
+    let public_model = user_repo
+        .find_by_id_public(&user_id)
+        .await
+        .unwrap()
+        .expect("User should exist");
+    assert_eq!(public_model.id, user_id);
+    assert_eq!(public_model.username, username);
+    assert_eq!(public_model.email, email);
+    assert_eq!(public_model.email_verified, false);
+
+    // Test find_by_email_basic - should only return basic fields
+    let basic_model = user_repo
+        .find_by_email_basic(&email)
+        .await
+        .unwrap()
+        .expect("User should exist");
+    assert_eq!(basic_model.id, user_id);
+    assert_eq!(basic_model.username, username);
+    assert_eq!(basic_model.email, email);
+
+    // Test find_email_verification_status - should only return verification fields
+    let verification_model = user_repo
+        .find_email_verification_status(&user_id)
+        .await
+        .unwrap()
+        .expect("User should exist");
+    assert_eq!(verification_model.id, user_id);
+    assert_eq!(verification_model.email, email);
+    assert_eq!(verification_model.email_verified, false);
+
+    // Test with non-existing user
+    let non_existing_id = uuid::Uuid::new_v4();
+    let result = user_repo
+        .find_by_id_public(&non_existing_id)
+        .await
+        .unwrap();
+    assert!(result.is_none());
+
+    let result = user_repo
+        .find_by_email_for_auth("nonexisting@test.fr")
+        .await
+        .unwrap();
+    assert!(result.is_none());
+}
