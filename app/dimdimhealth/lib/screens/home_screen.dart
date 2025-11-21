@@ -129,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.email_outlined,
                     size: 80,
                     color: AppConfig.blueColor,
@@ -159,11 +159,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 32),
                   const Divider(),
                   const SizedBox(height: 16),
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.refresh, size: 20, color: AppConfig.blueColor),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         'Pull down to refresh after verifying',
                         style: TextStyle(
