@@ -21,6 +21,10 @@ impl MigrationTrait for Migration {
             );
         "#
         );
+
+        // Escape quotes for cron.schedule
+        let clean_cmd = clean_cmd.replace('\'', "''");
+
         // Schedule the cron job to run every day at midnight
         manager
             .get_connection()
