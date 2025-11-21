@@ -217,6 +217,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 32),
 
+                    // Avatar Selection
+                    const Text(
+                      'Choose Your Avatar',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppConfig.whiteColor,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppConfig.whiteColor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: UserProfileImage.values.map((avatar) {
+                          final isSelected = _selectedAvatar == avatar;
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedAvatar = avatar;
+                              });
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppConfig.goldColor
+                                      : Colors.transparent,
+                                  width: 3,
+                                ),
+                              ),
+                              child: avatar.buildAvatar(size: 50),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
                     // Register Button
                     SizedBox(
                       width: double.infinity,

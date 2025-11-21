@@ -26,7 +26,20 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('Welcome ${user?.username ?? 'User'}'),
         backgroundColor: AppConfig.blueColor,
         foregroundColor: AppConfig.goldColor,
+        leading: user != null
+            ? Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: user.profileImage.buildAvatar(size: 40),
+              )
+            : null,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.of(context).pushNamed('/settings');
+            },
+            tooltip: 'Settings',
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
