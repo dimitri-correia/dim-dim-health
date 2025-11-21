@@ -18,9 +18,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final user = authProvider.user;
+    return Selector<AuthProvider, User?>(
+      selector: (_, authProvider) => authProvider.user,
+      builder: (context, user, _) => _buildScaffold(context, user),
+    );
+  }
 
+  Widget _buildScaffold(BuildContext context, User? user) {
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: Text('Welcome ${user?.username ?? 'User'}'),
@@ -68,30 +74,28 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisCount: 2,
                             mainAxisSpacing: 16,
                             crossAxisSpacing: 16,
-                            children: [
-                              _buildActionCard(
-                                context,
+                            childAspectRatio: 1.0,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: const [
+                              _ActionCard(
                                 icon: Icons.monitor_weight,
                                 title: 'Weight',
                                 subtitle: 'Track your weight',
                                 color: AppConfig.blueColor,
                               ),
-                              _buildActionCard(
-                                context,
+                              _ActionCard(
                                 icon: Icons.restaurant,
                                 title: 'Meals',
                                 subtitle: 'Log your meals',
                                 color: AppConfig.redColor,
                               ),
-                              _buildActionCard(
-                                context,
+                              _ActionCard(
                                 icon: Icons.fitness_center,
                                 title: 'Workouts',
                                 subtitle: 'Plan workouts',
                                 color: AppConfig.goldColor,
                               ),
-                              _buildActionCard(
-                                context,
+                              _ActionCard(
                                 icon: Icons.person,
                                 title: 'Profile',
                                 subtitle: 'View profile',
@@ -178,14 +182,23 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+}
 
-  Widget _buildActionCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-  }) {
+class _ActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+
+  const _ActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
