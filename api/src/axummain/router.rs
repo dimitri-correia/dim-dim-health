@@ -11,6 +11,9 @@ use crate::handlers::auth::{
     reset_password, verify_email,
 };
 use crate::handlers::server_health::server_health_check;
+use crate::handlers::user_streaks::{
+    get_user_streaks, update_diet_streak, update_weight_streak,
+};
 
 pub fn get_main_router(app_state: AppState) -> Router {
     // Configure CORS - adjust allowed origins for production
@@ -36,6 +39,10 @@ pub fn get_main_router(app_state: AppState) -> Router {
         .route("/api/auth/reset-password", post(reset_password))
         .route("/api/auth/refresh-token", post(refresh_token))
         .route("/api/auth/logout", post(logout))
+        // Streak routes
+        .route("/api/streaks", get(get_user_streaks))
+        .route("/api/streaks/weight/update", post(update_weight_streak))
+        .route("/api/streaks/diet/update", post(update_diet_streak))
         // Set application state
         .with_state(app_state)
         // Security headers

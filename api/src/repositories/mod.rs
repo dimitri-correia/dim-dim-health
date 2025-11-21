@@ -5,6 +5,7 @@ use crate::repositories::{
     password_reset_repository::PasswordResetRepository,
     refresh_token_repository::RefreshTokenRepository, user_group_repository::UserGroupsRepository,
     user_info_repository::UserInfoRepository, user_repository::UserRepository,
+    user_streak_repository::UserStreakRepository,
     user_watch_permission_repository::UserWatchPermissionRepository,
 };
 
@@ -14,6 +15,7 @@ pub mod refresh_token_repository;
 pub mod user_group_repository;
 pub mod user_info_repository;
 pub mod user_repository;
+pub mod user_streak_repository;
 pub mod user_watch_permission_repository;
 
 #[derive(Clone)]
@@ -25,6 +27,7 @@ pub struct Repositories {
     pub user_info_repository: UserInfoRepository,
     pub user_group_repository: UserGroupsRepository,
     pub user_watch_permission_repository: UserWatchPermissionRepository,
+    pub user_streak_repository: UserStreakRepository,
 }
 
 impl Repositories {
@@ -36,6 +39,7 @@ impl Repositories {
         let user_info_repository = UserInfoRepository::new(db.clone());
         let user_group_repository = UserGroupsRepository::new(db.clone());
         let user_watch_permission_repository = UserWatchPermissionRepository::new(db.clone());
+        let user_streak_repository = UserStreakRepository::new(db.clone());
 
         Self {
             user_repository,
@@ -45,6 +49,7 @@ impl Repositories {
             user_info_repository,
             user_group_repository,
             user_watch_permission_repository,
+            user_streak_repository,
         }
     }
 }
