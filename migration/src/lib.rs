@@ -17,6 +17,7 @@ mod m20251115_161449_create_meal_item;
 mod m20251119_163331_pg_cron_clean_guest_users;
 mod m20251119_172747_pg_cron_clean_non_verified_email;
 mod m20251121_080000_create_email_preferences;
+mod m20251121_080050_create_monthly_recap_queue;
 mod m20251121_080100_pg_cron_monthly_recap;
 
 pub struct Migrator;
@@ -42,6 +43,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20251119_163331_pg_cron_clean_guest_users::Migration),
             Box::new(m20251119_172747_pg_cron_clean_non_verified_email::Migration),
             Box::new(m20251121_080000_create_email_preferences::Migration),
+            Box::new(m20251121_080050_create_monthly_recap_queue::Migration),
             Box::new(m20251121_080100_pg_cron_monthly_recap::Migration),
         ]
     }

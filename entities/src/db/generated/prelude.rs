@@ -5,6 +5,7 @@ pub use super::email_verification_token::Entity as EmailVerificationToken;
 pub use super::food_item::Entity as FoodItem;
 pub use super::meal::Entity as Meal;
 pub use super::meal_item::Entity as MealItem;
+pub use super::monthly_recap_queue::Entity as MonthlyRecapQueue;
 pub use super::password_reset_token::Entity as PasswordResetToken;
 pub use super::refresh_token::Entity as RefreshToken;
 pub use super::user_additional_infos::Entity as UserAdditionalInfos;
