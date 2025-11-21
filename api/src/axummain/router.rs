@@ -1,5 +1,5 @@
 use axum::routing::post;
-use axum::{Router, routing::get};
+use axum::{Router, routing::{get, put}};
 use axum::http::{header, HeaderValue, Method};
 use tower_http::trace::TraceLayer;
 use tower_http::cors::CorsLayer;
@@ -11,6 +11,7 @@ use crate::handlers::auth::{
     reset_password, verify_email,
 };
 use crate::handlers::server_health::server_health_check;
+use crate::handlers::settings::update_settings;
 
 pub fn get_main_router(app_state: AppState) -> Router {
     // Configure CORS - adjust allowed origins for production
@@ -36,6 +37,8 @@ pub fn get_main_router(app_state: AppState) -> Router {
         .route("/api/auth/reset-password", post(reset_password))
         .route("/api/auth/refresh-token", post(refresh_token))
         .route("/api/auth/logout", post(logout))
+        // Settings routes
+        .route("/api/settings", put(update_settings))
         // Set application state
         .with_state(app_state)
         // Security headers

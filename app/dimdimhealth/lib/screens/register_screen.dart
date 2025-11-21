@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:email_validator/email_validator.dart';
 import '../services/auth_provider.dart';
 import '../utils/app_config.dart';
+import '../models/user_profile_image.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -19,6 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  UserProfileImage _selectedAvatar = UserProfileImage.avatar1;
 
   @override
   void dispose() {
@@ -37,6 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         username: _usernameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
+        profileImage: _selectedAvatar.toJson(),
       );
 
       if (mounted) {
@@ -211,6 +214,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         }
                         return null;
                       },
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Avatar Selection
+                    const Text(
+                      'Choose Your Avatar',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppConfig.whiteColor,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppConfig.whiteColor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: UserProfileImage.values.map((avatar) {
+                          final isSelected = _selectedAvatar == avatar;
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedAvatar = avatar;
+                              });
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppConfig.goldColor
+                                      : Colors.transparent,
+                                  width: 3,
+                                ),
+                              ),
+                              child: avatar.buildAvatar(size: 50),
+                            ),
+                          );
+                        }).toList(),
+                      ),
                     ),
                     const SizedBox(height: 32),
 

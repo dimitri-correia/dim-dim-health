@@ -35,3 +35,17 @@ pub enum UserGroup {
     #[sea_orm(string_value = "guest_group")]
     GuestGroup,
 }
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "user_profile_image")]
+pub enum UserProfileImage {
+    #[sea_orm(string_value = "avatar1")]
+    Avatar1,
+    #[sea_orm(string_value = "avatar2")]
+    Avatar2,
+    #[sea_orm(string_value = "avatar3")]
+    Avatar3,
+    #[sea_orm(string_value = "avatar4")]
+    Avatar4,
+    #[sea_orm(string_value = "avatar5")]
+    Avatar5,
+}

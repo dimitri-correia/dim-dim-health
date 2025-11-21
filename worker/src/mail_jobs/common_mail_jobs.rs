@@ -1,6 +1,8 @@
 use crate::{
     mail_jobs::{
-        register_mail::handle_registration_email, reset_password_mail::handle_reset_password_email,
+        email_change_mail::handle_email_change_email,
+        register_mail::handle_registration_email,
+        reset_password_mail::handle_reset_password_email,
     },
     worker_main::state::WorkerState,
 };
@@ -17,6 +19,10 @@ pub async fn handle_mail_job(worker_state: WorkerState, job: JobEmail) -> anyhow
         EmailType::ResetPassword => {
             let payload: JobEmailResetPassword = serde_json::from_value(job.data)?;
             handle_reset_password_email(worker_state, payload).await
+        }
+        EmailType::EmailChange => {
+            let payload: JobEmailRegister = serde_json::from_value(job.data)?;
+            handle_email_change_email(worker_state, payload).await
         }
     }
 }
