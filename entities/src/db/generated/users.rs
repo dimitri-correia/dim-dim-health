@@ -20,6 +20,8 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_many = "super::email_preferences::Entity")]
+    EmailPreferences,
     #[sea_orm(has_many = "super::email_verification_token::Entity")]
     EmailVerificationToken,
     #[sea_orm(has_many = "super::food_item::Entity")]
@@ -39,6 +41,12 @@ pub enum Relation {
     UserGroups,
     #[sea_orm(has_many = "super::user_weight::Entity")]
     UserWeight,
+}
+
+impl Related<super::email_preferences::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::EmailPreferences.def()
+    }
 }
 
 impl Related<super::email_verification_token::Entity> for Entity {
