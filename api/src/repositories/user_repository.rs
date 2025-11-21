@@ -39,7 +39,7 @@ impl UserRepository {
     }
 
     pub async fn find_by_id(&self, id: &Uuid) -> Result<Option<users::Model>, sea_orm::DbErr> {
-        users::Entity::find_by_id(id.to_owned()).one(&self.db).await
+        users::Entity::find_by_id(*id).one(&self.db).await
     }
 
     pub async fn find_by_email(&self, email: &str) -> Result<Option<users::Model>, sea_orm::DbErr> {
@@ -89,7 +89,7 @@ impl UserRepository {
         }
 
         let mut active = users::ActiveModel {
-            id: Set(id.to_owned()),
+            id: Set(*id),
             ..Default::default()
         };
 
@@ -109,7 +109,7 @@ impl UserRepository {
         password_hash: &str,
     ) -> Result<users::Model, sea_orm::DbErr> {
         let active = users::ActiveModel {
-            id: Set(id.to_owned()),
+            id: Set(*id),
             password_hash: Set(password_hash.to_owned()),
             ..Default::default()
         };

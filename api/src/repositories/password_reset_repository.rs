@@ -26,7 +26,7 @@ impl PasswordResetRepository {
     ) -> Result<password_reset_token::Model, sea_orm::DbErr> {
         let password_reset_token = password_reset_token::ActiveModel {
             id: NotSet,
-            user_id: Set(user_id.to_owned()),
+            user_id: Set(*user_id),
             token: Set(token.to_owned()),
             expires_at: Set(expires_at.to_owned()),
             created_at: NotSet,
