@@ -32,7 +32,10 @@ pub async fn search_users(
         .user_repository
         .search_by_username(&params.query)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+        .map_err(|err| {
+            error!("Failed to search users: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?;
 
     let user_results: Vec<UserSearchResult> = users
         .into_iter()
@@ -55,7 +58,10 @@ pub async fn get_watchers(
         .user_watch_permission_repository
         .find_all_watched(&user.id)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|err| {
+            error!("Failed to fetch watchers: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
 
     // Batch load all watcher users
     let watcher_ids: Vec<_> = permissions
@@ -68,7 +74,10 @@ pub async fn get_watchers(
         .user_repository
         .find_by_ids(&watcher_ids)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|err| {
+            error!("Failed to fetch watcher users: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
 
     // Create a map for quick lookup
     let user_map: std::collections::HashMap<_, _> = users
@@ -105,7 +114,10 @@ pub async fn get_watching(
         .user_watch_permission_repository
         .find_all_watching(&user.id)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|err| {
+            error!("Failed to fetch watching list: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
 
     // Batch load all watched users
     let watched_ids: Vec<_> = permissions
@@ -118,7 +130,10 @@ pub async fn get_watching(
         .user_repository
         .find_by_ids(&watched_ids)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|err| {
+            error!("Failed to fetch watched users: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
 
     // Create a map for quick lookup
     let user_map: std::collections::HashMap<_, _> = users
@@ -157,7 +172,10 @@ pub async fn grant_watch_permission(
         .user_repository
         .find_by_id(&payload.user_id)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+        .map_err(|err| {
+            error!("Failed to check if user exists: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?;
 
     if target_user.is_none() {
         return Err((
@@ -173,7 +191,10 @@ pub async fn grant_watch_permission(
         .user_watch_permission_repository
         .find_by_user_ids(&user.id, &payload.user_id)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+        .map_err(|err| {
+            error!("Failed to check existing permission: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?;
 
     if existing_permission.is_some() {
         return Err((
@@ -215,7 +236,10 @@ pub async fn revoke_watch_permission(
         .user_watch_permission_repository
         .find_by_user_ids(&user.id, &payload.user_id)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+        .map_err(|err| {
+            error!("Failed to check permission exists: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?;
 
     if existing_permission.is_none() {
         return Err((
