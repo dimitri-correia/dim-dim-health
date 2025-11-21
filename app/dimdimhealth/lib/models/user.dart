@@ -8,11 +8,17 @@ class User {
   final String username;
   @JsonKey(name: 'email_verified')
   final bool emailVerified;
+  @JsonKey(name: 'created_at')
+  final String createdAt;
+  @JsonKey(name: 'is_guest')
+  final bool isGuest;
 
   User({
     required this.email,
     required this.username,
     required this.emailVerified,
+    required this.createdAt,
+    required this.isGuest,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);

@@ -1,3 +1,4 @@
+use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -53,14 +54,21 @@ pub struct UserData {
     pub email: String,
     pub username: String,
     pub email_verified: bool,
+    pub created_at: DateTime<FixedOffset>,
+    pub is_guest: bool,
 }
 
 impl UserData {
     pub fn from_user(user: entities::users::Model) -> Self {
+        // Guest users have emails ending with @dimdim.guest
+        let is_guest = user.email.ends_with("@dimdim.guest");
+        
         Self {
             email: user.email,
             username: user.username,
             email_verified: user.email_verified,
+            created_at: user.created_at,
+            is_guest,
         }
     }
 }

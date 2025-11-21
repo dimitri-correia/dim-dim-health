@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/user.dart';
 import '../services/auth_provider.dart';
 import '../utils/app_config.dart';
 
@@ -51,6 +52,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Guest Account Banner
+                        if (user?.isGuest == true) 
+                          _buildGuestAccountBanner(context, user!),
+                        if (user?.isGuest == true) 
+                          const SizedBox(height: 16),
+                        
                         // Quick Actions
                         const Text(
                           'Quick Actions',
@@ -233,6 +240,140 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGuestAccountBanner(BuildContext context, User user) {
+    // Calculate hours remaining until expiration (24 hours from creation)
+    final createdAt = DateTime.parse(user.createdAt);
+    final expiresAt = createdAt.add(const Duration(hours: 24));
+    final now = DateTime.now();
+    final hoursRemaining = expiresAt.difference(now).inHours;
+    final daysRemaining = (hoursRemaining / 24).ceil();
+    
+    String expirationText;
+    if (hoursRemaining <= 0) {
+      expirationText = 'This account has expired';
+    } else if (hoursRemaining < 24) {
+      expirationText = 'This guest account will expire in $hoursRemaining ${hoursRemaining == 1 ? 'hour' : 'hours'}';
+    } else {
+      expirationText = 'This guest account will expire in $daysRemaining ${daysRemaining == 1 ? 'day' : 'days'}';
+    }
+
+    return Card(
+      elevation: 6,
+      color: AppConfig.goldColor.withOpacity(0.95),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: AppConfig.redColor, width: 2),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: AppConfig.redColor,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Guest Account',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppConfig.blueColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              expirationText,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppConfig.blueColor,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Divider(color: AppConfig.blueColor, thickness: 1),
+            const SizedBox(height: 12),
+            Text(
+              'If you log out, you can reconnect using:',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppConfig.blueColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppConfig.whiteColor.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.email, size: 16, color: AppConfig.blueColor),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Email: ',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppConfig.blueColor,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          user.email,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppConfig.blueColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.lock, size: 16, color: AppConfig.blueColor),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Password: ',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppConfig.blueColor,
+                        ),
+                      ),
+                      Text(
+                        'password',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppConfig.blueColor,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
