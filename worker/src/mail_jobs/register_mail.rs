@@ -20,9 +20,9 @@ pub async fn handle_registration_email(
 
     send_email(
         worker_state,
-        data.email.to_string(),
-        subject.to_string(),
-        content.to_string(),
+        data.email,
+        subject,
+        content,
     )
     .await
 }

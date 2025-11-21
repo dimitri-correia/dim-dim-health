@@ -32,7 +32,7 @@ where
         let token = extract_token_from_headers(headers).ok_or(StatusCode::UNAUTHORIZED)?;
 
         let claims =
-            validate_token(&token, &app_state.jwt_secret).map_err(|_| StatusCode::UNAUTHORIZED)?;
+            validate_token(token, &app_state.jwt_secret).map_err(|_| StatusCode::UNAUTHORIZED)?;
 
         let user_id = Uuid::parse_str(&claims.sub).map_err(|_| StatusCode::UNAUTHORIZED)?;
 
@@ -64,7 +64,7 @@ where
             None => return Ok(OptionalAuth(None)),
         };
 
-        let claims = match validate_token(&token, &app_state.jwt_secret) {
+        let claims = match validate_token(token, &app_state.jwt_secret) {
             Ok(claims) => claims,
             Err(_) => return Ok(OptionalAuth(None)),
         };
@@ -99,7 +99,7 @@ where
         let token = extract_token_from_headers(headers).ok_or(StatusCode::UNAUTHORIZED)?;
 
         let claims =
-            validate_token(&token, &app_state.jwt_secret).map_err(|_| StatusCode::UNAUTHORIZED)?;
+            validate_token(token, &app_state.jwt_secret).map_err(|_| StatusCode::UNAUTHORIZED)?;
 
         let user_id = Uuid::parse_str(&claims.sub).map_err(|_| StatusCode::UNAUTHORIZED)?;
 
@@ -119,10 +119,10 @@ where
     }
 }
 
-fn extract_token_from_headers(headers: &HeaderMap) -> Option<String> {
+fn extract_token_from_headers(headers: &HeaderMap) -> Option<&str> {
     let auth_header = headers.get("Authorization")?.to_str().ok()?;
 
-    auth_header.strip_prefix("Token ").map(|s| s.to_string())
+    auth_header.strip_prefix("Token ")
 }
 
 #[cfg(test)]
@@ -264,7 +264,7 @@ mod tests {
         headers.insert("Authorization", "Token test.token.here".parse().unwrap());
         assert_eq!(
             extract_token_from_headers(&headers),
-            Some("test.token.here".to_string())
+            Some("test.token.here")
         );
 
         let mut headers = HeaderMap::new();

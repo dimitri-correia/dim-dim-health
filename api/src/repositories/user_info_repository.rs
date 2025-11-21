@@ -27,7 +27,7 @@ impl UserInfoRepository {
         activity_level: Decimal,
     ) -> Result<user_additional_infos::Model, sea_orm::DbErr> {
         let user_infos = user_additional_infos::ActiveModel {
-            user_id: Set(user_id.to_owned()),
+            user_id: Set(*user_id),
             birth_date: Set(birth_date.to_owned()),
             height_in_cm: Set(height_in_cm),
             gender: Set(gender),
@@ -43,7 +43,7 @@ impl UserInfoRepository {
         &self,
         user_id: &Uuid,
     ) -> Result<Option<user_additional_infos::Model>, sea_orm::DbErr> {
-        user_additional_infos::Entity::find_by_id(user_id.to_owned())
+        user_additional_infos::Entity::find_by_id(*user_id)
             .one(&self.db)
             .await
     }
@@ -67,7 +67,7 @@ impl UserInfoRepository {
         }
 
         let mut active = user_additional_infos::ActiveModel {
-            user_id: Set(user_id.to_owned()),
+            user_id: Set(*user_id),
             ..Default::default()
         };
 

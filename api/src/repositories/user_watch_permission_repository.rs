@@ -23,8 +23,8 @@ impl UserWatchPermissionRepository {
         user_watching_id: &Uuid,
     ) -> Result<user_watch_permissions::Model, sea_orm::DbErr> {
         let user_watch_permissions = user_watch_permissions::ActiveModel {
-            user_watched_id: Set(user_watched_id.to_owned()),
-            user_watching_id: Set(user_watching_id.to_owned()),
+            user_watched_id: Set(*user_watched_id),
+            user_watching_id: Set(*user_watching_id),
             created_at: NotSet,
         };
         let user_watch_permissions = user_watch_permissions.insert(&self.db).await?;
@@ -37,7 +37,7 @@ impl UserWatchPermissionRepository {
         user_watched_id: &Uuid,
     ) -> Result<Vec<user_watch_permissions::Model>, sea_orm::DbErr> {
         user_watch_permissions::Entity::find()
-            .filter(user_watch_permissions::Column::UserWatchedId.eq(user_watched_id.to_owned()))
+            .filter(user_watch_permissions::Column::UserWatchedId.eq(*user_watched_id))
             .all(&self.db)
             .await
     }
@@ -47,7 +47,7 @@ impl UserWatchPermissionRepository {
         user_watching_id: &Uuid,
     ) -> Result<Vec<user_watch_permissions::Model>, sea_orm::DbErr> {
         user_watch_permissions::Entity::find()
-            .filter(user_watch_permissions::Column::UserWatchingId.eq(user_watching_id.to_owned()))
+            .filter(user_watch_permissions::Column::UserWatchingId.eq(*user_watching_id))
             .all(&self.db)
             .await
     }
@@ -58,8 +58,8 @@ impl UserWatchPermissionRepository {
         user_watching_id: &Uuid,
     ) -> Result<Option<user_watch_permissions::Model>, sea_orm::DbErr> {
         user_watch_permissions::Entity::find()
-            .filter(user_watch_permissions::Column::UserWatchedId.eq(user_watched_id.to_owned()))
-            .filter(user_watch_permissions::Column::UserWatchingId.eq(user_watching_id.to_owned()))
+            .filter(user_watch_permissions::Column::UserWatchedId.eq(*user_watched_id))
+            .filter(user_watch_permissions::Column::UserWatchingId.eq(*user_watching_id))
             .one(&self.db)
             .await
     }
@@ -70,8 +70,8 @@ impl UserWatchPermissionRepository {
         user_watching_id: &Uuid,
     ) -> Result<(), sea_orm::DbErr> {
         let user_watch_permissions = user_watch_permissions::Entity::find()
-            .filter(user_watch_permissions::Column::UserWatchedId.eq(user_watched_id.to_owned()))
-            .filter(user_watch_permissions::Column::UserWatchingId.eq(user_watching_id.to_owned()))
+            .filter(user_watch_permissions::Column::UserWatchedId.eq(*user_watched_id))
+            .filter(user_watch_permissions::Column::UserWatchingId.eq(*user_watching_id))
             .one(&self.db)
             .await?;
 

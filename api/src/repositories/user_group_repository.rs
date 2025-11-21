@@ -23,7 +23,7 @@ impl UserGroupsRepository {
         group: UserGroup,
     ) -> Result<user_groups::Model, sea_orm::DbErr> {
         let user_group = user_groups::ActiveModel {
-            user_id: Set(user_id.to_owned()),
+            user_id: Set(*user_id),
             group: Set(group),
             created_at: NotSet,
         };
@@ -37,7 +37,7 @@ impl UserGroupsRepository {
         user_id: &Uuid,
     ) -> Result<Vec<user_groups::Model>, sea_orm::DbErr> {
         user_groups::Entity::find()
-            .filter(user_groups::Column::UserId.eq(user_id.to_owned()))
+            .filter(user_groups::Column::UserId.eq(*user_id))
             .all(&self.db)
             .await
     }
@@ -48,7 +48,7 @@ impl UserGroupsRepository {
         group: UserGroup,
     ) -> Result<(), sea_orm::DbErr> {
         let user_group = user_groups::Entity::find()
-            .filter(user_groups::Column::UserId.eq(user_id.to_owned()))
+            .filter(user_groups::Column::UserId.eq(*user_id))
             .filter(user_groups::Column::Group.eq(group))
             .one(&self.db)
             .await?;

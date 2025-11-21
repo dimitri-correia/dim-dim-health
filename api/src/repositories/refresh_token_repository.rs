@@ -28,7 +28,7 @@ impl RefreshTokenRepository {
     ) -> Result<refresh_token::Model, sea_orm::DbErr> {
         let refresh_token = refresh_token::ActiveModel {
             id: NotSet,
-            user_id: Set(user_id.to_owned()),
+            user_id: Set(*user_id),
             token: Set(token.to_owned()),
             created_at: NotSet,
             expires_at: NotSet,

@@ -35,7 +35,7 @@ impl Repositories {
         let refresh_token_repository = RefreshTokenRepository::new(db.clone());
         let user_info_repository = UserInfoRepository::new(db.clone());
         let user_group_repository = UserGroupsRepository::new(db.clone());
-        let user_watch_permission_repository = UserWatchPermissionRepository::new(db.clone());
+        let user_watch_permission_repository = UserWatchPermissionRepository::new(db);
 
         Self {
             user_repository,

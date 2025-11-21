@@ -26,7 +26,7 @@ impl EmailVerificationRepository {
     ) -> Result<email_verification_token::Model, sea_orm::DbErr> {
         let email_verification_token = email_verification_token::ActiveModel {
             id: NotSet,
-            user_id: Set(user_id.to_owned()),
+            user_id: Set(*user_id),
             token: Set(token.to_owned()),
             expires_at: Set(expires_at.to_owned()),
             created_at: NotSet,
@@ -66,7 +66,7 @@ impl EmailVerificationRepository {
 
     pub async fn verify_user_email(&self, user_id: &Uuid) -> Result<users::Model, sea_orm::DbErr> {
         let mut active = users::ActiveModel {
-            id: Set(user_id.to_owned()),
+            id: Set(*user_id),
             ..Default::default()
         };
 
