@@ -50,6 +50,7 @@ pub struct UserResponse {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserData {
+    pub id: uuid::Uuid,
     pub email: String,
     pub username: String,
     pub email_verified: bool,
@@ -58,6 +59,7 @@ pub struct UserData {
 impl UserData {
     pub fn from_user(user: entities::users::Model) -> Self {
         Self {
+            id: user.id,
             email: user.email,
             username: user.username,
             email_verified: user.email_verified,

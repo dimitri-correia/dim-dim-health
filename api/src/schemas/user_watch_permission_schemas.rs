@@ -27,13 +27,13 @@ pub struct SearchUsersRequest {
 }
 
 /// Response for user search
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SearchUsersResponse {
     pub users: Vec<UserSearchResult>,
 }
 
 /// Response for a watch permission with user details
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct WatchPermissionWithUser {
     pub user_id: Uuid,
     pub username: String,
@@ -41,13 +41,13 @@ pub struct WatchPermissionWithUser {
 }
 
 /// Response for getting list of people watching me (people I allow)
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct WatchersResponse {
     pub watchers: Vec<WatchPermissionWithUser>,
 }
 
 /// Response for getting list of people I'm watching (people that allow me)
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct WatchingResponse {
     pub watching: Vec<WatchPermissionWithUser>,
 }
@@ -59,7 +59,7 @@ pub struct GrantWatchPermissionRequest {
 }
 
 /// Response for granting watch permission
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GrantWatchPermissionResponse {
     pub message: String,
     pub user_watched_id: Uuid,
@@ -73,7 +73,7 @@ pub struct RevokeWatchPermissionRequest {
 }
 
 /// Response for revoking watch permission
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct RevokeWatchPermissionResponse {
     pub message: String,
 }
