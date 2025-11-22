@@ -1,8 +1,9 @@
-use entities::users;
+use entities::{sea_orm_active_enums::UserGroup, user_groups, users};
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
-    ColumnTrait, DatabaseConnection, EntityTrait, ExprTrait, PaginatorTrait, QueryFilter,
+    ColumnTrait, Condition, DatabaseConnection, EntityTrait, ExprTrait, JoinType, PaginatorTrait,
+    QueryFilter, QuerySelect, RelationTrait,
 };
 
 use uuid::Uuid;
@@ -115,5 +116,26 @@ impl UserRepository {
         };
 
         active.update(&self.db).await
+    }
+
+    pub async fn search_by_username(
+        &self,
+        query: &str,
+    ) -> Result<Vec<users::Model>, sea_orm::DbErr> {
+        users::Entity::find()
+            .join(JoinType::LeftJoin, users::Relation::UserGroups.def())
+            .filter(
+                Condition::all()
+                    .add(users::Column::Username.contains(query))
+                    .add(users::Column::EmailVerified.eq(true))
+                    .add(
+                        user_groups::Column::Group
+                            .ne(UserGroup::GuestGroup)
+                            .or(user_groups::Column::Group.is_null()),
+                    ),
+            )
+            .limit(20)
+            .all(&self.db)
+            .await
     }
 }

@@ -23,6 +23,8 @@ use crate::handlers::user_group::{
 };
 use crate::handlers::user_weight::{
     create_user_weight, delete_user_weight, get_user_weights, update_user_weight,
+use crate::handlers::user_watch_permissions::{
+    search_users, get_watchers, get_watching, grant_watch_permission, revoke_watch_permission,
 };
 
 pub fn get_main_router(app_state: AppState) -> Router {
@@ -85,6 +87,12 @@ pub fn get_main_router(app_state: AppState) -> Router {
             get(get_public_group_members),
         )
         .route("/api/user-groups/myself", get(get_user_groups))
+        // User watch permissions routes
+        .route("/api/users/search", get(search_users))
+        .route("/api/watch-permissions/watchers", get(get_watchers))
+        .route("/api/watch-permissions/watching", get(get_watching))
+        .route("/api/watch-permissions/grant", post(grant_watch_permission))
+        .route("/api/watch-permissions/revoke", post(revoke_watch_permission))
         // Set application state
         .with_state(app_state)
         // Security headers
