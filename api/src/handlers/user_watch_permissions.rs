@@ -113,7 +113,6 @@ pub async fn get_watching(
 }
 
 /// Grant watch permission to another user (allow them to watch me)
-/// Grant watch permission to another user (allow them to watch me)
 pub async fn grant_watch_permission(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
