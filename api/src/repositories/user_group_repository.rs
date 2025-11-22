@@ -2,7 +2,7 @@ use entities::{sea_orm_active_enums::UserGroup, user_groups};
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
-    ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
+    ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
 };
 
 use uuid::Uuid;
@@ -42,6 +42,29 @@ impl UserGroupsRepository {
             .await
     }
 
+    pub async fn is_user_id_in_group(
+        &self,
+        user_id: &Uuid,
+        group: UserGroup,
+    ) -> Result<bool, sea_orm::DbErr> {
+        let count = user_groups::Entity::find()
+            .filter(user_groups::Column::UserId.eq(*user_id))
+            .filter(user_groups::Column::Group.eq(group))
+            .count(&self.db)
+            .await?;
+        Ok(count > 0)
+    }
+
+    pub async fn find_all_in_group(
+        &self,
+        group: UserGroup,
+    ) -> Result<Vec<user_groups::Model>, sea_orm::DbErr> {
+        user_groups::Entity::find()
+            .filter(user_groups::Column::Group.eq(group))
+            .all(&self.db)
+            .await
+    }
+
     pub async fn delete_by_user_id_and_group(
         &self,
         user_id: &Uuid,
@@ -58,12 +81,6 @@ impl UserGroupsRepository {
             user_group.delete(&self.db).await?;
         }
 
-        Ok(())
-    }
-
-    pub async fn delete(&self, user_group: user_groups::Model) -> Result<(), sea_orm::DbErr> {
-        let user_group: user_groups::ActiveModel = user_group.into();
-        user_group.delete(&self.db).await?;
         Ok(())
     }
 }
