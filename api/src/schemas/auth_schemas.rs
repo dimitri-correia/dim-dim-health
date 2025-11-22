@@ -1,5 +1,6 @@
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 use validator::Validate;
 
 #[derive(Debug, Deserialize)]
@@ -70,6 +71,7 @@ pub struct UserResponse {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserData {
+    pub id: Uuid,
     pub email: String,
     pub username: String,
     pub email_verified: bool,
@@ -83,6 +85,7 @@ impl UserData {
         let is_guest = user.email.ends_with("@dimdim.guest");
 
         Self {
+            id: user.id,
             email: user.email,
             username: user.username,
             email_verified: user.email_verified,
