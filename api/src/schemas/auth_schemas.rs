@@ -7,7 +7,7 @@ pub struct RegisterUserRequest {
     pub user: RegisterUserData,
 }
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Deserialize, Validate)]
 pub struct RegisterUserData {
     #[validate(length(
         min = 3,
@@ -23,18 +23,37 @@ pub struct RegisterUserData {
     pub password: String,
 }
 
+impl std::fmt::Debug for RegisterUserData {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RegisterUserData")
+            .field("username", &self.username)
+            .field("email", &self.email)
+            .field("password", &"[REDACTED]")
+            .finish()
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct LoginUserRequest {
     pub user: LoginUserData,
 }
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Deserialize, Validate)]
 pub struct LoginUserData {
     #[validate(email(message = "Invalid email format"))]
     pub email: String,
 
     #[validate(length(min = 1, message = "Password is required"))]
     pub password: String,
+}
+
+impl std::fmt::Debug for LoginUserData {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LoginUserData")
+            .field("email", &self.email)
+            .field("password", &"[REDACTED]")
+            .finish()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -70,5 +89,46 @@ impl UserData {
             created_at: user.created_at,
             is_guest,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_register_user_data_debug_redacts_password() {
+        let data = RegisterUserData {
+            username: "testuser".to_string(),
+            email: "test@example.com".to_string(),
+            password: "supersecretpassword".to_string(),
+        };
+
+        let debug_output = format!("{:?}", data);
+        
+        // Password should be redacted
+        assert!(debug_output.contains("[REDACTED]"));
+        // Password should NOT be visible
+        assert!(!debug_output.contains("supersecretpassword"));
+        // Other fields should be visible
+        assert!(debug_output.contains("testuser"));
+        assert!(debug_output.contains("test@example.com"));
+    }
+
+    #[test]
+    fn test_login_user_data_debug_redacts_password() {
+        let data = LoginUserData {
+            email: "test@example.com".to_string(),
+            password: "mysecretpassword".to_string(),
+        };
+
+        let debug_output = format!("{:?}", data);
+        
+        // Password should be redacted
+        assert!(debug_output.contains("[REDACTED]"));
+        // Password should NOT be visible
+        assert!(!debug_output.contains("mysecretpassword"));
+        // Email should be visible
+        assert!(debug_output.contains("test@example.com"));
     }
 }
