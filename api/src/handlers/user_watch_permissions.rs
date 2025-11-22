@@ -57,7 +57,7 @@ pub async fn get_watchers(
 ) -> Result<Json<WatchersResponse>, StatusCode> {
     info!("User {} fetching list of watchers", user.id);
 
-    let users: Vec<users::Model> = state
+    let permissions = state
         .repositories
         .user_watch_permission_repository
         .find_all_watched(&user.id)
@@ -67,11 +67,14 @@ pub async fn get_watchers(
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
-    let watchers: Vec<WatcherInfo> = users
+    let watchers: Vec<WatchPermissionWithUser> = permissions
         .into_iter()
-        .map(|u| WatcherInfo {
-            user_id: u.id,
-            username: u.username.clone(),
+        .filter_map(|(perm, user_opt)| {
+            user_opt.map(|u| WatchPermissionWithUser {
+                user_id: u.id,
+                username: u.username,
+                created_at: perm.created_at,
+            })
         })
         .collect();
 
@@ -85,7 +88,7 @@ pub async fn get_watching(
 ) -> Result<Json<WatchingResponse>, StatusCode> {
     info!("User {} fetching list of users they are watching", user.id);
 
-    let users: Vec<users::Model> = state
+    let permissions = state
         .repositories
         .user_watch_permission_repository
         .find_all_watching(&user.id)
@@ -95,11 +98,14 @@ pub async fn get_watching(
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
-    let watching: Vec<WatchingInfo> = users
+    let watching: Vec<WatchPermissionWithUser> = permissions
         .into_iter()
-        .map(|u| WatchingInfo {
-            user_id: u.id,
-            username: u.username.clone(),
+        .filter_map(|(perm, user_opt)| {
+            user_opt.map(|u| WatchPermissionWithUser {
+                user_id: u.id,
+                username: u.username,
+                created_at: perm.created_at,
+            })
         })
         .collect();
 
@@ -107,11 +113,12 @@ pub async fn get_watching(
 }
 
 /// Grant watch permission to another user (allow them to watch me)
+/// Grant watch permission to another user (allow them to watch me)
 pub async fn grant_watch_permission(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     Json(payload): Json<GrantWatchPermissionRequest>,
-) -> Result<StatusCode, impl IntoResponse> {
+) -> Result<impl IntoResponse, impl IntoResponse> {
     info!(
         "User {} granting watch permission to user {}",
         user.id, payload.user_id
@@ -137,7 +144,7 @@ pub async fn grant_watch_permission(
     }
 
     // Check if permission already exists
-    if state
+    if let Some(existing_perm) = state
         .repositories
         .user_watch_permission_repository
         .find_by_user_ids(&user.id, &payload.user_id)
@@ -146,13 +153,17 @@ pub async fn grant_watch_permission(
             error!("Failed to check existing permission: {}", err);
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         })?
-        .is_some()
     {
-        return Ok(StatusCode::OK.into_response());
+        return Ok(Json(GrantWatchPermissionResponse {
+            user_watched_id: existing_perm.user_watched_id,
+            user_watching_id: existing_perm.user_watching_id,
+            created_at: existing_perm.created_at,
+        })
+        .into_response());
     }
 
     // Create the permission (user.id is watched, payload.user_id is watching)
-    state
+    let permission = state
         .repositories
         .user_watch_permission_repository
         .create(&user.id, &payload.user_id)
@@ -162,7 +173,15 @@ pub async fn grant_watch_permission(
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         })?;
 
-    Ok(StatusCode::CREATED.into_response())
+    Ok((
+        StatusCode::CREATED,
+        Json(GrantWatchPermissionResponse {
+            user_watched_id: permission.user_watched_id,
+            user_watching_id: permission.user_watching_id,
+            created_at: permission.created_at,
+        }),
+    )
+        .into_response())
 }
 
 /// Revoke watch permission from another user (stop allowing them to watch me)
@@ -170,7 +189,7 @@ pub async fn revoke_watch_permission(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     Json(payload): Json<RevokeWatchPermissionRequest>,
-) -> Result<StatusCode, impl IntoResponse> {
+) -> Result<impl IntoResponse, impl IntoResponse> {
     info!(
         "User {} revoking watch permission from user {}",
         user.id, payload.user_id
@@ -205,5 +224,10 @@ pub async fn revoke_watch_permission(
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         })?;
 
-    Ok(StatusCode::NO_CONTENT.into_response())
+    Ok(Json(RevokeWatchPermissionResponse {
+        user_watched_id: user.id,
+        user_watching_id: payload.user_id,
+        message: "Watch permission revoked successfully".to_string(),
+    })
+    .into_response())
 }

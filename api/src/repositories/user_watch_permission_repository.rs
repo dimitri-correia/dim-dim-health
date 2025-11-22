@@ -1,4 +1,4 @@
-use entities::user_watch_permissions;
+use entities::{user_watch_permissions, users};
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
@@ -35,27 +35,23 @@ impl UserWatchPermissionRepository {
     pub async fn find_all_watched(
         &self,
         user_watched_id: &Uuid,
-    ) -> Result<Vec<users::Model>, sea_orm::DbErr> {
-        let res = user_watch_permissions::Entity::find()
+    ) -> Result<Vec<(user_watch_permissions::Model, Option<users::Model>)>, sea_orm::DbErr> {
+        user_watch_permissions::Entity::find()
             .filter(user_watch_permissions::Column::UserWatchedId.eq(*user_watched_id))
             .find_also_related(users::Entity)
             .all(&self.db)
-            .await?;
-
-        Ok(res.into_iter().filter_map(|(_, user)| user).collect())
+            .await
     }
 
     pub async fn find_all_watching(
         &self,
         user_watching_id: &Uuid,
-    ) -> Result<Vec<users::Model>, sea_orm::DbErr> {
-        let res = user_watch_permissions::Entity::find()
+    ) -> Result<Vec<(user_watch_permissions::Model, Option<users::Model>)>, sea_orm::DbErr> {
+        user_watch_permissions::Entity::find()
             .filter(user_watch_permissions::Column::UserWatchingId.eq(*user_watching_id))
             .find_also_related(users::Entity)
             .all(&self.db)
-            .await?;
-
-        Ok(res.into_iter().filter_map(|(_, user)| user).collect())
+            .await
     }
 
     pub async fn find_by_user_ids(

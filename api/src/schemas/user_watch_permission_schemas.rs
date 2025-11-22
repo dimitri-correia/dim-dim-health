@@ -51,3 +51,31 @@ pub struct WatchersResponse {
 pub struct WatchingResponse {
     pub watching: Vec<WatchPermissionWithUser>,
 }
+
+/// Request to grant watch permission to a user
+#[derive(Debug, Deserialize)]
+pub struct GrantWatchPermissionRequest {
+    pub user_id: Uuid,
+}
+
+/// Request to revoke watch permission from a user
+#[derive(Debug, Deserialize)]
+pub struct RevokeWatchPermissionRequest {
+    pub user_id: Uuid,
+}
+
+/// Response when granting watch permission
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GrantWatchPermissionResponse {
+    pub user_watched_id: Uuid,
+    pub user_watching_id: Uuid,
+    pub created_at: DateTime<FixedOffset>,
+}
+
+/// Response when revoking watch permission
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RevokeWatchPermissionResponse {
+    pub user_watched_id: Uuid,
+    pub user_watching_id: Uuid,
+    pub message: String,
+}

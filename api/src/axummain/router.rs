@@ -23,6 +23,7 @@ use crate::handlers::user_group::{
 };
 use crate::handlers::user_weight::{
     create_user_weight, delete_user_weight, get_user_weights, update_user_weight,
+};
 use crate::handlers::user_watch_permissions::{
     search_users, get_watchers, get_watching, grant_watch_permission, revoke_watch_permission,
 };
