@@ -57,7 +57,21 @@ impl MigrationTrait for Migration {
                     .col(UserWeight::UserId)
                     .to_owned(),
             )
-            .await
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_unique_user_weight_per_day")
+                    .table(UserWeight::Table)
+                    .col(UserWeight::UserId)
+                    .col(UserWeight::RecordedAt)
+                    .unique()
+                    .to_owned(),
+            )
+            .await?;
+
+        Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
