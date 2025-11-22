@@ -1,8 +1,9 @@
-use entities::user_watch_permissions;
+use entities::{user_watch_permissions, users};
+use sea_orm::RelationTrait;
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
-    ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
+    ColumnTrait, DatabaseConnection, EntityTrait, JoinType, QueryFilter, QuerySelect,
 };
 
 use uuid::Uuid;
@@ -35,21 +36,35 @@ impl UserWatchPermissionRepository {
     pub async fn find_all_watched(
         &self,
         user_watched_id: &Uuid,
-    ) -> Result<Vec<user_watch_permissions::Model>, sea_orm::DbErr> {
-        user_watch_permissions::Entity::find()
+    ) -> Result<Vec<users::Model>, sea_orm::DbErr> {
+        let res = user_watch_permissions::Entity::find()
             .filter(user_watch_permissions::Column::UserWatchedId.eq(*user_watched_id))
+            .join(
+                JoinType::InnerJoin,
+                user_watch_permissions::Relation::Users2.def(),
+            )
+            .select_also(users::Entity)
             .all(&self.db)
-            .await
+            .await?;
+
+        Ok(res.into_iter().filter_map(|(_, user)| user).collect())
     }
 
     pub async fn find_all_watching(
         &self,
         user_watching_id: &Uuid,
-    ) -> Result<Vec<user_watch_permissions::Model>, sea_orm::DbErr> {
-        user_watch_permissions::Entity::find()
+    ) -> Result<Vec<users::Model>, sea_orm::DbErr> {
+        let res = user_watch_permissions::Entity::find()
             .filter(user_watch_permissions::Column::UserWatchingId.eq(*user_watching_id))
+            .join(
+                JoinType::InnerJoin,
+                user_watch_permissions::Relation::Users1.def(),
+            )
+            .select_also(users::Entity)
             .all(&self.db)
-            .await
+            .await?;
+
+        Ok(res.into_iter().filter_map(|(_, user)| user).collect())
     }
 
     pub async fn find_by_user_ids(
@@ -81,16 +96,6 @@ impl UserWatchPermissionRepository {
             user_watch_permissions.delete(&self.db).await?;
         }
 
-        Ok(())
-    }
-
-    pub async fn delete(
-        &self,
-        user_watch_permissions: user_watch_permissions::Model,
-    ) -> Result<(), sea_orm::DbErr> {
-        let user_watch_permissions: user_watch_permissions::ActiveModel =
-            user_watch_permissions.into();
-        user_watch_permissions.delete(&self.db).await?;
         Ok(())
     }
 }
