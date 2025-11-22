@@ -18,6 +18,9 @@ use crate::handlers::meal::{
     get_meals, update_meal, update_meal_item,
 };
 use crate::handlers::server_health::server_health_check;
+use crate::handlers::user_group::{
+    get_public_group_members, get_user_groups, join_public_group, leave_public_group,
+};
 use crate::handlers::user_weight::{
     create_user_weight, delete_user_weight, get_user_weights, update_user_weight,
 };
@@ -74,6 +77,14 @@ pub fn get_main_router(app_state: AppState) -> Router {
             "/api/meals/{meal_id}/items/{item_id}",
             delete(delete_meal_item),
         )
+        // User group routes
+        .route("/api/user-groups/join-public", post(join_public_group))
+        .route("/api/user-groups/leave-public", post(leave_public_group))
+        .route(
+            "/api/user-groups/public/members",
+            get(get_public_group_members),
+        )
+        .route("/api/user-groups/myself", get(get_user_groups))
         // Set application state
         .with_state(app_state)
         // Security headers
