@@ -1,3 +1,4 @@
+use crate::utils::guest_name_generator::GUEST_EMAIL_DOMAIN;
 use crate::{
     auth::{
         jwt::generate_token,
@@ -73,7 +74,7 @@ pub async fn register_guest(
     State(state): State<AppState>,
 ) -> Result<Json<LoginResponse>, impl IntoResponse> {
     let username = crate::utils::guest_name_generator::generate_guest_name();
-    let email = format!("{}@dimdim.guest", username);
+    let email = format!("{username}{GUEST_EMAIL_DOMAIN}");
     let passwrod_hash = hash_password("password", Some(4))
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
     common_register_logic(state, username, email, passwrod_hash, true)
