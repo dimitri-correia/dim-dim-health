@@ -60,6 +60,15 @@ impl UserRepository {
             .await
     }
 
+    pub async fn ensure_username_not_taken(&self, username: &str) -> Result<bool, sea_orm::DbErr> {
+        let count = users::Entity::find()
+            .filter(users::Column::Username.eq(username.to_owned()))
+            .count(&self.db)
+            .await?;
+
+        Ok(count == 0)
+    }
+
     pub async fn user_already_exists(
         &self,
         email: &str,

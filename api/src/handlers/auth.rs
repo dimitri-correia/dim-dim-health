@@ -73,11 +73,24 @@ pub async fn register(
 pub async fn register_guest(
     State(state): State<AppState>,
 ) -> Result<Json<LoginResponse>, impl IntoResponse> {
-    let username = crate::utils::guest_name_generator::generate_guest_name();
+    let username = loop {
+        let candidate = crate::utils::guest_name_generator::generate_guest_name();
+        if state
+            .repositories
+            .user_repository
+            .ensure_username_not_taken(&candidate)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?
+        {
+            break candidate;
+        }
+    };
+
     let email = format!("{username}{GUEST_EMAIL_DOMAIN}");
-    let passwrod_hash = hash_password("password", Some(4))
+    let password_hash = hash_password("password", Some(4))
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
-    common_register_logic(state, username, email, passwrod_hash, true)
+
+    common_register_logic(state, username, email, password_hash, true)
         .await
         .map_err(|e| e.into_response())
 }
