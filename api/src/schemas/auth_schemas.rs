@@ -2,6 +2,8 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
+use crate::utils::guest_name_generator::GUEST_EMAIL_DOMAIN;
+
 #[derive(Debug, Deserialize)]
 pub struct RegisterUserRequest {
     pub user: RegisterUserData,
@@ -80,7 +82,7 @@ pub struct UserData {
 impl UserData {
     pub fn from_user(user: entities::users::Model) -> Self {
         // a bit of a hack, cleaner to use the user_groups table but this will do for now
-        let is_guest = user.email.ends_with("@dimdim.guest");
+        let is_guest = user.email.ends_with(GUEST_EMAIL_DOMAIN);
 
         Self {
             email: user.email,
@@ -105,7 +107,7 @@ mod tests {
         };
 
         let debug_output = format!("{:?}", data);
-        
+
         // Password should be redacted
         assert!(debug_output.contains("[REDACTED]"));
         // Password should NOT be visible
@@ -123,7 +125,7 @@ mod tests {
         };
 
         let debug_output = format!("{:?}", data);
-        
+
         // Password should be redacted
         assert!(debug_output.contains("[REDACTED]"));
         // Password should NOT be visible
