@@ -7,7 +7,7 @@ pub struct ForgotPasswordRequest {
     pub email: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ForgotPasswordResponse {
     pub message: String,
 }
@@ -28,7 +28,7 @@ impl std::fmt::Debug for ResetPasswordRequest {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ResetPasswordResponse {
     pub message: String,
 }

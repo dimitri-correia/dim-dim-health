@@ -4,6 +4,7 @@ use crate::helpers::{
 };
 use axum::http::{HeaderValue, StatusCode};
 use dimdim_health_api::schemas::auth_schemas::{LoginResponse, UserResponse};
+use dimdim_health_api::schemas::password_reset_schemas::ForgotPasswordResponse;
 use serde_json::json;
 
 #[tokio::test]
@@ -195,4 +196,86 @@ async fn test_create_guest_user() {
     assert!(current_user_data.username.starts_with("guest_"));
     assert!(current_user_data.email.ends_with("@dimdim.guest"));
     assert!(current_user_data.email_verified);
+}
+
+#[tokio::test]
+async fn test_forgot_password() {
+    let username = "testforgotpassword";
+    let email = format!("{username}@dimdim.fr");
+    let password = "securepassword";
+
+    let app_test = get_app_state().await;
+    let server = get_test_server(app_test.clone()).await;
+
+    // Create a user first
+    let res = server
+        .post(APP_PATHS.create_user)
+        .json(&json!({
+            "user": {
+                "username": username,
+                "email": email,
+                "password": password
+            }
+        }))
+        .await;
+    res.assert_status(StatusCode::OK);
+
+    // Request password reset
+    let res = server
+        .post(APP_PATHS.forgot_password)
+        .json(&json!({
+            "email": email
+        }))
+        .await;
+
+    res.assert_status(StatusCode::OK);
+    let forgot_response = res.json::<ForgotPasswordResponse>();
+    assert!(forgot_response.message.contains("password reset link"));
+}
+
+#[tokio::test]
+async fn test_forgot_password_invalid_email() {
+    let app_test = get_app_state().await;
+    let server = get_test_server(app_test.clone()).await;
+
+    // Request password reset with invalid email format
+    let res = server
+        .post(APP_PATHS.forgot_password)
+        .json(&json!({
+            "email": "not-an-email"
+        }))
+        .await;
+
+    res.assert_status(StatusCode::BAD_REQUEST);
+}
+
+#[tokio::test]
+async fn test_reset_password_page() {
+    let app_test = get_app_state().await;
+    let server = get_test_server(app_test.clone()).await;
+
+    // Test that GET endpoint returns HTML
+    let res = server
+        .get(&format!("{}?token=test-token", APP_PATHS.reset_password_page))
+        .await;
+
+    res.assert_status(StatusCode::OK);
+    res.assert_header("content-type", "text/html; charset=utf-8");
+}
+
+#[tokio::test]
+async fn test_reset_password_with_invalid_token() {
+    let app_test = get_app_state().await;
+    let server = get_test_server(app_test.clone()).await;
+
+    // Try to reset password with invalid token
+    let res = server
+        .post(APP_PATHS.reset_password)
+        .json(&json!({
+            "token": "invalid-token-123",
+            "new_password": "newsecurepassword"
+        }))
+        .await;
+
+    res.assert_status(StatusCode::NOT_FOUND);
 }
