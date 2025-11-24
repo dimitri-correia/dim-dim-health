@@ -297,16 +297,30 @@ pub async fn verify_email(
         return Err(StatusCode::GONE);
     }
 
-    debug!(
-        "Marking user {} email as verified",
-        verification_token.user_id
-    );
-    state
-        .repositories
-        .email_verification_repository
-        .verify_user_email(&verification_token.user_id)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    // Check if this is an email change verification or initial verification
+    if let Some(pending_email) = &verification_token.pending_email {
+        debug!(
+            "Updating user {} email to {}",
+            verification_token.user_id, pending_email
+        );
+        state
+            .repositories
+            .email_verification_repository
+            .update_user_email(&verification_token.user_id, pending_email)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    } else {
+        debug!(
+            "Marking user {} email as verified",
+            verification_token.user_id
+        );
+        state
+            .repositories
+            .email_verification_repository
+            .verify_user_email(&verification_token.user_id)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    }
 
     debug!("Deleting verification token: {}", token);
     state
