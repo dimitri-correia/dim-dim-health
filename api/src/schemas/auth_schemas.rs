@@ -23,6 +23,8 @@ pub struct RegisterUserData {
 
     #[validate(length(min = 8, message = "Password must be at least 8 characters"))]
     pub password: String,
+
+    pub profile_image: Option<entities::sea_orm_active_enums::UserProfileImage>,
 }
 
 impl std::fmt::Debug for RegisterUserData {
@@ -77,6 +79,7 @@ pub struct UserData {
     pub email_verified: bool,
     pub created_at: DateTime<FixedOffset>,
     pub is_guest: bool,
+    pub profile_image: entities::sea_orm_active_enums::UserProfileImage,
 }
 
 impl UserData {
@@ -90,6 +93,7 @@ impl UserData {
             email_verified: user.email_verified,
             created_at: user.created_at,
             is_guest,
+            profile_image: user.profile_image,
         }
     }
 }
@@ -104,6 +108,7 @@ mod tests {
             username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password: "supersecretpassword".to_string(),
+            profile_image: None,
         };
 
         let debug_output = format!("{:?}", data);
