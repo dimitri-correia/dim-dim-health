@@ -30,6 +30,7 @@ impl EmailVerificationRepository {
             token: Set(token.to_owned()),
             expires_at: Set(expires_at.to_owned()),
             created_at: NotSet,
+            pending_email: NotSet,
         };
         let email_verification_token = email_verification_token.insert(&self.db).await?;
 
@@ -71,6 +72,41 @@ impl EmailVerificationRepository {
         };
 
         active.email_verified = Set(true);
+
+        active.update(&self.db).await
+    }
+
+    pub async fn create_email_change_token(
+        &self,
+        user_id: &Uuid,
+        token: &str,
+        expires_at: &chrono::DateTime<chrono::FixedOffset>,
+        pending_email: &str,
+    ) -> Result<email_verification_token::Model, sea_orm::DbErr> {
+        let email_verification_token = email_verification_token::ActiveModel {
+            id: NotSet,
+            user_id: Set(user_id.to_owned()),
+            token: Set(token.to_owned()),
+            expires_at: Set(expires_at.to_owned()),
+            created_at: NotSet,
+            pending_email: Set(Some(pending_email.to_owned())),
+        };
+        let email_verification_token = email_verification_token.insert(&self.db).await?;
+
+        Ok(email_verification_token)
+    }
+
+    pub async fn update_user_email(
+        &self,
+        user_id: &Uuid,
+        new_email: &str,
+    ) -> Result<users::Model, sea_orm::DbErr> {
+        let mut active = users::ActiveModel {
+            id: Set(user_id.to_owned()),
+            ..Default::default()
+        };
+
+        active.email = Set(new_email.to_owned());
 
         active.update(&self.db).await
     }
