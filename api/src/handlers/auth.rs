@@ -59,12 +59,18 @@ pub async fn register(
     let password_hash = hash_password(&payload.user.password, None)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
+    let profile_image = payload
+        .user
+        .profile_image
+        .unwrap_or(entities::sea_orm_active_enums::UserProfileImage::Avatar1);
+
     common_register_logic(
         state,
         payload.user.username,
         payload.user.email,
         password_hash,
         false,
+        profile_image,
     )
     .await
     .map_err(|e| e.into_response())
@@ -90,9 +96,16 @@ pub async fn register_guest(
     let password_hash = hash_password("password", Some(4))
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
-    common_register_logic(state, username, email, password_hash, true)
-        .await
-        .map_err(|e| e.into_response())
+    common_register_logic(
+        state,
+        username,
+        email,
+        password_hash,
+        true,
+        entities::sea_orm_active_enums::UserProfileImage::Avatar1,
+    )
+    .await
+    .map_err(|e| e.into_response())
 }
 
 async fn common_register_logic(
@@ -101,12 +114,13 @@ async fn common_register_logic(
     email: String,
     password_hash: String,
     is_guest: bool,
+    profile_image: entities::sea_orm_active_enums::UserProfileImage,
 ) -> Result<Json<LoginResponse>, impl IntoResponse> {
     debug!("Creating user: {} [email: {}]", username, email);
     let user = state
         .repositories
         .user_repository
-        .create(&username, &email, &password_hash, is_guest)
+        .create(&username, &email, &password_hash, is_guest, profile_image)
         .await;
 
     let user = match user {
@@ -297,16 +311,30 @@ pub async fn verify_email(
         return Err(StatusCode::GONE);
     }
 
-    debug!(
-        "Marking user {} email as verified",
-        verification_token.user_id
-    );
-    state
-        .repositories
-        .email_verification_repository
-        .verify_user_email(&verification_token.user_id)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    // Check if this is an email change verification or initial verification
+    if let Some(pending_email) = &verification_token.pending_email {
+        debug!(
+            "Updating user {} email to {}",
+            verification_token.user_id, pending_email
+        );
+        state
+            .repositories
+            .email_verification_repository
+            .update_user_email(&verification_token.user_id, pending_email)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    } else {
+        debug!(
+            "Marking user {} email as verified",
+            verification_token.user_id
+        );
+        state
+            .repositories
+            .email_verification_repository
+            .verify_user_email(&verification_token.user_id)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    }
 
     debug!("Deleting verification token: {}", token);
     state

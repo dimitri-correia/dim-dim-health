@@ -1,8 +1,15 @@
 use axum::http::{HeaderValue, Method, header};
+use axum::http::{HeaderValue, Method, header};
+use axum::routing::post;
 use axum::routing::{delete, post, put};
 use axum::{Router, routing::get};
+use axum::{
+    Router,
+    routing::{get, put},
+};
 use tower_http::cors::CorsLayer;
 use tower_http::set_header::SetResponseHeaderLayer;
+use tower_http::trace::TraceLayer;
 use tower_http::trace::TraceLayer;
 
 use crate::axummain::state::AppState;
@@ -18,6 +25,7 @@ use crate::handlers::meal::{
     get_meals, update_meal, update_meal_item,
 };
 use crate::handlers::server_health::server_health_check;
+use crate::handlers::settings::update_settings;
 use crate::handlers::user_group::{
     get_public_group_members, get_user_groups, join_public_group, leave_public_group,
 };
@@ -97,6 +105,8 @@ pub fn get_main_router(app_state: AppState) -> Router {
             "/api/watch-permissions/revoke",
             post(revoke_watch_permission),
         )
+        // Settings routes
+        .route("/api/settings", put(update_settings))
         // Set application state
         .with_state(app_state)
         // Security headers
