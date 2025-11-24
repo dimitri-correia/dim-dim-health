@@ -104,7 +104,7 @@ mod tests {
     use crate::repositories::user_watch_permission_repository::UserWatchPermissionRepository;
     use chrono::Utc;
     use entities::user_watch_permissions;
-    use sea_orm::{DatabaseBackend, DatabaseConnection, MockDatabase, MockExecResult};
+    use sea_orm::{DatabaseBackend, MockDatabase};
 
     fn create_mock_permission(
         user_watched_id: Uuid,
