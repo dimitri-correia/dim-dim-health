@@ -14,6 +14,8 @@ pub struct Settings {
 
     pub gmail_email: String,
     pub gmail_password: String,
+    
+    pub openobserve_endpoint: Option<String>,
 }
 
 impl Settings {
