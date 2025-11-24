@@ -1,4 +1,5 @@
 use log::info;
+use tokio::signal;
 
 use crate::axummain::{env_loader::Settings, router, state};
 
@@ -23,5 +24,39 @@ pub async fn axum_main() {
 
     info!("Server listening on {}", &settings.listenner_addr);
 
-    axum::serve(listener, app).await.unwrap();
+    // Graceful shutdown with signal handling
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await
+        .unwrap();
+
+    info!("Server shutdown complete");
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {
+            info!("Received Ctrl+C signal, initiating graceful shutdown...");
+        },
+        _ = terminate => {
+            info!("Received SIGTERM signal, initiating graceful shutdown...");
+        },
+    }
 }
