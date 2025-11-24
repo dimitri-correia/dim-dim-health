@@ -130,6 +130,7 @@ mod tests {
     use super::*;
     use axum::http::{HeaderMap, Method, Request, Version, request::Parts};
     use chrono::{FixedOffset, Utc};
+    use entities::sea_orm_active_enums::UserProfileImage;
     use sea_orm::{DatabaseBackend, DatabaseConnection, MockDatabase};
 
     fn create_mock_user() -> User {
@@ -142,6 +143,7 @@ mod tests {
             created_at: Utc::now().with_timezone(&fixed_offset),
             updated_at: Utc::now().with_timezone(&fixed_offset),
             email_verified: true,
+            profile_image: UserProfileImage::Avatar1,
         }
     }
 
