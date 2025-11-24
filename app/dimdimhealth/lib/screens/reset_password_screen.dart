@@ -29,7 +29,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   Future<void> _handleResetPassword() async {
     if (_formKey.currentState!.validate()) {
-      if (widget.token == null || widget.token!.isEmpty) {
+      final token = widget.token;
+      if (token == null || token.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -45,7 +46,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
       try {
         final success = await authProvider.resetPassword(
-          token: widget.token!,
+          token: token,
           newPassword: _passwordController.text.trim(),
         );
 
