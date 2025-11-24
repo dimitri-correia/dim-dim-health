@@ -22,7 +22,17 @@ anyhow = "1.0.100"
 # Logging
 log = "0.4.28"
 tracing = "0.1.41"
-tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.20", features = ["env-filter", "json"] }
+
+# OpenTelemetry for OpenObserve integration
+opentelemetry = "0.31.0"
+opentelemetry_sdk = { version = "0.31.0", features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.31.0", features = [
+    "default",
+    "http-proto",
+    "reqwest-client",
+] }
+tracing-opentelemetry = "0.32.0"
 
 # Serialization
 serde = { version = "1.0.228", features = ["derive"] }
