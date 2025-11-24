@@ -77,6 +77,7 @@ pub struct UserData {
     pub email_verified: bool,
     pub created_at: DateTime<FixedOffset>,
     pub is_guest: bool,
+    pub profile_image: entities::sea_orm_active_enums::UserProfileImage,
 }
 
 impl UserData {
@@ -90,6 +91,7 @@ impl UserData {
             email_verified: user.email_verified,
             created_at: user.created_at,
             is_guest,
+            profile_image: user.profile_image,
         }
     }
 }
