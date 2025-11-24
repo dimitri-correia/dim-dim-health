@@ -7,6 +7,7 @@ import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/forgot_password_screen.dart';
+import 'screens/reset_password_screen.dart';
 import 'screens/home_screen.dart';
 
 import 'utils/app_config.dart';
@@ -39,6 +40,18 @@ class MyApp extends StatelessWidget {
           '/forgot-password': (context) =>
               const GuestGuard(child: ForgotPasswordScreen()),
           '/home': (context) => const AuthGuard(child: HomeScreen()),
+        },
+        onGenerateRoute: (settings) {
+          if (settings.name?.startsWith('/reset-password') ?? false) {
+            final uri = Uri.parse(settings.name!);
+            final token = uri.queryParameters['token'];
+            return MaterialPageRoute(
+              builder: (context) => GuestGuard(
+                child: ResetPasswordScreen(token: token),
+              ),
+            );
+          }
+          return null;
         },
       ),
     );

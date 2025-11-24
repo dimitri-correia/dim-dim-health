@@ -98,6 +98,35 @@ class ApiService {
     }
   }
 
+  Future<ResetPasswordResponse> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    final request = ResetPasswordRequest(
+      token: token,
+      newPassword: newPassword,
+    );
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/auth/reset-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(request.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return ResetPasswordResponse.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Invalid or expired reset token', statusCode: 404);
+    } else if (response.statusCode == 410) {
+      throw ApiException('Reset token has expired', statusCode: 410);
+    } else {
+      throw ApiException('Request failed', statusCode: response.statusCode);
+    }
+  }
+
   Future<LoginResponse> loginAsGuest() async {
     final response = await http.post(
       Uri.parse('$baseUrl/api/users/guest'),

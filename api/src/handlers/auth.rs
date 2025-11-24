@@ -481,6 +481,275 @@ pub async fn reset_password(
     }))
 }
 
+pub async fn reset_password_page(
+    axum::extract::Query(params): axum::extract::Query<std::collections::HashMap<String, String>>,
+) -> impl IntoResponse {
+    let token = params.get("token").unwrap_or(&String::new()).clone();
+    
+    let html = format!(
+        r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password - DimDim Health</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }}
+        .container {{
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 100%;
+            padding: 40px;
+        }}
+        .header {{
+            text-align: center;
+            margin-bottom: 32px;
+        }}
+        .icon {{
+            font-size: 64px;
+            margin-bottom: 16px;
+        }}
+        h1 {{
+            color: #d97706;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }}
+        .subtitle {{
+            color: #6b7280;
+            font-size: 14px;
+        }}
+        .form-group {{
+            margin-bottom: 20px;
+        }}
+        label {{
+            display: block;
+            color: #374151;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }}
+        input {{
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }}
+        input:focus {{
+            outline: none;
+            border-color: #d97706;
+        }}
+        .error {{
+            color: #dc2626;
+            font-size: 14px;
+            margin-top: 8px;
+            display: none;
+        }}
+        .error.show {{
+            display: block;
+        }}
+        .submit-btn {{
+            width: 100%;
+            padding: 14px;
+            background: #d97706;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 24px;
+        }}
+        .submit-btn:hover {{
+            background: #b45309;
+        }}
+        .submit-btn:disabled {{
+            background: #9ca3af;
+            cursor: not-allowed;
+        }}
+        .success {{
+            display: none;
+            text-align: center;
+        }}
+        .success.show {{
+            display: block;
+        }}
+        .success-icon {{
+            width: 80px;
+            height: 80px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            margin-bottom: 24px;
+        }}
+        .success h2 {{
+            color: #d97706;
+            margin-bottom: 16px;
+        }}
+        .success p {{
+            color: #6b7280;
+            margin-bottom: 24px;
+        }}
+        .login-link {{
+            display: inline-block;
+            color: #d97706;
+            text-decoration: none;
+            font-weight: 600;
+        }}
+        .login-link:hover {{
+            text-decoration: underline;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">🔐</div>
+            <h1>Reset Password</h1>
+            <p class="subtitle">Enter your new password below</p>
+        </div>
+
+        <form id="resetForm">
+            <div class="form-group">
+                <label for="password">New Password</label>
+                <input type="password" id="password" name="password" 
+                       placeholder="Enter new password" required minlength="8">
+                <div class="error" id="passwordError">Password must be at least 8 characters</div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" 
+                       placeholder="Confirm new password" required>
+                <div class="error" id="confirmError">Passwords do not match</div>
+            </div>
+
+            <div class="error" id="apiError"></div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">Reset Password</button>
+        </form>
+
+        <div class="success" id="successView">
+            <div class="success-icon">✓</div>
+            <h2>Password Reset!</h2>
+            <p>Your password has been reset successfully. You can now login with your new password.</p>
+            <a href="/login" class="login-link">Go to Login</a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('resetForm');
+        const passwordInput = document.getElementById('password');
+        const confirmInput = document.getElementById('confirmPassword');
+        const passwordError = document.getElementById('passwordError');
+        const confirmError = document.getElementById('confirmError');
+        const apiError = document.getElementById('apiError');
+        const submitBtn = document.getElementById('submitBtn');
+        const successView = document.getElementById('successView');
+        const token = '{token}';
+
+        form.addEventListener('submit', async (e) => {{
+            e.preventDefault();
+            
+            // Clear previous errors
+            passwordError.classList.remove('show');
+            confirmError.classList.remove('show');
+            apiError.classList.remove('show');
+            apiError.textContent = '';
+
+            // Validate
+            const password = passwordInput.value;
+            const confirmPassword = confirmInput.value;
+            let hasError = false;
+
+            if (password.length < 8) {{
+                passwordError.classList.add('show');
+                hasError = true;
+            }}
+
+            if (password !== confirmPassword) {{
+                confirmError.classList.add('show');
+                hasError = true;
+            }}
+
+            if (hasError) return;
+
+            // Submit
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Resetting...';
+
+            try {{
+                const response = await fetch('/api/auth/reset-password', {{
+                    method: 'POST',
+                    headers: {{
+                        'Content-Type': 'application/json'
+                    }},
+                    body: JSON.stringify({{
+                        token: token,
+                        new_password: password
+                    }})
+                }});
+
+                if (response.ok) {{
+                    form.style.display = 'none';
+                    successView.classList.add('show');
+                }} else {{
+                    const errorData = await response.json().catch(() => ({{}}));
+                    apiError.textContent = errorData.error || 'Failed to reset password. The link may have expired.';
+                    apiError.classList.add('show');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Reset Password';
+                }}
+            }} catch (error) {{
+                apiError.textContent = 'Network error. Please try again.';
+                apiError.classList.add('show');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Reset Password';
+            }}
+        }});
+
+        // Real-time validation
+        confirmInput.addEventListener('input', () => {{
+            if (confirmInput.value && confirmInput.value !== passwordInput.value) {{
+                confirmError.classList.add('show');
+            }} else {{
+                confirmError.classList.remove('show');
+            }}
+        }});
+    </script>
+</body>
+</html>"#,
+        token = token
+    );
+
+    (
+        StatusCode::OK,
+        [(axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8")],
+        html,
+    )
+}
+
 pub async fn refresh_token(
     State(state): State<AppState>,
     Json(payload): Json<RefreshTokenRequest>,

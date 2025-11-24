@@ -116,3 +116,27 @@ class ForgotPasswordResponse {
       _$ForgotPasswordResponseFromJson(json);
   Map<String, dynamic> toJson() => _$ForgotPasswordResponseToJson(this);
 }
+
+@JsonSerializable()
+class ResetPasswordRequest {
+  final String token;
+  @JsonKey(name: 'new_password')
+  final String newPassword;
+
+  ResetPasswordRequest({required this.token, required this.newPassword});
+
+  factory ResetPasswordRequest.fromJson(Map<String, dynamic> json) =>
+      _$ResetPasswordRequestFromJson(json);
+  Map<String, dynamic> toJson() => _$ResetPasswordRequestToJson(this);
+}
+
+@JsonSerializable()
+class ResetPasswordResponse {
+  final String message;
+
+  ResetPasswordResponse({required this.message});
+
+  factory ResetPasswordResponse.fromJson(Map<String, dynamic> json) =>
+      _$ResetPasswordResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$ResetPasswordResponseToJson(this);
+}
