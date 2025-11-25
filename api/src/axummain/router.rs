@@ -26,7 +26,8 @@ use crate::handlers::user_watch_permissions::{
     get_watchers, get_watching, grant_watch_permission, revoke_watch_permission, search_users,
 };
 use crate::handlers::user_weight::{
-    create_user_weight, delete_user_weight, get_user_weights, update_user_weight,
+    create_user_weight, delete_user_weight, get_user_last_weight, get_user_weight_infos,
+    get_user_weights, update_user_weight,
 };
 
 pub fn get_main_router(app_state: AppState) -> Router {
@@ -56,6 +57,8 @@ pub fn get_main_router(app_state: AppState) -> Router {
         // User weight routes
         .route("/api/user/weights", post(create_user_weight))
         .route("/api/user/weights", get(get_user_weights))
+        .route("/api/user/weights/last", get(get_user_last_weight))
+        .route("/api/user/weights/infos", get(get_user_weight_infos))
         .route("/api/user/weights/{id}", put(update_user_weight))
         .route("/api/user/weights/{id}", delete(delete_user_weight))
         // Food item routes
