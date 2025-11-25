@@ -3,19 +3,24 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
+    pub env: String,
+
     pub database_url: String,
     pub redis_url: String,
 
     pub frontend_url: String,
+    pub listenner_addr: String,
 
     pub env_filter: String,
+
+    pub jwt_secret: String,
 
     pub number_workers: usize,
 
     pub gmail_email: String,
     pub gmail_password: String,
 
-    pub openobserve_endpoint: Option<String>,
+    pub openobserve_endpoint: String,
 }
 
 impl Settings {
@@ -27,7 +32,8 @@ impl Settings {
             // Load common first
             .add_source(File::with_name("config/common.toml").required(true))
             // Override with env-specific file
-            .add_source(File::with_name(&format!("config/{}.toml", env)).required(false));
+            .add_source(File::with_name(&format!("config/{}.toml", env)).required(false))
+            .set_default("env", env)?;
 
         builder.build()?.try_deserialize()
     }
