@@ -1,7 +1,7 @@
 database_url = "postgresql://dev:dev-db@localhost:5432/dimdimhealthdev"
 redis_url = "redis://localhost:6379/"
 
-base_url = "http://localhost:3000"
+frontend_url = "http://localhost:8081"
 listenner_addr = "0.0.0.0:3000"
 
 frontend_origin = "http://localhost:3000"

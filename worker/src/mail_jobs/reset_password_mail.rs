@@ -10,8 +10,8 @@ pub async fn handle_reset_password_email(
     info!("Handling reset password email for: {}", data.email);
     let subject = format!("DimDim Health - Reset your password {}", data.username);
     let reset_link = format!(
-        "{}/api/auth/reset-password?token={}",
-        worker_state.base_url, data.token
+        "{}/#/reset-password?token={}",
+        worker_state.frontend_url, data.token
     );
     let content = format!(
         "Hey {}.\nWe received a request to reset your password. If you didn't make this request, you can safely ignore this email.\nPlease reset your password by clicking the following link: {reset_link} (this link will expire in 1 hour)\n\n Cheers,\n DimDim Health",
