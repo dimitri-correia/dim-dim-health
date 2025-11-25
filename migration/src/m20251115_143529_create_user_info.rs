@@ -1,9 +1,11 @@
+use crate::helpers::{create_updated_at_trigger, drop_updated_at_trigger};
 use sea_orm_migration::prelude::*;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
 static GENDER_ENUM: &str = "gender_enum";
+static TABLE_NAME: &str = "user_additional_infos";
 
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
@@ -72,10 +74,18 @@ impl MigrationTrait for Migration {
                     )
                     .to_owned(),
             )
-            .await
+            .await?;
+
+        // Add trigger for updated_at
+        create_updated_at_trigger(manager, TABLE_NAME).await?;
+
+        Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        // Drop trigger
+        drop_updated_at_trigger(manager, TABLE_NAME).await?;
+
         manager
             .drop_table(Table::drop().table(UserAdditionalInfos::Table).to_owned())
             .await?;

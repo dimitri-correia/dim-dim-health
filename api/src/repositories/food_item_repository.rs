@@ -34,6 +34,7 @@ impl FoodItemRepository {
             fat_per100g: Set(request.fat_per100g),
             added_by: Set(added_by),
             added_at: NotSet,
+            updated_at: NotSet,
         };
         let food_item = food_item.insert(&self.db).await?;
 

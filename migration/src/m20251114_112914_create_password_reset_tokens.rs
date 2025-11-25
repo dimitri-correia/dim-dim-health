@@ -1,3 +1,4 @@
+use crate::helpers::{schedule_cron_job, unschedule_cron_job};
 use sea_orm_migration::prelude::*;
 
 #[derive(DeriveMigrationName)]
@@ -78,15 +79,34 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        // Schedule the cron job to run every day at 01:00 AM
+        schedule_cron_job(
+            manager,
+            CRON_NAME,
+            "0 1 * * *",
+            &format!("DELETE FROM {PASSWORD_RESET_TABLE} WHERE expires_at < NOW()"),
+        )
+        .await?;
+
         Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        unschedule_cron_job(manager, CRON_NAME).await?;
+
+        manager
+            .get_connection()
+            .execute_unprepared(&format!("SELECT cron.unschedule('{CRON_NAME}');"))
+            .await?;
+
         manager
             .drop_table(Table::drop().table(PasswordResetToken::Table).to_owned())
             .await
     }
 }
+
+static CRON_NAME: &str = "cleanup_expired_pass_reset_tokens";
+static PASSWORD_RESET_TABLE: &str = "password_reset_token";
 
 #[derive(DeriveIden)]
 enum PasswordResetToken {
