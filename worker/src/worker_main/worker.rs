@@ -1,6 +1,9 @@
 use entities::{Job, JobEmail, TaskType};
 use redis::{AsyncCommands, aio::ConnectionManager};
+use std::sync::Arc;
 use std::time::Duration;
+use tokio::signal;
+use tokio::sync::RwLock;
 use tracing::{error, info};
 
 use crate::{
@@ -8,15 +11,20 @@ use crate::{
     worker_main::{
         env_loader::Settings,
         state::{self, WorkerState},
+        telemetry,
     },
 };
 
 pub async fn worker_main() {
     let settings = Settings::load_config().expect("Failed to load configuration");
 
-    tracing_subscriber::fmt()
-        .with_env_filter(&settings.env_filter)
-        .init();
+    // Initialize telemetry with OpenObserve if configured
+    telemetry::init_telemetry(
+        "dimdim-health-worker",
+        settings.openobserve_endpoint.as_deref(),
+        &settings.env_filter,
+    )
+    .expect("Failed to initialize telemetry");
 
     info!("Starting Worker...");
 
@@ -24,32 +32,90 @@ pub async fn worker_main() {
         .await
         .expect("Failed to create Worker State");
 
+    // Shared flag to indicate shutdown
+    let shutdown = Arc::new(RwLock::new(false));
+
     // Spawn multiple worker tasks
     let mut handles = vec![];
     for i in 0..settings.number_workers {
         let worker_id = format!("worker-{i}");
-
         let worker_state = worker_state.clone();
+        let shutdown = shutdown.clone();
 
         let handle =
-            tokio::spawn(async move { worker_loop(worker_state.clone(), worker_id).await });
+            tokio::spawn(
+                async move { worker_loop(worker_state.clone(), worker_id, shutdown).await },
+            );
         handles.push(handle);
     }
 
-    // Wait for all workers
+    // Wait for shutdown signal
+    shutdown_signal().await;
+
+    // Set shutdown flag
+    {
+        let mut shutdown_flag = shutdown.write().await;
+        *shutdown_flag = true;
+    }
+
+    info!("Shutdown signal received, waiting for workers to finish processing current jobs...");
+
+    // Wait for all workers to complete
     for handle in handles {
         if let Err(e) = handle.await {
             error!("Worker task panicked: {}", e);
         }
     }
+
+    info!("All workers have shut down gracefully");
+
+    // Shutdown telemetry gracefully
+    telemetry::shutdown_telemetry();
 }
 
-async fn worker_loop(worker_state: WorkerState, worker_id: String) {
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {
+            info!("Received Ctrl+C signal");
+        },
+        _ = terminate => {
+            info!("Received SIGTERM signal");
+        },
+    }
+}
+
+async fn worker_loop(worker_state: WorkerState, worker_id: String, shutdown: Arc<RwLock<bool>>) {
     info!("{}: Worker started", worker_id);
 
     let mut redis = worker_state.redis.clone();
 
     loop {
+        // Check if shutdown was requested
+        {
+            let should_shutdown = *shutdown.read().await;
+            if should_shutdown {
+                info!("{}: Shutdown requested, stopping worker loop", worker_id);
+                break;
+            }
+        }
+
         match fetch_job(&mut redis).await {
             Ok(Some(job)) => {
                 if let Err(err) = process(worker_state.clone(), job, &worker_id).await {
@@ -65,6 +131,8 @@ async fn worker_loop(worker_state: WorkerState, worker_id: String) {
             }
         }
     }
+
+    info!("{}: Worker stopped", worker_id);
 }
 
 async fn fetch_job(redis: &mut ConnectionManager) -> Result<Option<Job>, redis::RedisError> {
