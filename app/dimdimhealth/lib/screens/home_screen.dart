@@ -82,6 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 title: 'Weight',
                                 subtitle: 'Track your weight',
                                 color: AppConfig.blueColor,
+                                route: '/weight',
                               ),
                               _buildActionCard(
                                 context,
@@ -192,18 +193,23 @@ class _HomeScreenState extends State<HomeScreen> {
     required String title,
     required String subtitle,
     required Color color,
+    String? route,
   }) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('$title feature coming soon!'),
-              duration: const Duration(seconds: 2),
-            ),
-          );
+          if (route != null) {
+            Navigator.of(context).pushNamed(route);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('$title feature coming soon!'),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
         },
         borderRadius: BorderRadius.circular(16),
         child: Container(
