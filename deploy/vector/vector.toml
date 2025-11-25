@@ -1,0 +1,35 @@
+# Vector configuration for collecting container logs and sending to OpenObserve
+# Collects logs from Postgres, Redis, API, Worker, and all other containers
+
+[sources.docker_logs]
+type = "docker_logs"
+docker_host = "unix:///var/run/docker.sock"
+
+[transforms.parse_logs]
+type = "remap"
+inputs = ["docker_logs"]
+source = '''
+# Add container metadata as structured fields
+.container_name = .container_name
+.service = .label."com.docker.compose.service" ?? "unknown"
+.timestamp = now()
+'''
+
+[sinks.openobserve]
+type = "http"
+inputs = ["parse_logs"]
+uri = "http://openobserve:5080/api/default/default/_json"
+method = "post"
+encoding.codec = "json"
+
+[sinks.openobserve.auth]
+strategy = "basic"
+user = "admin@example.com"
+password = "Complexpass#123"
+
+[sinks.openobserve.request]
+timeout_secs = 10
+
+[sinks.openobserve.batch]
+max_bytes = 10485760
+timeout_secs = 5

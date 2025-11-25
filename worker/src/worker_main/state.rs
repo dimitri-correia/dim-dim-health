@@ -1,8 +1,8 @@
+use entities::env_loader::Settings;
 use log::info;
 use migration::sea_orm::{self, ConnectOptions, Database, DatabaseConnection};
 use redis::{RedisError, aio::ConnectionManager};
 
-use crate::worker_main::env_loader::Settings;
 use anyhow::Context;
 use lettre::{message::Mailbox, transport::smtp::authentication::Credentials};
 
