@@ -1,3 +1,4 @@
+use crate::helpers::{schedule_cron_job, unschedule_cron_job};
 use sea_orm_migration::prelude::*;
 
 #[derive(DeriveMigrationName)]
@@ -29,6 +30,15 @@ impl MigrationTrait for Migration {
                             .not_null()
                             .unique_key(),
                     )
+                    .col(
+                        ColumnDef::new(EmailVerificationToken::PendingEmail)
+                            .string_len(255)
+                            .null(),
+                    )
+                    // Add pending_email column to email_verification_token table
+                    // This will store the new email when a user changes their email
+                    // NULL means it's a regular email verification (for new users)
+                    // Non-NULL means it's an email change verification
                     .col(
                         ColumnDef::new(EmailVerificationToken::ExpiresAt)
                             .timestamp_with_time_zone()
@@ -85,10 +95,27 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        // Schedule the cron job to run every day at 02:00 AM
+        // Ensure pg_cron extension is enabled
+        manager
+            .get_connection()
+            .execute_unprepared("CREATE EXTENSION IF NOT EXISTS pg_cron;")
+            .await?;
+
+        schedule_cron_job(
+            manager,
+            CRON_NAME,
+            "0 2 * * *",
+            &format!("DELETE FROM {EMAIL_VERIFICATION_TABLE} WHERE expires_at < NOW()"),
+        )
+        .await?;
+
         Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        unschedule_cron_job(manager, CRON_NAME).await?;
+
         manager
             .drop_table(
                 Table::drop()
@@ -99,12 +126,16 @@ impl MigrationTrait for Migration {
     }
 }
 
+static CRON_NAME: &str = "cleanup_expired_tokens";
+static EMAIL_VERIFICATION_TABLE: &str = "email_verification_token";
+
 #[derive(DeriveIden)]
 enum EmailVerificationToken {
     Table,
     Id,
     UserId,
     Token,
+    PendingEmail,
     ExpiresAt,
     CreatedAt,
 }

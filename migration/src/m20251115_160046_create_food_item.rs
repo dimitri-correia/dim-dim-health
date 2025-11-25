@@ -47,6 +47,12 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(FoodItem::AddedBy).uuid().not_null())
                     .col(
+                        ColumnDef::new(FoodItem::UpdatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null()
+                            .default(Expr::current_timestamp()),
+                    )
+                    .col(
                         ColumnDef::new(FoodItem::AddedAt)
                             .timestamp_with_time_zone()
                             .not_null()
@@ -113,6 +119,7 @@ enum FoodItem {
     CarbsPer100g,
     FatPer100g,
     AddedBy,
+    UpdatedAt,
     AddedAt,
 }
 
