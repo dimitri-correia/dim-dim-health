@@ -12,3 +12,8 @@ number_workers = 5
 
 gmail_email = "dimdimhealth@gmail.com"
 # gmail_password is defined in common.toml
+
+# OpenObserve configuration (matches docker-compose.yml defaults for local development)
+openobserve_endpoint = "http://localhost:5080/api/default/v1/traces"
+openobserve_user = "admin@example.com"
+openobserve_password = "Complexpass#123"
