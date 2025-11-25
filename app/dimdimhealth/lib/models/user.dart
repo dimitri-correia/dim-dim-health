@@ -4,6 +4,7 @@ part 'user.g.dart';
 
 @JsonSerializable()
 class User {
+  final String id;
   final String email;
   final String username;
   @JsonKey(name: 'email_verified')
@@ -12,13 +13,17 @@ class User {
   final String createdAt;
   @JsonKey(name: 'is_guest')
   final bool isGuest;
+  @JsonKey(name: 'profile_image')
+  final String profileImage;
 
   User({
+    required this.id,
     required this.email,
     required this.username,
     required this.emailVerified,
     required this.createdAt,
     required this.isGuest,
+    required this.profileImage,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
@@ -60,11 +65,14 @@ class RegisterUserData {
   final String username;
   final String email;
   final String password;
+  @JsonKey(name: 'profile_image')
+  final String? profileImage;
 
   RegisterUserData({
     required this.username,
     required this.email,
     required this.password,
+    this.profileImage,
   });
 
   factory RegisterUserData.fromJson(Map<String, dynamic> json) =>

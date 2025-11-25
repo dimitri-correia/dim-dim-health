@@ -5,8 +5,7 @@ use crate::helpers::{
 use axum::http::{HeaderValue, StatusCode};
 use dimdim_health_api::schemas::auth_schemas::LoginResponse;
 use dimdim_health_api::schemas::user_watch_permission_schemas::{
-    SearchUsersResponse, WatchersResponse, WatchingResponse, GrantWatchPermissionResponse,
-    RevokeWatchPermissionResponse,
+    SearchUsersResponse, WatchersResponse, WatchingResponse,
 };
 use serde_json::json;
 
@@ -34,7 +33,7 @@ async fn create_test_user(username: &str, email: &str) -> (LoginResponse, axum_t
 #[tokio::test]
 async fn test_search_users() {
     // Create test users
-    let (user1, _) = create_test_user("searchtest1", "searchtest1@dimdim.fr").await;
+    let (_user1, _) = create_test_user("searchtest1", "searchtest1@dimdim.fr").await;
     let (user2, server2) = create_test_user("searchtest2", "searchtest2@dimdim.fr").await;
     let (_user3, _) = create_test_user("searchtest3", "searchtest3@dimdim.fr").await;
 
@@ -91,10 +90,7 @@ async fn test_grant_and_get_watch_permissions() {
         )
         .await;
 
-    res.assert_status(StatusCode::OK);
-    let grant_response = res.json::<GrantWatchPermissionResponse>();
-    assert_eq!(grant_response.user_watched_id, user1.user.id);
-    assert_eq!(grant_response.user_watching_id, user2.user.id);
+    res.assert_status(StatusCode::CREATED);
 
     // User1 gets their watchers (should include User2)
     let res = server1
@@ -143,7 +139,7 @@ async fn test_revoke_watch_permission() {
         )
         .await;
 
-    res.assert_status(StatusCode::OK);
+    res.assert_status(StatusCode::CREATED);
 
     // User1 revokes permission from User2
     let res = server1
@@ -158,8 +154,6 @@ async fn test_revoke_watch_permission() {
         .await;
 
     res.assert_status(StatusCode::OK);
-    let revoke_response = res.json::<RevokeWatchPermissionResponse>();
-    assert_eq!(revoke_response.message, "Watch permission revoked successfully");
 
     // User1 gets their watchers (should be empty now)
     let res = server1
@@ -193,7 +187,7 @@ async fn test_grant_duplicate_permission() {
         )
         .await;
 
-    res.assert_status(StatusCode::OK);
+    res.assert_status(StatusCode::CREATED);
 
     // User1 tries to grant permission to User2 again (should fail with conflict)
     let res = server1

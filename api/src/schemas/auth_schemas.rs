@@ -72,6 +72,7 @@ pub struct UserResponse {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserData {
+    pub id: uuid::Uuid,
     pub email: String,
     pub username: String,
     pub email_verified: bool,
@@ -86,6 +87,7 @@ impl UserData {
         let is_guest = user.email.ends_with(GUEST_EMAIL_DOMAIN);
 
         Self {
+            id: user.id,
             email: user.email,
             username: user.username,
             email_verified: user.email_verified,
