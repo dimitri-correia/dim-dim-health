@@ -1,4 +1,5 @@
 use chrono::{DateTime, Duration, FixedOffset, Utc};
+use entities::sea_orm_active_enums::UserProfileImage;
 use once_cell::sync::Lazy;
 use uuid::Uuid;
 
@@ -36,7 +37,7 @@ async fn test_password_reset_repo_create_and_get() {
     let user = app_state
         .repositories
         .user_repository
-        .create(username, &email, password_hash, false)
+        .create(username, &email, password_hash, false, UserProfileImage::Avatar1)
         .await
         .unwrap();
 
@@ -125,7 +126,7 @@ async fn test_delete_all_user_tokens() {
     let user = app_state
         .repositories
         .user_repository
-        .create(username, &email, password_hash, false)
+        .create(username, &email, password_hash, false, UserProfileImage::Avatar1)
         .await
         .unwrap();
 

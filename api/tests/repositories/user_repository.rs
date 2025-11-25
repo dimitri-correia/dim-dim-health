@@ -1,4 +1,5 @@
 use crate::helpers::test_server::get_app_state;
+use entities::sea_orm_active_enums::UserProfileImage;
 use uuid::Uuid;
 
 #[tokio::test]
@@ -10,7 +11,7 @@ async fn test_user_repo_create_and_get() {
     let user_repo = &get_app_state().await.repositories.user_repository;
 
     let res = user_repo
-        .create(username, &email, password_hash, false)
+        .create(username, &email, password_hash, false, UserProfileImage::Avatar1)
         .await
         .unwrap();
     assert_eq!(res.username, username);
@@ -22,7 +23,7 @@ async fn test_user_repo_create_and_get() {
     let user_id = res.id;
 
     let res = user_repo
-        .create(username, &email, password_hash, false)
+        .create(username, &email, password_hash, false, UserProfileImage::Avatar1)
         .await;
     assert!(res.is_err());
 
@@ -93,7 +94,7 @@ async fn test_user_repo_create_and_update() {
 
     let user_repo = &get_app_state().await.repositories.user_repository;
     let res = user_repo
-        .create(username, &email, password_hash, false)
+        .create(username, &email, password_hash, false, UserProfileImage::Avatar1)
         .await
         .unwrap();
 
@@ -153,7 +154,7 @@ async fn test_sql_injection() {
 
     let user_repo = &get_app_state().await.repositories.user_repository;
     let res = user_repo
-        .create(username, email, password_hash, false)
+        .create(username, email, password_hash, false, UserProfileImage::Avatar1)
         .await
         .unwrap();
 
@@ -174,7 +175,7 @@ async fn test_user_repo_create_guest_user() {
     let user_repo = &get_app_state().await.repositories.user_repository;
 
     let res = user_repo
-        .create(username, &email, password_hash, true)
+        .create(username, &email, password_hash, true, UserProfileImage::Avatar1)
         .await
         .unwrap();
     assert_eq!(res.username, username);
@@ -201,7 +202,7 @@ async fn test_user_repo_create_regular_user() {
     let user_repo = &get_app_state().await.repositories.user_repository;
 
     let res = user_repo
-        .create(username, &email, password_hash, false)
+        .create(username, &email, password_hash, false, UserProfileImage::Avatar1)
         .await
         .unwrap();
     assert_eq!(res.username, username);

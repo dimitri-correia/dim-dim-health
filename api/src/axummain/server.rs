@@ -34,21 +34,6 @@ pub async fn axum_main() {
         .await
         .unwrap();
 
-    info!("Server shutdown complete");
-
-    // Setup graceful shutdown
-    let shutdown_signal = async {
-        tokio::signal::ctrl_c()
-            .await
-            .expect("Failed to install CTRL+C signal handler");
-    };
-
-    // Run server with graceful shutdown
-    axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal)
-        .await
-        .unwrap();
-
     info!("Server shutting down...");
 
     // Shutdown telemetry gracefully

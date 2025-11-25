@@ -1,11 +1,15 @@
 use anyhow::Result;
 use opentelemetry::{global, trace::TracerProvider as _, KeyValue};
-use opentelemetry_otlp::{HttpExporterBuilder, WithExportConfig};
+use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{
-    trace::{self, RandomIdGenerator, Sampler, TracerProvider},
+    trace::{RandomIdGenerator, Sampler, SdkTracerProvider},
     Resource,
 };
+use std::sync::OnceLock;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
+
+/// Global tracer provider for shutdown
+static TRACER_PROVIDER: OnceLock<SdkTracerProvider> = OnceLock::new();
 
 /// Initialize OpenTelemetry tracing with OpenObserve backend
 /// 
@@ -45,22 +49,24 @@ pub fn init_telemetry(
         .build()?;
 
     // Create tracer provider
-    let provider = TracerProvider::builder()
-        .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio)
-        .with_config(
-            trace::Config::default()
-                .with_sampler(Sampler::AlwaysOn)
-                .with_id_generator(RandomIdGenerator::default())
-                .with_max_events_per_span(64)
-                .with_max_attributes_per_span(16)
-                .with_resource(Resource::new(vec![
-                    KeyValue::new("service.name", service_name.to_string()),
-                ])),
+    let provider = SdkTracerProvider::builder()
+        .with_batch_exporter(exporter)
+        .with_sampler(Sampler::AlwaysOn)
+        .with_id_generator(RandomIdGenerator::default())
+        .with_max_events_per_span(64)
+        .with_max_attributes_per_span(16)
+        .with_resource(
+            Resource::builder_empty()
+                .with_attributes([KeyValue::new("service.name", service_name.to_string())])
+                .build(),
         )
         .build();
 
     // Set as global provider
     global::set_tracer_provider(provider.clone());
+
+    // Store provider for shutdown
+    let _ = TRACER_PROVIDER.set(provider.clone());
 
     // Create telemetry layer
     let tracer_name = service_name.to_string();
@@ -80,5 +86,7 @@ pub fn init_telemetry(
 /// 
 /// This should be called before the application exits to ensure all traces are flushed
 pub fn shutdown_telemetry() {
-    global::shutdown_tracer_provider();
+    if let Some(provider) = TRACER_PROVIDER.get() {
+        let _ = provider.shutdown();
+    }
 }

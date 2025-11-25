@@ -1,15 +1,8 @@
 use axum::http::{HeaderValue, Method, header};
-use axum::http::{HeaderValue, Method, header};
-use axum::routing::post;
 use axum::routing::{delete, post, put};
 use axum::{Router, routing::get};
-use axum::{
-    Router,
-    routing::{get, put},
-};
 use tower_http::cors::CorsLayer;
 use tower_http::set_header::SetResponseHeaderLayer;
-use tower_http::trace::TraceLayer;
 use tower_http::trace::TraceLayer;
 
 use crate::axummain::state::AppState;

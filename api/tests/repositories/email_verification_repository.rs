@@ -1,5 +1,6 @@
 use crate::helpers::test_server::get_app_state;
 use chrono::{DateTime, Duration, FixedOffset, Utc};
+use entities::sea_orm_active_enums::UserProfileImage;
 use once_cell::sync::Lazy;
 use uuid::Uuid;
 
@@ -43,7 +44,7 @@ async fn test_email_verif_repo_create_and_get() {
     let user = app_state
         .repositories
         .user_repository
-        .create(username, &email, password_hash, false)
+        .create(username, &email, password_hash, false, UserProfileImage::Avatar1)
         .await
         .unwrap();
 
