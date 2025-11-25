@@ -1,3 +1,4 @@
+use crate::helpers::drop_updated_at_trigger;
 use sea_orm_migration::prelude::*;
 
 #[derive(DeriveMigrationName)]
@@ -80,7 +81,8 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        // Add trigger for updated_at
+        // Create the update_updated_at_column function (shared by all tables)
+        // and add trigger for updated_at on users table
         manager
             .get_connection()
             .execute_unprepared(
@@ -105,15 +107,13 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        // Drop trigger and function
+        // Drop trigger
+        drop_updated_at_trigger(manager, "users").await?;
+
+        // Drop the shared function (since this is the first migration that creates it)
         manager
             .get_connection()
-            .execute_unprepared(
-                r#"
-                DROP TRIGGER IF EXISTS update_users_updated_at ON users;
-                DROP FUNCTION IF EXISTS update_updated_at_column;
-                "#,
-            )
+            .execute_unprepared("DROP FUNCTION IF EXISTS update_updated_at_column;")
             .await?;
 
         // Drop table

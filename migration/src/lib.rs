@@ -1,5 +1,7 @@
 pub use sea_orm_migration::prelude::*;
 
+pub mod helpers;
+
 mod m20251028_170454_user_table;
 mod m20251101_123625_create_email_verification_tokens;
 mod m20251101_124651_add_email_verified_to_users;
