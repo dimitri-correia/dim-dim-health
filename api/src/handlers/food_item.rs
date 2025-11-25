@@ -97,28 +97,6 @@ pub async fn get_food_items(
     Ok(Json(response))
 }
 
-pub async fn get_food_item_by_id(
-    State(state): State<AppState>,
-    RequireVerifiedAuth(_user): RequireVerifiedAuth,
-    Path(id): Path<Uuid>,
-) -> Result<Json<FoodItemResponse>, impl IntoResponse> {
-    info!("Fetching food item {}", id);
-
-    match state
-        .repositories
-        .food_item_repository
-        .find_by_id(&id)
-        .await
-    {
-        Ok(Some(food_item)) => Ok(Json(FoodItemResponse::from(food_item))),
-        Ok(None) => Err(StatusCode::NOT_FOUND.into_response()),
-        Err(err) => {
-            error!("Failed to fetch food item: {}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
-        }
-    }
-}
-
 pub async fn update_food_item(
     State(state): State<AppState>,
     RequireVerifiedAuth(user): RequireVerifiedAuth,

@@ -12,6 +12,7 @@ pub struct WorkerState {
     pub redis: ConnectionManager,
 
     pub base_url: String,
+    pub frontend_url: String,
 
     pub gmail_from: Mailbox,
     pub gmail_creds: Credentials,
@@ -26,6 +27,7 @@ impl WorkerState {
             db,
             redis,
             settings.base_url.clone(),
+            settings.frontend_url.clone(),
             settings.gmail_email.clone(),
             settings.gmail_password.clone(),
         )
@@ -36,6 +38,7 @@ impl WorkerState {
         db: DatabaseConnection,
         redis: ConnectionManager,
         base_url: String,
+        frontend_url: String,
         gmail_email: String,
         gmail_password: String,
     ) -> anyhow::Result<Self> {
@@ -50,6 +53,7 @@ impl WorkerState {
             db,
             redis,
             base_url,
+            frontend_url,
             gmail_from,
             gmail_creds,
         })

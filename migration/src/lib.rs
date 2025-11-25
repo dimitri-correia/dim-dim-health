@@ -16,7 +16,8 @@ mod m20251115_160750_create_meal;
 mod m20251115_161449_create_meal_item;
 mod m20251119_163331_pg_cron_clean_guest_users;
 mod m20251119_172747_pg_cron_clean_non_verified_email;
-mod m20251121_074500_add_query_optimization_indexes;
+mod m20251124_130840_add_user_image;
+mod m20251124_131126_chnage_email_adress;
 
 pub struct Migrator;
 
@@ -40,7 +41,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20251115_161449_create_meal_item::Migration),
             Box::new(m20251119_163331_pg_cron_clean_guest_users::Migration),
             Box::new(m20251119_172747_pg_cron_clean_non_verified_email::Migration),
-            Box::new(m20251121_074500_add_query_optimization_indexes::Migration),
+            Box::new(m20251124_130840_add_user_image::Migration),
+            Box::new(m20251124_131126_chnage_email_adress::Migration),
         ]
     }
 }

@@ -37,6 +37,7 @@ class AuthProvider with ChangeNotifier {
     required String username,
     required String email,
     required String password,
+    String? profileImage,
   }) async {
     _isLoading = true;
     _error = null;
@@ -47,6 +48,7 @@ class AuthProvider with ChangeNotifier {
         username: username,
         email: email,
         password: password,
+        profileImage: profileImage,
       );
 
       _user = response.user;
@@ -136,10 +138,18 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      await _apiService.resetPassword(
+      final response = await _apiService.resetPassword(
         token: token,
         newPassword: newPassword,
       );
+
+      // Auto-login after successful password reset
+      _user = response.user;
+      _accessToken = response.accessToken;
+      _refreshToken = response.refreshToken;
+
+      await _saveAuth();
+
       _isLoading = false;
       notifyListeners();
       return true;
@@ -214,12 +224,79 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<String?> updateSettings({
+    String? username,
+    String? email,
+    String? profileImage,
+    String? currentPassword,
+    String? newPassword,
+  }) async {
+    if (_accessToken == null) {
+      return 'Not authenticated';
+    }
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final message = await _apiService.updateSettings(
+        accessToken: _accessToken!,
+        username: username,
+        email: email,
+        profileImage: profileImage,
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+
+      // Refresh user data after successful update
+      await refreshUser();
+
+      _isLoading = false;
+      notifyListeners();
+      return message;
+    } on ApiException catch (e) {
+      _error = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return null;
+    } catch (e) {
+      _error = 'Network error. Please check your connection.';
+      _isLoading = false;
+      notifyListeners();
+      return null;
+    }
+  }
+
   Future<void> _saveAuth() async {
     if (_accessToken != null) {
       await _storage.write(key: 'access_token', value: _accessToken);
     }
     if (_refreshToken != null) {
       await _storage.write(key: 'refresh_token', value: _refreshToken);
+    }
+  }
+
+  Future<bool> verifyEmail({required String token}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _apiService.verifyEmail(token: token);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Network error. Please check your connection.';
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 

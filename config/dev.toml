@@ -2,6 +2,7 @@ database_url = "postgresql://dev:dev-db@localhost:5432/dimdimhealthdev"
 redis_url = "redis://localhost:6379/"
 
 base_url = "http://localhost:3000"
+frontend_url = "http://localhost:8081"
 listenner_addr = "0.0.0.0:3000"
 
 frontend_origin = "http://localhost:3000"
@@ -14,3 +15,10 @@ number_workers = 5
 
 gmail_email = "dimdimhealth@gmail.com"
 # gmail_password is defined in common.toml
+
+# OpenObserve configuration
+# Uncomment the line below to enable OpenObserve logging
+# Format: http://<host>:<port>/api/<org_name>
+# Default OpenObserve HTTP port is 5080, organization name is "default"
+# openobserve_endpoint = "http://localhost:5080/api/default"
+

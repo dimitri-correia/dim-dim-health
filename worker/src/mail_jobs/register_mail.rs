@@ -10,8 +10,8 @@ pub async fn handle_registration_email(
     info!("Handling registration email for: {}", data.email);
     let subject = format!("DimDim Health - Verify your email {}", data.username);
     let verification_link = format!(
-        "{}/api/auth/verify-email?token={}",
-        worker_state.base_url, data.token
+        "{}/#/verify-email?token={}",
+        worker_state.frontend_url, data.token
     );
     let content = format!(
         "Hey {}.\nThanks for registering!\nPlease verify your email by clicking the following link: {verification_link} (this link will expire in 2 hours)\n\n Cheers,\n DimDim Health",

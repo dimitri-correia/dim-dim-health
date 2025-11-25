@@ -7,6 +7,7 @@ pub struct Settings {
     pub redis_url: String,
 
     pub base_url: String,
+    pub frontend_url: String,
 
     pub env_filter: String,
 
@@ -14,6 +15,8 @@ pub struct Settings {
 
     pub gmail_email: String,
     pub gmail_password: String,
+    
+    pub openobserve_endpoint: Option<String>,
 }
 
 impl Settings {

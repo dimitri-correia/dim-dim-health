@@ -276,19 +276,19 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         ),
         const SizedBox(height: 16),
         const Text(
-          'Your password has been reset successfully. You can now login with your new password.',
+          'Your password has been reset successfully. You are now logged in.',
           style: TextStyle(fontSize: 16, color: AppConfig.whiteColor),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 48),
 
-        // Go to Login Button
+        // Go to Home Button
         SizedBox(
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
             onPressed: () {
-              Navigator.of(context).pushReplacementNamed('/login');
+              Navigator.of(context).pushReplacementNamed('/home');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppConfig.goldColor,
@@ -298,7 +298,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               ),
             ),
             child: const Text(
-              'Go to Login',
+              'Go to Home',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),

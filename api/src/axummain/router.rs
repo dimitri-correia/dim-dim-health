@@ -11,13 +11,14 @@ use crate::handlers::auth::{
     reset_password, reset_password_page, verify_email,
 };
 use crate::handlers::food_item::{
-    create_food_item, delete_food_item, get_food_item_by_id, get_food_items, update_food_item,
+    create_food_item, delete_food_item, get_food_items, update_food_item,
 };
 use crate::handlers::meal::{
-    add_meal_item, create_meal, delete_meal, delete_meal_item, get_meal_by_id, get_meal_items,
-    get_meals, update_meal, update_meal_item,
+    add_meal_item, create_meal, delete_meal, delete_meal_item, get_meal_items, get_meals,
+    update_meal, update_meal_item,
 };
 use crate::handlers::server_health::server_health_check;
+use crate::handlers::settings::update_settings;
 use crate::handlers::user_group::{
     get_public_group_members, get_user_groups, join_public_group, leave_public_group,
 };
@@ -61,13 +62,11 @@ pub fn get_main_router(app_state: AppState) -> Router {
         // Food item routes
         .route("/api/food-items", post(create_food_item))
         .route("/api/food-items", get(get_food_items))
-        .route("/api/food-items/{id}", get(get_food_item_by_id))
         .route("/api/food-items/{id}", put(update_food_item))
         .route("/api/food-items/{id}", delete(delete_food_item))
         // Meal routes
         .route("/api/meals", post(create_meal))
         .route("/api/meals", get(get_meals))
-        .route("/api/meals/{id}", get(get_meal_by_id))
         .route("/api/meals/{id}", put(update_meal))
         .route("/api/meals/{id}", delete(delete_meal))
         // Meal item routes
@@ -98,6 +97,8 @@ pub fn get_main_router(app_state: AppState) -> Router {
             "/api/watch-permissions/revoke",
             post(revoke_watch_permission),
         )
+        // Settings routes
+        .route("/api/settings", put(update_settings))
         // Set application state
         .with_state(app_state)
         // Security headers

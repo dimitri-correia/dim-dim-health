@@ -11,7 +11,6 @@ use crate::{
         auth_schemas::*,
         password_reset_schemas::{
             ForgotPasswordRequest, ForgotPasswordResponse, ResetPasswordRequest,
-            ResetPasswordResponse,
         },
         token_schemas::{LogoutRequest, LogoutResponse, RefreshTokenRequest, RefreshTokenResponse},
     },
@@ -297,16 +296,30 @@ pub async fn verify_email(
         return Err(StatusCode::GONE);
     }
 
-    debug!(
-        "Marking user {} email as verified",
-        verification_token.user_id
-    );
-    state
-        .repositories
-        .email_verification_repository
-        .verify_user_email(&verification_token.user_id)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    // Check if this is an email change verification or initial verification
+    if let Some(pending_email) = &verification_token.pending_email {
+        debug!(
+            "Updating user {} email to {}",
+            verification_token.user_id, pending_email
+        );
+        state
+            .repositories
+            .email_verification_repository
+            .update_user_email(&verification_token.user_id, pending_email)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    } else {
+        debug!(
+            "Marking user {} email as verified",
+            verification_token.user_id
+        );
+        state
+            .repositories
+            .email_verification_repository
+            .verify_user_email(&verification_token.user_id)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    }
 
     debug!("Deleting verification token: {}", token);
     state
@@ -411,7 +424,7 @@ pub async fn forgot_password(
 pub async fn reset_password(
     State(state): State<AppState>,
     Json(payload): Json<ResetPasswordRequest>,
-) -> Result<Json<ResetPasswordResponse>, impl IntoResponse> {
+) -> Result<Json<LoginResponse>, impl IntoResponse> {
     info!(
         "Received reset password request for token: {}",
         payload.token
@@ -460,7 +473,7 @@ pub async fn reset_password(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
     debug!("Updating password for user {}", reset_token.user_id);
-    state
+    let user = state
         .repositories
         .user_repository
         .update_password(&reset_token.user_id, &new_password_hash)
@@ -475,9 +488,25 @@ pub async fn reset_password(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
-    Ok(Json(ResetPasswordResponse {
-        message: "Password has been reset successfully. You can now login with your new password."
-            .to_string(),
+    // Generate tokens for auto-login
+    let access_token = generate_token(&user.id, &state.jwt_secret)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+
+    let refresh_token = generate_refresh_token();
+    let refresh_token_hash = hash_password(&refresh_token, Some(4))
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+
+    state
+        .repositories
+        .refresh_token_repository
+        .create_token(&user.id, &refresh_token_hash)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+
+    Ok(Json(LoginResponse {
+        user: UserData::from_user(user),
+        access_token,
+        refresh_token,
     }))
 }
 

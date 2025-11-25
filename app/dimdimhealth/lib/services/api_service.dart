@@ -20,12 +20,14 @@ class ApiService {
     required String username,
     required String email,
     required String password,
+    String? profileImage,
   }) async {
     final request = RegisterRequest(
       user: RegisterUserData(
         username: username,
         email: email,
         password: password,
+        profileImage: profileImage,
       ),
     );
 
@@ -98,7 +100,7 @@ class ApiService {
     }
   }
 
-  Future<ResetPasswordResponse> resetPassword({
+  Future<LoginResponse> resetPassword({
     required String token,
     required String newPassword,
   }) async {
@@ -114,7 +116,7 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      return ResetPasswordResponse.fromJson(jsonDecode(response.body));
+      return LoginResponse.fromJson(jsonDecode(response.body));
     } else if (response.statusCode == 400) {
       final error = jsonDecode(response.body);
       throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
@@ -162,6 +164,74 @@ class ApiService {
         'Failed to fetch user data',
         statusCode: response.statusCode,
       );
+    }
+  }
+
+  Future<String> updateSettings({
+    required String accessToken,
+    String? username,
+    String? email,
+    String? profileImage,
+    String? currentPassword,
+    String? newPassword,
+  }) async {
+    final body = <String, dynamic>{};
+    
+    if (username != null) body['username'] = username;
+    if (email != null) body['email'] = email;
+    if (profileImage != null) body['profile_image'] = profileImage;
+    
+    if (currentPassword != null && newPassword != null) {
+      body['passwords'] = {
+        'current_password': currentPassword,
+        'new_password': newPassword,
+      };
+    }
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/api/settings'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['message'] as String;
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 409) {
+      throw ApiException(
+        'Username or email already taken',
+        statusCode: 409,
+      );
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
+    } else {
+      throw ApiException(
+        'Failed to update settings',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  Future<VerifyEmailResponse> verifyEmail({required String token}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/auth/verify-email?token=$token'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      return VerifyEmailResponse.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 404) {
+      throw ApiException('Invalid or expired verification token', statusCode: 404);
+    } else if (response.statusCode == 410) {
+      throw ApiException('Verification token has expired', statusCode: 410);
+    } else {
+      throw ApiException('Verification failed', statusCode: response.statusCode);
     }
   }
 }

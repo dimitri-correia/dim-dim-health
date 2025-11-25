@@ -87,28 +87,6 @@ pub async fn get_meals(
     Ok(Json(response))
 }
 
-pub async fn get_meal_by_id(
-    State(state): State<AppState>,
-    RequireVerifiedAuth(user): RequireVerifiedAuth,
-    Path(id): Path<Uuid>,
-) -> Result<Json<MealResponse>, impl IntoResponse> {
-    info!("Fetching meal {} for user: {}", id, user.id);
-
-    match state.repositories.meal_repository.find_by_id(&id).await {
-        Ok(Some(meal)) => {
-            if meal.user_id != user.id {
-                return Err(StatusCode::FORBIDDEN.into_response());
-            }
-            Ok(Json(MealResponse::from(meal)))
-        }
-        Ok(None) => Err(StatusCode::NOT_FOUND.into_response()),
-        Err(err) => {
-            error!("Failed to fetch meal: {}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
-        }
-    }
-}
-
 pub async fn update_meal(
     State(state): State<AppState>,
     RequireVerifiedAuth(user): RequireVerifiedAuth,

@@ -33,6 +33,7 @@ impl UserRepository {
             created_at: NotSet,
             updated_at: NotSet,
             email_verified: if is_guest { Set(true) } else { NotSet },
+            profile_image: NotSet,
         };
         let user = user.insert(&self.db).await?;
 
@@ -146,5 +147,19 @@ impl UserRepository {
             .limit(20)
             .all(&self.db)
             .await
+    }
+
+    pub async fn update_profile_image(
+        &self,
+        id: &Uuid,
+        profile_image: entities::sea_orm_active_enums::UserProfileImage,
+    ) -> Result<users::Model, sea_orm::DbErr> {
+        let active = users::ActiveModel {
+            id: Set(id.to_owned()),
+            profile_image: Set(profile_image),
+            ..Default::default()
+        };
+
+        active.update(&self.db).await
     }
 }
