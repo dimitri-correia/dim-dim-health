@@ -14,6 +14,7 @@ class AuthProvider with ChangeNotifier {
   String? _error;
 
   User? get user => _user;
+  String? get accessToken => _accessToken;
   bool get isAuthenticated => _user != null && _accessToken != null;
   bool get isLoading => _isLoading;
   String? get error => _error;
