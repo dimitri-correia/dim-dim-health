@@ -25,3 +25,5 @@ tracing-subscriber = { workspace = true }
 log = { workspace = true }
 anyhow = { workspace = true }
 lettre = { workspace = true }
+sea-orm = { workspace = true }
+chrono = { workspace = true }

@@ -6,6 +6,7 @@ use tracing::{error, info};
 use crate::{
     mail_jobs::common_mail_jobs::handle_mail_job,
     scheduled_jobs::monthly_recap_processor::process_monthly_recap_queue,
+    scheduled_jobs::weekly_recap_processor::process_weekly_recap_queue,
     worker_main::{
         env_loader::Settings,
         state::{self, WorkerState},
@@ -29,11 +30,18 @@ pub async fn worker_main() {
     let mut handles = vec![];
     
     // Spawn the monthly recap queue processor
-    let processor_state = worker_state.clone();
-    let processor_handle = tokio::spawn(async move {
-        process_monthly_recap_queue(processor_state).await
+    let monthly_processor_state = worker_state.clone();
+    let monthly_processor_handle = tokio::spawn(async move {
+        process_monthly_recap_queue(monthly_processor_state).await
     });
-    handles.push(processor_handle);
+    handles.push(monthly_processor_handle);
+    
+    // Spawn the weekly recap queue processor
+    let weekly_processor_state = worker_state.clone();
+    let weekly_processor_handle = tokio::spawn(async move {
+        process_weekly_recap_queue(weekly_processor_state).await
+    });
+    handles.push(weekly_processor_handle);
     
     for i in 0..settings.number_workers {
         let worker_id = format!("worker-{i}");

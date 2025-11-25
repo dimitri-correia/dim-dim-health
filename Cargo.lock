@@ -926,12 +926,14 @@ name = "dimdim-health-worker"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "config",
  "entities",
  "lettre",
  "log",
  "migration",
  "redis",
+ "sea-orm",
  "serde",
  "serde_json",
  "tokio",

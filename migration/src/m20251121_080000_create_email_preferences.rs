@@ -24,6 +24,12 @@ impl MigrationTrait for Migration {
                             .default(false),
                     )
                     .col(
+                        ColumnDef::new(EmailPreferences::WeeklyRecap)
+                            .boolean()
+                            .not_null()
+                            .default(false),
+                    )
+                    .col(
                         ColumnDef::new(EmailPreferences::CreatedAt)
                             .timestamp_with_time_zone()
                             .not_null()
@@ -87,6 +93,7 @@ enum EmailPreferences {
     Table,
     UserId,
     MonthlyRecap,
+    WeeklyRecap,
     CreatedAt,
     UpdatedAt,
 }

@@ -1,5 +1,5 @@
 use entities::{
-    monthly_recap_queue, users, EmailType, Job, JobEmail, JobEmailMonthlyRecap, TaskType,
+    weekly_recap_queue, users, EmailType, Job, JobEmail, JobEmailWeeklyRecap, TaskType,
 };
 use redis::AsyncCommands;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
@@ -8,19 +8,19 @@ use tracing::{error, info};
 
 use crate::worker_main::state::WorkerState;
 
-/// Process the monthly recap queue and enqueue email jobs to Redis
-pub async fn process_monthly_recap_queue(worker_state: WorkerState) {
-    info!("Starting monthly recap queue processor");
+/// Process the weekly recap queue and enqueue email jobs to Redis
+pub async fn process_weekly_recap_queue(worker_state: WorkerState) {
+    info!("Starting weekly recap queue processor");
     
     loop {
         match process_pending_recaps(&worker_state).await {
             Ok(count) => {
                 if count > 0 {
-                    info!("Processed {} monthly recap jobs", count);
+                    info!("Processed {} weekly recap jobs", count);
                 }
             }
             Err(e) => {
-                error!("Error processing monthly recap queue: {}", e);
+                error!("Error processing weekly recap queue: {}", e);
             }
         }
         
@@ -30,9 +30,9 @@ pub async fn process_monthly_recap_queue(worker_state: WorkerState) {
 }
 
 async fn process_pending_recaps(worker_state: &WorkerState) -> anyhow::Result<usize> {
-    // Find all unprocessed monthly recap queue items
-    let pending_items = monthly_recap_queue::Entity::find()
-        .filter(monthly_recap_queue::Column::Processed.eq(false))
+    // Find all unprocessed weekly recap queue items
+    let pending_items = weekly_recap_queue::Entity::find()
+        .filter(weekly_recap_queue::Column::Processed.eq(false))
         .find_also_related(users::Entity)
         .all(&worker_state.db)
         .await?;
@@ -42,14 +42,14 @@ async fn process_pending_recaps(worker_state: &WorkerState) -> anyhow::Result<us
     for (queue_item, user_opt) in pending_items {
         if let Some(user) = user_opt {
             // Create and enqueue the job
-            let job_email_monthly_recap = JobEmailMonthlyRecap {
+            let job_email_weekly_recap = JobEmailWeeklyRecap {
                 email: user.email.clone(),
                 username: user.username.clone(),
             };
             
             let job_email = JobEmail {
-                email_type: EmailType::MonthlyRecap,
-                data: serde_json::to_value(job_email_monthly_recap)?,
+                email_type: EmailType::WeeklyRecap,
+                data: serde_json::to_value(job_email_weekly_recap)?,
             };
             
             let job = Job {
@@ -64,10 +64,10 @@ async fn process_pending_recaps(worker_state: &WorkerState) -> anyhow::Result<us
                 .await
             {
                 Ok(_) => {
-                    info!("Enqueued monthly recap email for user: {}", user.username);
+                    info!("Enqueued weekly recap email for user: {}", user.username);
                     
                     // Mark as processed
-                    let mut queue_item_active: monthly_recap_queue::ActiveModel = queue_item.into();
+                    let mut queue_item_active: weekly_recap_queue::ActiveModel = queue_item.into();
                     queue_item_active.processed = Set(true);
                     queue_item_active.processed_at = Set(Some(chrono::Utc::now().into()));
                     
