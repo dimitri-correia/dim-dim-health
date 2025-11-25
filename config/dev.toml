@@ -4,8 +4,6 @@ redis_url = "redis://localhost:6379/"
 frontend_url = "http://localhost:8081"
 listenner_addr = "0.0.0.0:3000"
 
-frontend_origin = "http://localhost:3000"
-
 env_filter = "dimdim_health=debug,tower_http=debug"
 
 jwt_secret = "dev_jwt_secret_key"
