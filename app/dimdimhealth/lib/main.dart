@@ -10,6 +10,7 @@ import 'screens/forgot_password_screen.dart';
 import 'screens/reset_password_screen.dart';
 import 'screens/verify_email_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/weight_screen.dart';
 
 import 'utils/app_config.dart';
 
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
           '/forgot-password': (context) =>
               const GuestGuard(child: ForgotPasswordScreen()),
           '/home': (context) => const AuthGuard(child: HomeScreen()),
+          '/weight': (context) => const AuthGuard(child: WeightScreen()),
         },
         onGenerateRoute: (settings) {
           if (settings.name?.startsWith('/reset-password') ?? false) {
