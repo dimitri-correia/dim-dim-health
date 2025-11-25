@@ -1,0 +1,6 @@
+# Common configuration shared between all environments
+# EXAMPLE FILE: Copy this to common.toml and fill in the values
+# Environment-specific files (dev.toml, prod.toml) override these values
+
+# Gmail password for sending emails
+gmail_password = ""

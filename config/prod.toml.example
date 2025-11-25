@@ -1,0 +1,23 @@
+# Production configuration
+# EXAMPLE FILE: Copy this to prod.toml and fill in the sensitive values
+# Sensitive values should be overridden via environment variables
+
+database_url = "postgresql://dimdimhealth:${DB_PASSWORD}@db:5432/dimdimhealth"
+redis_url = "redis://redis:6379/"
+
+frontend_url = "https://dimdimhealth.com"
+listenner_addr = "0.0.0.0:3000"
+
+env_filter = "dimdim_health=info,tower_http=info"
+
+jwt_secret = "${JWT_SECRET}"
+
+number_workers = 5
+
+gmail_email = "dimdimhealth@gmail.com"
+# gmail_password should be set in common.toml or as environment variable
+
+# OpenObserve endpoint for OTLP traces (uses docker network hostname)
+openobserve_endpoint = "http://openobserve:5080/api/default/v1/traces"
+openobserve_user = "admin@example.com"
+openobserve_password = "Complexpass#123"
