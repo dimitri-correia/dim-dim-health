@@ -3,7 +3,8 @@ use axum::routing::{delete, post, put};
 use axum::{Router, routing::get};
 use tower_http::cors::CorsLayer;
 use tower_http::set_header::SetResponseHeaderLayer;
-use tower_http::trace::TraceLayer;
+use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer};
+use tracing::Level;
 
 use crate::axummain::state::AppState;
 use crate::handlers::auth::{
@@ -40,6 +41,23 @@ pub fn get_main_router(app_state: AppState) -> Router {
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
         .allow_headers([header::AUTHORIZATION, header::CONTENT_TYPE])
         .allow_credentials(true);
+
+    // Configure trace layer with better request/response logging
+    let trace_layer = TraceLayer::new_for_http()
+        .make_span_with(DefaultMakeSpan::new().level(Level::INFO))
+        .on_request(DefaultOnRequest::new().level(Level::INFO))
+        .on_response(
+            DefaultOnResponse::new()
+                .level(Level::INFO)
+                .include_headers(false),
+        )
+        .on_failure(|error: tower_http::classify::ServerErrorsFailureClass, latency, _span: &_| {
+            tracing::error!(
+                error = %error,
+                latency = ?latency,
+                "Request failed"
+            );
+        });
 
     Router::new()
         // Health check route
@@ -118,6 +136,6 @@ pub fn get_main_router(app_state: AppState) -> Router {
         ))
         // Apply CORS
         .layer(cors)
-        // Apply tracing
-        .layer(TraceLayer::new_for_http())
+        // Apply tracing with enhanced logging
+        .layer(trace_layer)
 }
