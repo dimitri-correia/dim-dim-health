@@ -26,6 +26,18 @@ impl MigrationTrait for Migration {
                             .not_null()
                             .check(Expr::col(MealItem::QuantityInGrams).gt(Expr::value(0))),
                     )
+                    .col(
+                        ColumnDef::new(MealItem::UpdatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null()
+                            .default(Expr::current_timestamp()),
+                    )
+                    .col(
+                        ColumnDef::new(MealItem::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null()
+                            .default(Expr::current_timestamp()),
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_meal_item_meal_id")
@@ -69,6 +81,8 @@ enum MealItem {
     MealId,
     FoodItemId,
     QuantityInGrams,
+    UpdatedAt,
+    CreatedAt,
 }
 
 #[derive(DeriveIden)]

@@ -11,6 +11,8 @@ pub struct Model {
     pub meal_id: Uuid,
     pub food_item_id: Uuid,
     pub quantity_in_grams: i32,
+    pub updated_at: DateTimeWithTimeZone,
+    pub created_at: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -29,6 +29,7 @@ impl UserWeightRepository {
             weight_in_kg: Set(weight_in_kg),
             recorded_at: Set(recorded_at),
             created_at: NotSet,
+            updated_at: NotSet,
         };
         let user_weight = user_weight.insert(&self.db).await?;
 

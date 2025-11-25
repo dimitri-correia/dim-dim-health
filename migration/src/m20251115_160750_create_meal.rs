@@ -1,9 +1,11 @@
+use crate::helpers::{create_updated_at_trigger, drop_updated_at_trigger};
 use sea_orm_migration::prelude::*;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
 static MEAL_TYPE_ENUM: &str = "meal_type_enum";
+static TABLE_NAME: &str = "meal";
 
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
@@ -67,10 +69,18 @@ impl MigrationTrait for Migration {
                     .col(Meal::UserId)
                     .to_owned(),
             )
-            .await
+            .await?;
+
+        // Add trigger for updated_at
+        create_updated_at_trigger(manager, TABLE_NAME).await?;
+
+        Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        // Drop trigger
+        drop_updated_at_trigger(manager, TABLE_NAME).await?;
+
         manager
             .drop_table(Table::drop().table(Meal::Table).to_owned())
             .await?;

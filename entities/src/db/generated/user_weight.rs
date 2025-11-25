@@ -12,6 +12,7 @@ pub struct Model {
     #[sea_orm(column_type = "Decimal(Some((5, 2)))")]
     pub weight_in_kg: Decimal,
     pub recorded_at: DateTimeWithTimeZone,
+    pub updated_at: DateTimeWithTimeZone,
     pub created_at: DateTimeWithTimeZone,
 }
 
