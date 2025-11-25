@@ -9,6 +9,7 @@ import 'screens/register_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/weight_screen.dart';
 
 import 'utils/app_config.dart';
 
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
               const GuestGuard(child: ForgotPasswordScreen()),
           '/home': (context) => const AuthGuard(child: HomeScreen()),
           '/settings': (context) => const AuthGuard(child: SettingsScreen()),
+          '/weight': (context) => const AuthGuard(child: WeightScreen()),
         },
       ),
     );
