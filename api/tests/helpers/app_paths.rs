@@ -8,7 +8,6 @@ pub struct TestAppPaths {
     pub login_user: &'static str,
     pub forgot_password: &'static str,
     pub reset_password: &'static str,
-    pub reset_password_page: &'static str,
     // user groups
     pub join_public_group: &'static str,
     pub leave_public_group: &'static str,
@@ -24,7 +23,6 @@ pub const APP_PATHS: TestAppPaths = TestAppPaths {
     login_user: "/api/users/login",
     forgot_password: "/api/auth/forgot-password",
     reset_password: "/api/auth/reset-password",
-    reset_password_page: "/api/auth/reset-password",
     join_public_group: "/api/user-groups/join-public",
     leave_public_group: "/api/user-groups/leave-public",
     get_user_groups: "/api/user-groups/myself",

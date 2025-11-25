@@ -8,7 +8,7 @@ use tower_http::trace::TraceLayer;
 use crate::axummain::state::AppState;
 use crate::handlers::auth::{
     current_user, forgot_password, login, logout, refresh_token, register, register_guest,
-    reset_password, reset_password_page, verify_email,
+    reset_password, verify_email,
 };
 use crate::handlers::food_item::{
     create_food_item, delete_food_item, get_food_items, update_food_item,
@@ -50,7 +50,6 @@ pub fn get_main_router(app_state: AppState) -> Router {
         .route("/api/user", get(current_user))
         .route("/api/auth/verify-email", get(verify_email))
         .route("/api/auth/forgot-password", post(forgot_password))
-        .route("/api/auth/reset-password", get(reset_password_page))
         .route("/api/auth/reset-password", post(reset_password))
         .route("/api/auth/refresh-token", post(refresh_token))
         .route("/api/auth/logout", post(logout))
