@@ -129,6 +129,43 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.resetPassword(
+        token: token,
+        newPassword: newPassword,
+      );
+
+      // Auto-login after successful password reset
+      _user = response.user;
+      _accessToken = response.accessToken;
+      _refreshToken = response.refreshToken;
+
+      await _saveAuth();
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Network error. Please check your connection.';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> loginAsGuest() async {
     _isLoading = true;
     _error = null;
@@ -237,6 +274,29 @@ class AuthProvider with ChangeNotifier {
     }
     if (_refreshToken != null) {
       await _storage.write(key: 'refresh_token', value: _refreshToken);
+    }
+  }
+
+  Future<bool> verifyEmail({required String token}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _apiService.verifyEmail(token: token);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Network error. Please check your connection.';
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 
