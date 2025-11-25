@@ -1,0 +1,148 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database with pg_cron extension
+  db:
+    image: postgres:18
+    container_name: dimdim-health-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dimdimhealth
+      POSTGRES_USER: dimdimhealth
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Initialize pg_cron if needed
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dimdimhealth -d dimdimhealth"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dimdim-network
+
+  # Redis for job queue
+  redis:
+    image: redis:7-alpine
+    container_name: dimdim-health-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dimdim-network
+
+  # API Service
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    container_name: dimdim-health-api
+    restart: unless-stopped
+    environment:
+      APP_ENV: prod
+      RUST_LOG: info
+    volumes:
+      - ../config:/app/config:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      openobserve:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+    networks:
+      - dimdim-network
+    # Graceful shutdown: give 30 seconds to finish in-flight requests
+    stop_grace_period: 30s
+
+  # Worker Service
+  worker:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.worker
+    container_name: dimdim-health-worker
+    restart: unless-stopped
+    environment:
+      APP_ENV: prod
+      RUST_LOG: info
+    volumes:
+      - ../config:/app/config:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      openobserve:
+        condition: service_healthy
+    networks:
+      - dimdim-network
+    # Graceful shutdown: give 60 seconds to finish processing jobs
+    stop_grace_period: 60s
+
+  # OpenObserve - Open Source Observability Platform
+  openobserve:
+    image: public.ecr.aws/zinclabs/openobserve:latest
+    container_name: dimdim-health-openobserve
+    restart: unless-stopped
+    environment:
+      ZO_ROOT_USER_EMAIL: "admin@example.com"
+      ZO_ROOT_USER_PASSWORD: "Complexpass#123"
+      ZO_DATA_DIR: "/data"
+    ports:
+      - "5080:5080"  # HTTP API and UI
+      - "5081:5081"  # OTLP gRPC endpoint
+    volumes:
+      - openobserve_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - dimdim-network
+
+  # Vector - Log collector for Postgres, Redis, and all container logs
+  vector:
+    image: timberio/vector:latest-alpine
+    container_name: dimdim-health-vector
+    restart: unless-stopped
+    volumes:
+      - ./vector/vector.toml:/etc/vector/vector.toml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      openobserve:
+        condition: service_healthy
+    networks:
+      - dimdim-network
+
+networks:
+  dimdim-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  openobserve_data:
+    driver: local

@@ -54,6 +54,7 @@ pub async fn get_app_state() -> &'static state::AppState {
                 jwt_secret: "test_secret".to_string(),
                 env_filter: "debug".to_string(),
                 listenner_addr: "127.0.0.1:0".to_string(),
+                openobserve_endpoint: "notneeded".to_string(),
             };
 
             state::AppState::create_from_settings(&settings)
