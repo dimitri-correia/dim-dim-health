@@ -1,3 +1,4 @@
+use crate::helpers::{drop_updated_at_trigger, schedule_cron_job, unschedule_cron_job};
 use sea_orm_migration::prelude::*;
 
 #[derive(DeriveMigrationName)]
@@ -6,6 +7,22 @@ pub struct Migration;
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .get_connection()
+            .execute_unprepared(&format!(
+                r#"
+                CREATE TYPE {} AS ENUM (
+                    'avatar1',
+                    'avatar2',
+                    'avatar3',
+                    'avatar4',
+                    'avatar5'
+                );
+                "#,
+                USER_PROFILE_IMAGE_ENUM
+            ))
+            .await?;
+
         manager
             .create_table(
                 Table::create()
@@ -34,6 +51,18 @@ impl MigrationTrait for Migration {
                         ColumnDef::new(Users::PasswordHash)
                             .string_len(255)
                             .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(Users::EmailVerified)
+                            .boolean()
+                            .not_null()
+                            .default(false),
+                    )
+                    .col(
+                        ColumnDef::new(Users::ProfileImage)
+                            .custom(Alias::new(USER_PROFILE_IMAGE_ENUM))
+                            .not_null()
+                            .default("avatar1"),
                     )
                     .col(
                         ColumnDef::new(Users::CreatedAt)
@@ -79,6 +108,15 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             )
             .await?;
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_users_email_verified")
+                    .table(Users::Table)
+                    .col(Users::EmailVerified)
+                    .to_owned(),
+            )
+            .await?;
 
         // Add trigger for updated_at
         manager
@@ -101,19 +139,39 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        // Schedule the cron job to clean non-verified email users
+        // We keep non-verified email users for 5 days before cleaning them up
+        // It's a bit more than the time they have to verify their email
+        schedule_cron_job(
+            manager,
+            CRON_NAME,
+            "30 0 * * *",
+            &format!(
+                "DELETE FROM {USER_TABLE} WHERE email_verified = FALSE AND created_at < NOW() - INTERVAL '5 days'"
+            ),
+        )
+        .await?;
+
         Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        // Drop trigger and function
+        // Unschedule the cron job
+        unschedule_cron_job(manager, CRON_NAME).await?;
+
+        // Drop trigger
+        drop_updated_at_trigger(manager, "users").await?;
+
+        // Drop the shared function (since this is the first migration that creates it)
         manager
             .get_connection()
-            .execute_unprepared(
-                r#"
-                DROP TRIGGER IF EXISTS update_users_updated_at ON users;
-                DROP FUNCTION IF EXISTS update_updated_at_column;
-                "#,
-            )
+            .execute_unprepared("DROP FUNCTION IF EXISTS update_updated_at_column;")
+            .await?;
+
+        // Drop enum type
+        manager
+            .get_connection()
+            .execute_unprepared(&format!("DROP TYPE IF EXISTS {};", USER_PROFILE_IMAGE_ENUM))
             .await?;
 
         // Drop table
@@ -125,6 +183,10 @@ impl MigrationTrait for Migration {
     }
 }
 
+static USER_PROFILE_IMAGE_ENUM: &str = "user_profile_image";
+static CRON_NAME: &str = "cleanup_expired_non_verified_emails";
+static USER_TABLE: &str = "users";
+
 #[derive(Iden)]
 enum Users {
     Table,
@@ -132,6 +194,8 @@ enum Users {
     Username,
     Email,
     PasswordHash,
+    EmailVerified,
+    ProfileImage,
     CreatedAt,
     UpdatedAt,
 }

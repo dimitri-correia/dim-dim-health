@@ -1,3 +1,4 @@
+use crate::helpers::{schedule_cron_job, unschedule_cron_job};
 use sea_orm_migration::prelude::*;
 
 #[derive(DeriveMigrationName)]
@@ -57,10 +58,33 @@ impl MigrationTrait for Migration {
                     .col(UserGroups::UserId)
                     .to_owned(),
             )
-            .await
+            .await?;
+
+        // Schedule the cron job to clean expired guest users
+        let clean_cmd = format!(
+            r#"
+            DELETE FROM {USER_TABLE}
+            WHERE id IN (
+                SELECT ug.user_id
+                FROM {USER_GROUPS_TABLE} ug
+                WHERE ug.group = 'guest_group'
+                AND ug.expires_at < NOW() - INTERVAL '24 hours'
+            );
+            "#
+        );
+        schedule_cron_job(manager, CRON_NAME, "0 0 * * *", &clean_cmd).await?;
+
+        Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        unschedule_cron_job(manager, CRON_NAME).await?;
+
+        manager
+            .get_connection()
+            .execute_unprepared(&format!("SELECT cron.unschedule('{CRON_NAME}');"))
+            .await?;
+
         manager
             .drop_table(Table::drop().table(UserGroups::Table).to_owned())
             .await?;
@@ -73,6 +97,10 @@ impl MigrationTrait for Migration {
         Ok(())
     }
 }
+
+static CRON_NAME: &str = "cleanup_expired_guests_users";
+static USER_GROUPS_TABLE: &str = "user_groups";
+static USER_TABLE: &str = "users";
 
 #[derive(DeriveIden)]
 enum UserGroups {

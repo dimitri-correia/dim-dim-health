@@ -29,6 +29,11 @@ impl MigrationTrait for Migration {
                     .col(
                         ColumnDef::new(UserWeight::RecordedAt)
                             .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(UserWeight::UpdatedAt)
+                            .timestamp_with_time_zone()
                             .not_null()
                             .default(Expr::current_timestamp()),
                     )
@@ -88,6 +93,7 @@ enum UserWeight {
     UserId,
     WeightInKg,
     RecordedAt,
+    UpdatedAt,
     CreatedAt,
 }
 

@@ -27,6 +27,8 @@ impl MealItemRepository {
             meal_id: Set(meal_id),
             food_item_id: Set(food_item_id),
             quantity_in_grams: Set(quantity_in_grams),
+            created_at: NotSet,
+            updated_at: NotSet,
         };
         let meal_item = meal_item.insert(&self.db).await?;
 
