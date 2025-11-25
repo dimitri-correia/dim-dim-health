@@ -29,3 +29,4 @@ opentelemetry-otlp = { workspace = true }
 tracing-opentelemetry = { workspace = true }
 anyhow = { workspace = true }
 lettre = { workspace = true }
+uuid = { workspace = true }
