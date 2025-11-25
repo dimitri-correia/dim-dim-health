@@ -1,0 +1,32 @@
+# Production configuration for DimDim Health
+# Environment-specific overrides for production deployment
+
+# Database connection - use environment variable or Docker service name
+database_url = "postgresql://dimdimhealth:${DB_PASSWORD}@db:5432/dimdimhealth"
+
+# Redis connection - use Docker service name
+redis_url = "redis://redis:6379/"
+
+# Frontend URL for CORS and email links
+frontend_url = "https://your-domain.com"
+
+# Server listen address - bind to all interfaces in container
+listenner_addr = "0.0.0.0:3000"
+
+# Frontend origin for CORS
+frontend_origin = "https://your-domain.com"
+
+# Logging level - production should be less verbose
+# Available levels: trace, debug, info, warn, error
+env_filter = "dimdim_health=info,tower_http=info"
+
+# Number of worker processes for background jobs
+number_workers = 3
+
+# Gmail email for sending notifications
+gmail_email = "dimdimhealth@gmail.com"
+# gmail_password is defined in common.toml
+
+# OpenObserve configuration for observability
+# Uncomment and configure to enable distributed tracing and logging
+# openobserve_endpoint = "http://openobserve:5080/api/default"

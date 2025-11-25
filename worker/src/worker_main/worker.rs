@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::signal;
 use tokio::sync::RwLock;
-use tracing::{error, info};
+use tracing::{debug, error, info, instrument, warn};
 
 use crate::{
     mail_jobs::common_mail_jobs::handle_mail_job,
@@ -16,21 +16,39 @@ use crate::{
 };
 
 pub async fn worker_main() {
-    let settings = Settings::load_config().expect("Failed to load configuration");
+    let settings = match Settings::load_config() {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Failed to load configuration: {}", e);
+            std::process::exit(1);
+        }
+    };
 
     // Initialize telemetry with OpenObserve if configured
-    telemetry::init_telemetry(
+    if let Err(e) = telemetry::init_telemetry(
         "dimdim-health-worker",
         settings.openobserve_endpoint.as_deref(),
         &settings.env_filter,
-    )
-    .expect("Failed to initialize telemetry");
+    ) {
+        eprintln!("Failed to initialize telemetry: {}", e);
+        std::process::exit(1);
+    }
 
-    info!("Starting Worker...");
+    info!(
+        num_workers = settings.number_workers,
+        "Starting DimDim Health Worker"
+    );
 
-    let worker_state = state::WorkerState::create_from_settings(&settings)
-        .await
-        .expect("Failed to create Worker State");
+    let worker_state = match state::WorkerState::create_from_settings(&settings).await {
+        Ok(s) => {
+            info!("Worker state initialized successfully");
+            s
+        }
+        Err(e) => {
+            error!(error = %e, "Failed to create worker state");
+            std::process::exit(1);
+        }
+    };
 
     // Shared flag to indicate shutdown
     let shutdown = Arc::new(RwLock::new(false));
@@ -42,12 +60,18 @@ pub async fn worker_main() {
         let worker_state = worker_state.clone();
         let shutdown = shutdown.clone();
 
+        info!(worker_id = %worker_id, "Spawning worker task");
         let handle =
             tokio::spawn(
                 async move { worker_loop(worker_state.clone(), worker_id, shutdown).await },
             );
         handles.push(handle);
     }
+
+    info!(
+        num_workers = settings.number_workers,
+        "All worker tasks spawned and running"
+    );
 
     // Wait for shutdown signal
     shutdown_signal().await;
@@ -58,12 +82,13 @@ pub async fn worker_main() {
         *shutdown_flag = true;
     }
 
-    info!("Shutdown signal received, waiting for workers to finish processing current jobs...");
+    warn!("Shutdown signal received, waiting for workers to finish processing current jobs...");
 
     // Wait for all workers to complete
-    for handle in handles {
-        if let Err(e) = handle.await {
-            error!("Worker task panicked: {}", e);
+    for (i, handle) in handles.into_iter().enumerate() {
+        match handle.await {
+            Ok(_) => debug!(worker_index = i, "Worker task completed"),
+            Err(e) => error!(worker_index = i, error = %e, "Worker task panicked"),
         }
     }
 
@@ -93,46 +118,64 @@ async fn shutdown_signal() {
 
     tokio::select! {
         _ = ctrl_c => {
-            info!("Received Ctrl+C signal");
+            warn!("Received Ctrl+C signal");
         },
         _ = terminate => {
-            info!("Received SIGTERM signal");
+            warn!("Received SIGTERM signal");
         },
     }
 }
 
+#[instrument(skip(worker_state, shutdown), fields(worker_id = %worker_id))]
 async fn worker_loop(worker_state: WorkerState, worker_id: String, shutdown: Arc<RwLock<bool>>) {
-    info!("{}: Worker started", worker_id);
+    info!("Worker started and listening for jobs");
 
     let mut redis = worker_state.redis.clone();
+    let mut consecutive_errors = 0u32;
 
     loop {
         // Check if shutdown was requested
         {
             let should_shutdown = *shutdown.read().await;
             if should_shutdown {
-                info!("{}: Shutdown requested, stopping worker loop", worker_id);
+                info!("Shutdown requested, stopping worker loop");
                 break;
             }
         }
 
         match fetch_job(&mut redis).await {
             Ok(Some(job)) => {
+                consecutive_errors = 0;
+                debug!(task_type = %job.task_type, "Processing job");
+
                 if let Err(err) = process(worker_state.clone(), job, &worker_id).await {
-                    error!("{worker_id}: Error processing with erorr {err}",);
+                    error!(
+                        error = %err,
+                        "Job processing failed"
+                    );
                 }
             }
             Ok(None) => {
                 // Timeout, continue
+                consecutive_errors = 0;
             }
             Err(e) => {
-                error!("{}: Error fetching job: {}", worker_id, e);
-                tokio::time::sleep(Duration::from_secs(1)).await;
+                consecutive_errors += 1;
+                error!(
+                    error = %e,
+                    consecutive_errors = consecutive_errors,
+                    "Error fetching job from queue"
+                );
+
+                // Exponential backoff on consecutive errors
+                let delay = Duration::from_secs(std::cmp::min(1 << consecutive_errors, 30));
+                debug!(delay_secs = ?delay.as_secs(), "Backing off before retry");
+                tokio::time::sleep(delay).await;
             }
         }
     }
 
-    info!("{}: Worker stopped", worker_id);
+    info!("Worker stopped");
 }
 
 async fn fetch_job(redis: &mut ConnectionManager) -> Result<Option<Job>, redis::RedisError> {
@@ -148,16 +191,22 @@ async fn fetch_job(redis: &mut ConnectionManager) -> Result<Option<Job>, redis::
     }
 }
 
+#[instrument(skip(worker_state, job), fields(worker_id = %worker_id, task_type = ?job.task_type))]
 async fn process(worker_state: WorkerState, job: Job, worker_id: &str) -> anyhow::Result<bool> {
-    info!("{}: Processing job: {}", worker_id, job);
+    info!("Processing job");
 
     let job_result = match job.task_type {
         TaskType::Email => {
             let job_email: JobEmail = serde_json::from_value(job.data)?;
+            debug!(email_type = ?job_email, "Handling email job");
             handle_mail_job(worker_state, job_email).await
         }
     };
 
-    info!("{}: Completed job: {}", worker_id, job.task_type);
+    match &job_result {
+        Ok(_) => info!("Job completed successfully"),
+        Err(e) => error!(error = %e, "Job failed"),
+    }
+
     job_result
 }

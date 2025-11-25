@@ -1,0 +1,30 @@
+# Common configuration file template for DimDim Health
+# Copy this file to common.toml and fill in your secrets
+#
+# IMPORTANT: common.toml should NEVER be committed to version control
+# as it contains sensitive credentials
+#
+# Usage:
+#   cp config/common.toml.example config/common.toml
+#   # Then edit common.toml with your actual values
+
+# ============================================================================
+# Email Configuration (Gmail)
+# ============================================================================
+# Gmail App Password for sending emails
+# To get an app password:
+#   1. Enable 2-Factor Authentication on your Google account
+#   2. Go to: https://myaccount.google.com/apppasswords
+#   3. Generate a new app password for "Mail"
+#   4. Copy the 16-character password here (spaces are removed automatically)
+gmail_password = "your_gmail_app_password_here"
+
+# ============================================================================
+# Security Configuration
+# ============================================================================
+# JWT Secret for authentication tokens
+# Generate a secure random string with:
+#   openssl rand -base64 32
+# or:
+#   python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+jwt_secret = "your_secure_random_jwt_secret_here"
