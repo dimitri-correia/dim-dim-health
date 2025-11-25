@@ -17,6 +17,7 @@ pub struct Model {
     pub carbs_per100g: i32,
     pub fat_per100g: i32,
     pub added_by: Uuid,
+    pub updated_at: DateTimeWithTimeZone,
     pub added_at: DateTimeWithTimeZone,
 }
 

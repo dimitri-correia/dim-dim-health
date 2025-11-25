@@ -11,9 +11,9 @@ pub struct Model {
     pub user_id: Uuid,
     #[sea_orm(unique)]
     pub token: String,
+    pub pending_email: Option<String>,
     pub expires_at: DateTimeWithTimeZone,
     pub created_at: DateTimeWithTimeZone,
-    pub pending_email: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
