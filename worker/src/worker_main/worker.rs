@@ -7,6 +7,7 @@ use crate::{
     mail_jobs::common_mail_jobs::handle_mail_job,
     scheduled_jobs::monthly_recap_processor::process_monthly_recap_queue,
     scheduled_jobs::weekly_recap_processor::process_weekly_recap_queue,
+    scheduled_jobs::yearly_recap_processor::process_yearly_recap_queue,
     worker_main::{
         env_loader::Settings,
         state::{self, WorkerState},
@@ -42,6 +43,13 @@ pub async fn worker_main() {
         process_weekly_recap_queue(weekly_processor_state).await
     });
     handles.push(weekly_processor_handle);
+    
+    // Spawn the yearly recap queue processor
+    let yearly_processor_state = worker_state.clone();
+    let yearly_processor_handle = tokio::spawn(async move {
+        process_yearly_recap_queue(yearly_processor_state).await
+    });
+    handles.push(yearly_processor_handle);
     
     for i in 0..settings.number_workers {
         let worker_id = format!("worker-{i}");

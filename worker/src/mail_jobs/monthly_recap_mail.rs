@@ -9,9 +9,11 @@ pub async fn handle_monthly_recap_email(
 ) -> anyhow::Result<bool> {
     info!("Handling monthly recap email for: {}", data.email);
     let subject = format!("DimDim Health - Your Monthly Recap, {}", data.username);
+    let preferences_url = format!("{}/settings/email-preferences", worker_state.base_url);
     let content = format!(
-        "Hey {}.\n\nThis is your monthly recap for DimDim Health!\n\n[PLACEHOLDER: Monthly statistics and progress will be displayed here]\n\nKey achievements this month:\n- Total workouts: [PLACEHOLDER]\n- Weight change: [PLACEHOLDER]\n- Meals logged: [PLACEHOLDER]\n\nKeep up the great work!\n\nCheers,\nDimDim Health Team",
-        data.username
+        "Hey {}.\n\nThis is your monthly recap for DimDim Health!\n\n[PLACEHOLDER: Monthly statistics and progress will be displayed here]\n\nKey achievements this month:\n- Total workouts: [PLACEHOLDER]\n- Weight change: [PLACEHOLDER]\n- Meals logged: [PLACEHOLDER]\n\nKeep up the great work!\n\nCheers,\nDimDim Health Team\n\n---\nManage your email preferences: {}",
+        data.username,
+        preferences_url
     );
 
     send_email(

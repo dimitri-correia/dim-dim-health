@@ -17,3 +17,4 @@ pub mod user_watch_permissions;
 pub mod user_weight;
 pub mod users;
 pub mod weekly_recap_queue;
+pub mod yearly_recap_queue;
