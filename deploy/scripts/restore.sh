@@ -24,7 +24,7 @@ print_error() {
 
 # Configuration
 BACKUP_DIR="/opt/dimdim-health-backups"
-COMPOSE_FILE="docker-compose.yml"
+COMPOSE_FILE="deploy/docker-compose.yml"
 
 # Check if backup directory exists
 if [ ! -d "$BACKUP_DIR" ]; then
@@ -99,7 +99,7 @@ sleep 20
 
 # Verify services
 if docker-compose -f "$COMPOSE_FILE" ps | grep -q "unhealthy"; then
-    print_warning "Some services may be unhealthy. Check logs with: docker-compose logs"
+    print_warning "Some services may be unhealthy. Check logs with: docker-compose -f deploy/docker-compose.yml logs"
 else
     print_info "All services are running"
 fi

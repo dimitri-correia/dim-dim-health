@@ -7,7 +7,7 @@ set -e
 # Configuration
 BACKUP_DIR="/opt/dimdim-health-backups"
 DATE=$(date +%Y%m%d_%H%M%S)
-COMPOSE_FILE="docker-compose.yml"
+COMPOSE_FILE="deploy/docker-compose.yml"
 
 # Colors
 GREEN='\033[0;32m'

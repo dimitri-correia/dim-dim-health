@@ -107,16 +107,16 @@ By default, the API is accessible on port 3000. To access it from other devices:
 cd /opt/dimdim-health
 
 # Build images (this may take 15-30 minutes on Raspberry Pi)
-docker-compose build
+docker-compose -f deploy/docker-compose.yml build
 
 # Start services
-docker-compose up -d
+docker-compose -f deploy/docker-compose.yml up -d
 
 # Check status
-docker-compose ps
+docker-compose -f deploy/docker-compose.yml ps
 
 # View logs
-docker-compose logs -f
+docker-compose -f deploy/docker-compose.yml logs -f
 ```
 
 ### Automated Deployment Script
@@ -127,7 +127,7 @@ For updates with zero downtime and no data loss:
 cd /opt/dimdim-health
 
 # Run the deployment script
-./scripts/deploy-production.sh
+./deploy/scripts/deploy-production.sh
 ```
 
 The script will:
@@ -148,16 +148,16 @@ If you prefer to update manually:
 git pull
 
 # Rebuild images
-docker-compose build
+docker-compose -f deploy/docker-compose.yml build
 
 # Update worker (will finish current jobs before stopping)
-docker-compose up -d --no-deps worker
+docker-compose -f deploy/docker-compose.yml up -d --no-deps worker
 
 # Wait for workers to finish (check logs)
-docker-compose logs -f worker
+docker-compose -f deploy/docker-compose.yml logs -f worker
 
 # Update API (will wait for in-flight requests)
-docker-compose up -d --no-deps api
+docker-compose -f deploy/docker-compose.yml up -d --no-deps api
 
 # Check health
 curl http://localhost:3000/health
@@ -169,7 +169,7 @@ To automatically start services on boot:
 
 ```bash
 # Copy systemd service file
-sudo cp scripts/dimdim-health.service /etc/systemd/system/
+sudo cp deploy/scripts/dimdim-health.service /etc/systemd/system/
 
 # Edit the WorkingDirectory in the service file if needed
 sudo nano /etc/systemd/system/dimdim-health.service
@@ -193,24 +193,24 @@ sudo systemctl status dimdim-health.service
 
 ```bash
 # All services
-docker-compose logs -f
+docker-compose -f deploy/docker-compose.yml logs -f
 
 # Specific service
-docker-compose logs -f api
-docker-compose logs -f worker
+docker-compose -f deploy/docker-compose.yml logs -f api
+docker-compose -f deploy/docker-compose.yml logs -f worker
 
 # Last 100 lines
-docker-compose logs --tail=100 api
+docker-compose -f deploy/docker-compose.yml logs --tail=100 api
 ```
 
 ### Check Service Status
 
 ```bash
 # All services
-docker-compose ps
+docker-compose -f deploy/docker-compose.yml ps
 
 # Detailed information
-docker-compose top
+docker-compose -f deploy/docker-compose.yml top
 
 # Resource usage
 docker stats
@@ -223,33 +223,33 @@ docker stats
 curl http://localhost:3000/health
 
 # Check all container health
-docker-compose ps
+docker-compose -f deploy/docker-compose.yml ps
 ```
 
 ### Database Access
 
 ```bash
 # Connect to PostgreSQL
-docker-compose exec db psql -U dimdimhealth -d dimdimhealth
+docker-compose -f deploy/docker-compose.yml exec db psql -U dimdimhealth -d dimdimhealth
 
 # Create backup
-docker-compose exec db pg_dump -U dimdimhealth dimdimhealth > backup.sql
+docker-compose -f deploy/docker-compose.yml exec db pg_dump -U dimdimhealth dimdimhealth > backup.sql
 
 # Restore backup
-cat backup.sql | docker-compose exec -T db psql -U dimdimhealth dimdimhealth
+cat backup.sql | docker-compose -f deploy/docker-compose.yml exec -T db psql -U dimdimhealth dimdimhealth
 ```
 
 ### Redis Access
 
 ```bash
 # Connect to Redis CLI
-docker-compose exec redis redis-cli
+docker-compose -f deploy/docker-compose.yml exec redis redis-cli
 
 # Check queue length
-docker-compose exec redis redis-cli LLEN jobs
+docker-compose -f deploy/docker-compose.yml exec redis redis-cli LLEN jobs
 
 # View memory usage
-docker-compose exec redis redis-cli INFO memory
+docker-compose -f deploy/docker-compose.yml exec redis redis-cli INFO memory
 ```
 
 ## Backup and Restore
@@ -266,10 +266,10 @@ DATE=$(date +%Y%m%d_%H%M%S)
 mkdir -p $BACKUP_DIR
 
 # Backup database
-docker-compose exec -T db pg_dump -U dimdimhealth dimdimhealth | gzip > $BACKUP_DIR/db_$DATE.sql.gz
+docker-compose -f deploy/docker-compose.yml exec -T db pg_dump -U dimdimhealth dimdimhealth | gzip > $BACKUP_DIR/db_$DATE.sql.gz
 
 # Backup Redis data
-docker-compose exec -T redis redis-cli BGSAVE
+docker-compose -f deploy/docker-compose.yml exec -T redis redis-cli BGSAVE
 sleep 5
 docker cp dimdim-health-redis:/data/dump.rdb $BACKUP_DIR/redis_$DATE.rdb
 
@@ -284,12 +284,12 @@ echo "Backup completed: $DATE"
 
 ```bash
 # Create backup script
-sudo nano /opt/dimdim-health/scripts/backup.sh
+sudo nano /opt/dimdim-health/deploy/scripts/backup.sh
 # (paste the script above)
-sudo chmod +x /opt/dimdim-health/scripts/backup.sh
+sudo chmod +x /opt/dimdim-health/deploy/scripts/backup.sh
 
 # Add to crontab (daily at 2 AM)
-(crontab -l 2>/dev/null; echo "0 2 * * * /opt/dimdim-health/scripts/backup.sh") | crontab -
+(crontab -l 2>/dev/null; echo "0 2 * * * /opt/dimdim-health/deploy/scripts/backup.sh") | crontab -
 ```
 
 ## Troubleshooting
@@ -301,11 +301,11 @@ sudo chmod +x /opt/dimdim-health/scripts/backup.sh
 sudo systemctl status docker
 
 # Check logs for errors
-docker-compose logs
+docker-compose -f deploy/docker-compose.yml logs
 
 # Remove and recreate containers
-docker-compose down
-docker-compose up -d
+docker-compose -f deploy/docker-compose.yml down
+docker-compose -f deploy/docker-compose.yml up -d
 ```
 
 ### Out of Memory
@@ -323,20 +323,20 @@ number_workers = 2  # Reduce from 3 to 2
 
 ```bash
 # Check database is running
-docker-compose ps db
+docker-compose -f deploy/docker-compose.yml ps db
 
 # Check database logs
-docker-compose logs db
+docker-compose -f deploy/docker-compose.yml logs db
 
 # Test connection
-docker-compose exec db psql -U dimdimhealth -d dimdimhealth -c "SELECT 1;"
+docker-compose -f deploy/docker-compose.yml exec db psql -U dimdimhealth -d dimdimhealth -c "SELECT 1;"
 ```
 
 ### Build Takes Too Long
 
 ```bash
 # Use cached images when possible
-docker-compose build --pull
+docker-compose -f deploy/docker-compose.yml build --pull
 
 # Build on a faster machine and export/import
 # On fast machine:
@@ -354,7 +354,7 @@ gunzip -c worker-image.tar.gz | docker load
 # Check what's using port 3000
 sudo lsof -i :3000
 
-# Change port in docker-compose.yml
+# Change port in deploy/docker-compose.yml
 ports:
   - "3001:3000"  # Use 3001 externally, 3000 internally
 ```
@@ -420,7 +420,7 @@ htop
 
 ```bash
 cd /opt/dimdim-health
-./scripts/deploy-production.sh
+./deploy/scripts/deploy-production.sh
 ```
 
 ### Update System
@@ -451,7 +451,7 @@ docker system prune -a -f
 
 For issues or questions:
 - GitHub Issues: https://github.com/dimitri-correia/dim-dim-health/issues
-- Check logs: `docker-compose logs -f`
+- Check logs: `docker-compose -f deploy/docker-compose.yml logs -f`
 - Review this documentation
 
 ## Architecture Diagram
@@ -524,7 +524,7 @@ This deployment solution provides:
 For a typical deployment, simply run:
 ```bash
 cd /opt/dimdim-health
-./scripts/deploy-production.sh
+./deploy/scripts/deploy-production.sh
 ```
 
 The script handles everything automatically with zero data loss!

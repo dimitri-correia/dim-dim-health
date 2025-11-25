@@ -15,7 +15,6 @@ target/
 
 # Documentation
 *.md
-!DEPLOYMENT.md
 docs/
 
 # Test files
@@ -26,6 +25,9 @@ tests/
 scripts/dev-db/
 scripts/test-db/
 scripts/curl-tests/
+
+# Deploy scripts (not needed in container)
+deploy/scripts/
 
 # Config files (mounted as volumes)
 config/common.toml
@@ -41,6 +43,6 @@ tmp/
 .DS_Store
 
 # Docker files themselves
-Dockerfile*
-docker-compose*.yml
+deploy/Dockerfile*
+deploy/docker-compose*.yml
 .dockerignore

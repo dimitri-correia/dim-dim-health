@@ -47,15 +47,15 @@ services:
   # API Service
   api:
     build:
-      context: .
-      dockerfile: Dockerfile.api
+      context: ..
+      dockerfile: deploy/Dockerfile.api
     container_name: dimdim-health-api
     restart: unless-stopped
     environment:
       APP_ENV: prod
       RUST_LOG: info
     volumes:
-      - ./config:/app/config:ro
+      - ../config:/app/config:ro
     # Port exposed only to nginx, not to host
     expose:
       - "3000"
@@ -77,15 +77,15 @@ services:
   # Worker Service
   worker:
     build:
-      context: .
-      dockerfile: Dockerfile.worker
+      context: ..
+      dockerfile: deploy/Dockerfile.worker
     container_name: dimdim-health-worker
     restart: unless-stopped
     environment:
       APP_ENV: prod
       RUST_LOG: info
     volumes:
-      - ./config:/app/config:ro
+      - ../config:/app/config:ro
     depends_on:
       db:
         condition: service_healthy

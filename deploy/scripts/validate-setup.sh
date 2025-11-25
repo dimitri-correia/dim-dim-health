@@ -59,24 +59,24 @@ fi
 echo ""
 echo "Checking required files..."
 
-if [ -f "docker-compose.yml" ]; then
-    print_ok "docker-compose.yml exists"
+if [ -f "deploy/docker-compose.yml" ]; then
+    print_ok "deploy/docker-compose.yml exists"
 else
-    print_error "docker-compose.yml not found"
+    print_error "deploy/docker-compose.yml not found"
     ((ERRORS++))
 fi
 
-if [ -f "Dockerfile.api" ]; then
-    print_ok "Dockerfile.api exists"
+if [ -f "deploy/Dockerfile.api" ]; then
+    print_ok "deploy/Dockerfile.api exists"
 else
-    print_error "Dockerfile.api not found"
+    print_error "deploy/Dockerfile.api not found"
     ((ERRORS++))
 fi
 
-if [ -f "Dockerfile.worker" ]; then
-    print_ok "Dockerfile.worker exists"
+if [ -f "deploy/Dockerfile.worker" ]; then
+    print_ok "deploy/Dockerfile.worker exists"
 else
-    print_error "Dockerfile.worker not found"
+    print_error "deploy/Dockerfile.worker not found"
     ((ERRORS++))
 fi
 
@@ -135,15 +135,15 @@ echo "Checking deployment scripts..."
 
 SCRIPTS=("quick-start.sh" "deploy-production.sh" "backup.sh" "restore.sh")
 for script in "${SCRIPTS[@]}"; do
-    if [ -f "scripts/$script" ]; then
-        if [ -x "scripts/$script" ]; then
-            print_ok "scripts/$script is executable"
+    if [ -f "deploy/scripts/$script" ]; then
+        if [ -x "deploy/scripts/$script" ]; then
+            print_ok "deploy/scripts/$script is executable"
         else
-            print_warning "scripts/$script is not executable (run: chmod +x scripts/$script)"
+            print_warning "deploy/scripts/$script is not executable (run: chmod +x deploy/scripts/$script)"
             ((WARNINGS++))
         fi
     else
-        print_error "scripts/$script not found"
+        print_error "deploy/scripts/$script not found"
         ((ERRORS++))
     fi
 done
@@ -181,7 +181,7 @@ if [ $ERRORS -eq 0 ]; then
     echo ""
     echo "Next steps:"
     echo "  1. Review warnings (if any)"
-    echo "  2. Run: ./scripts/quick-start.sh"
+    echo "  2. Run: ./deploy/scripts/quick-start.sh"
     exit 0
 else
     print_error "Validation failed with $ERRORS error(s) and $WARNINGS warning(s)"

@@ -9,7 +9,7 @@ echo "DimDim Health Production Deployment"
 echo "=========================================="
 
 # Configuration
-COMPOSE_FILE="docker-compose.yml"
+COMPOSE_FILE="deploy/docker-compose.yml"
 API_SERVICE="api"
 WORKER_SERVICE="worker"
 
@@ -107,5 +107,5 @@ print_info "Services status:"
 docker-compose -f $COMPOSE_FILE ps
 
 echo ""
-print_info "To view logs, run: docker-compose logs -f"
-print_info "To stop services, run: docker-compose down"
+print_info "To view logs, run: docker-compose -f deploy/docker-compose.yml logs -f"
+print_info "To stop services, run: docker-compose -f deploy/docker-compose.yml down"

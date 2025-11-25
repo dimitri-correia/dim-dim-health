@@ -7,13 +7,13 @@ A health tracking application with API and background worker services.
 
 ### Production Deployment (Raspberry Pi)
 
-For a quick production setup, see [QUICKSTART.md](QUICKSTART.md).
+For a quick production setup, see [docs/QUICKSTART.md](docs/QUICKSTART.md).
 
-For detailed deployment documentation, see [DEPLOYMENT.md](DEPLOYMENT.md).
+For detailed deployment documentation, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 One-command setup:
 ```bash
-./scripts/quick-start.sh
+./deploy/scripts/quick-start.sh
 ```
 
 ### Development Setup
@@ -45,13 +45,13 @@ We provide a complete production deployment solution with:
 Quick deployment:
 ```bash
 # Initial setup
-./scripts/quick-start.sh
+./deploy/scripts/quick-start.sh
 
 # Deploy updates
-./scripts/deploy-production.sh
+./deploy/scripts/deploy-production.sh
 
 # Backup data
-./scripts/backup.sh
+./deploy/scripts/backup.sh
 ```
 
 ## Development
@@ -78,8 +78,8 @@ Set environment variable `APP_ENV=prod` to use production config.
 
 ## Documentation
 
-- [QUICKSTART.md](QUICKSTART.md) - Quick reference for common tasks
-- [DEPLOYMENT.md](DEPLOYMENT.md) - Comprehensive deployment guide
+- [docs/QUICKSTART.md](docs/QUICKSTART.md) - Quick reference for common tasks
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - Comprehensive deployment guide
 
 ## todo
 

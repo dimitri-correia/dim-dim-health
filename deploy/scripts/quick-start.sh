@@ -91,11 +91,11 @@ fi
 
 # Build images
 print_info "Building Docker images (this will take a while)..."
-docker-compose build
+docker-compose -f deploy/docker-compose.yml build
 
 # Start services
 print_info "Starting services..."
-docker-compose up -d
+docker-compose -f deploy/docker-compose.yml up -d
 
 # Wait for services to be ready
 print_info "Waiting for services to be ready..."
@@ -103,9 +103,9 @@ sleep 30
 
 # Check health
 print_info "Checking service health..."
-if docker-compose ps | grep -q "unhealthy"; then
-    print_error "Some services are unhealthy. Check logs with: docker-compose logs"
-    docker-compose ps
+if docker-compose -f deploy/docker-compose.yml ps | grep -q "unhealthy"; then
+    print_error "Some services are unhealthy. Check logs with: docker-compose -f deploy/docker-compose.yml logs"
+    docker-compose -f deploy/docker-compose.yml ps
     exit 1
 fi
 
@@ -114,15 +114,15 @@ print_info "Setup completed successfully!"
 print_info "=========================================="
 echo ""
 print_info "Services are running:"
-docker-compose ps
+docker-compose -f deploy/docker-compose.yml ps
 echo ""
 print_info "API available at: http://localhost:3000"
 print_info "API health check: curl http://localhost:3000/health"
 echo ""
 print_info "Useful commands:"
-echo "  View logs:           docker-compose logs -f"
-echo "  Stop services:       docker-compose down"
-echo "  Restart services:    docker-compose restart"
-echo "  Deploy updates:      ./scripts/deploy-production.sh"
+echo "  View logs:           docker-compose -f deploy/docker-compose.yml logs -f"
+echo "  Stop services:       docker-compose -f deploy/docker-compose.yml down"
+echo "  Restart services:    docker-compose -f deploy/docker-compose.yml restart"
+echo "  Deploy updates:      ./deploy/scripts/deploy-production.sh"
 echo ""
-print_info "For detailed documentation, see DEPLOYMENT.md"
+print_info "For detailed documentation, see docs/DEPLOYMENT.md"

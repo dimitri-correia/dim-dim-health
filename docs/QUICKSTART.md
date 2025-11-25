@@ -22,67 +22,67 @@ RUST_LOG=info
 EOF
 
 # 4. Start services
-./scripts/quick-start.sh
+./deploy/scripts/quick-start.sh
 ```
 
 ## Regular Deployment (Updates)
 
 ```bash
 cd /opt/dimdim-health
-./scripts/deploy-production.sh
+./deploy/scripts/deploy-production.sh
 ```
 
 ## Daily Operations
 
 ### View Logs
 ```bash
-docker-compose logs -f              # All services
-docker-compose logs -f api          # API only
-docker-compose logs -f worker       # Worker only
+docker-compose -f deploy/docker-compose.yml logs -f              # All services
+docker-compose -f deploy/docker-compose.yml logs -f api          # API only
+docker-compose -f deploy/docker-compose.yml logs -f worker       # Worker only
 ```
 
 ### Check Status
 ```bash
-docker-compose ps                   # Service status
+docker-compose -f deploy/docker-compose.yml ps                   # Service status
 curl http://localhost:3000/health   # API health
 ```
 
 ### Restart Services
 ```bash
-docker-compose restart              # All services
-docker-compose restart api          # API only
-docker-compose restart worker       # Worker only
+docker-compose -f deploy/docker-compose.yml restart              # All services
+docker-compose -f deploy/docker-compose.yml restart api          # API only
+docker-compose -f deploy/docker-compose.yml restart worker       # Worker only
 ```
 
 ### Stop Services
 ```bash
-docker-compose down                 # Stop all (keeps data)
-docker-compose down -v              # Stop and delete volumes (⚠️ data loss)
+docker-compose -f deploy/docker-compose.yml down                 # Stop all (keeps data)
+docker-compose -f deploy/docker-compose.yml down -v              # Stop and delete volumes (⚠️ data loss)
 ```
 
 ## Backup & Restore
 
 ### Manual Backup
 ```bash
-./scripts/backup.sh
+./deploy/scripts/backup.sh
 ```
 
 ### Automated Daily Backup (2 AM)
 ```bash
-(crontab -l 2>/dev/null; echo "0 2 * * * /opt/dimdim-health/scripts/backup.sh") | crontab -
+(crontab -l 2>/dev/null; echo "0 2 * * * /opt/dimdim-health/deploy/scripts/backup.sh") | crontab -
 ```
 
 ### Restore from Backup
 ```bash
-./scripts/restore.sh
+./deploy/scripts/restore.sh
 ```
 
 ## Troubleshooting
 
 ### Services Not Starting
 ```bash
-docker-compose logs                 # Check logs
-docker-compose down && docker-compose up -d  # Restart
+docker-compose -f deploy/docker-compose.yml logs                 # Check logs
+docker-compose -f deploy/docker-compose.yml down && docker-compose -f deploy/docker-compose.yml up -d  # Restart
 ```
 
 ### Out of Memory
@@ -94,7 +94,7 @@ docker stats                       # Container usage
 
 ### Database Issues
 ```bash
-docker-compose exec db psql -U dimdimhealth -d dimdimhealth -c "SELECT 1;"
+docker-compose -f deploy/docker-compose.yml exec db psql -U dimdimhealth -d dimdimhealth -c "SELECT 1;"
 ```
 
 ### Build Issues (Raspberry Pi)
@@ -115,14 +115,20 @@ sudo swapon /swapfile
 │   ├── dev.toml             # Development config
 │   └── prod.toml            # Production config
 ├── .env                     # Environment variables (not in git)
-├── docker-compose.yml       # Basic deployment
-├── docker-compose.nginx.yml # With nginx reverse proxy
-├── scripts/
-│   ├── quick-start.sh       # Initial setup
-│   ├── deploy-production.sh # Rolling update
-│   ├── backup.sh            # Backup script
-│   └── restore.sh           # Restore script
-└── DEPLOYMENT.md            # Full documentation
+├── deploy/
+│   ├── docker-compose.yml       # Basic deployment
+│   ├── docker-compose.nginx.yml # With nginx reverse proxy
+│   ├── Dockerfile.api           # API Docker image
+│   ├── Dockerfile.worker        # Worker Docker image
+│   ├── nginx/                   # Nginx configuration
+│   └── scripts/
+│       ├── quick-start.sh       # Initial setup
+│       ├── deploy-production.sh # Rolling update
+│       ├── backup.sh            # Backup script
+│       └── restore.sh           # Restore script
+└── docs/
+    ├── DEPLOYMENT.md            # Full documentation
+    └── QUICKSTART.md            # This file
 ```
 
 ## Security Checklist
@@ -144,7 +150,7 @@ sudo swapon /swapfile
 ✅ **Graceful Shutdown:**
 - Worker: 60 seconds to finish jobs
 - API: 30 seconds to finish requests
-- Use: `docker-compose stop` (not `docker-compose kill`)
+- Use: `docker-compose -f deploy/docker-compose.yml stop` (not `docker-compose kill`)
 
 ✅ **Zero Data Loss:**
 - All data stored in Docker volumes
@@ -153,6 +159,6 @@ sudo swapon /swapfile
 
 ## Support
 
-- Full Documentation: DEPLOYMENT.md
-- Check Logs: `docker-compose logs -f`
+- Full Documentation: docs/DEPLOYMENT.md
+- Check Logs: `docker-compose -f deploy/docker-compose.yml logs -f`
 - GitHub Issues: https://github.com/dimitri-correia/dim-dim-health/issues
