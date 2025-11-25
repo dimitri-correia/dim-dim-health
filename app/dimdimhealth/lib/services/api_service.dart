@@ -100,6 +100,35 @@ class ApiService {
     }
   }
 
+  Future<LoginResponse> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    final request = ResetPasswordRequest(
+      token: token,
+      newPassword: newPassword,
+    );
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/auth/reset-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(request.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return LoginResponse.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Invalid or expired reset token', statusCode: 404);
+    } else if (response.statusCode == 410) {
+      throw ApiException('Reset token has expired', statusCode: 410);
+    } else {
+      throw ApiException('Request failed', statusCode: response.statusCode);
+    }
+  }
+
   Future<LoginResponse> loginAsGuest() async {
     final response = await http.post(
       Uri.parse('$baseUrl/api/users/guest'),
@@ -186,6 +215,23 @@ class ApiService {
         'Failed to update settings',
         statusCode: response.statusCode,
       );
+    }
+  }
+
+  Future<VerifyEmailResponse> verifyEmail({required String token}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/auth/verify-email?token=$token'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      return VerifyEmailResponse.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 404) {
+      throw ApiException('Invalid or expired verification token', statusCode: 404);
+    } else if (response.statusCode == 410) {
+      throw ApiException('Verification token has expired', statusCode: 410);
+    } else {
+      throw ApiException('Verification failed', statusCode: response.statusCode);
     }
   }
 }
