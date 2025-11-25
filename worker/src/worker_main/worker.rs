@@ -160,16 +160,22 @@ async fn worker_loop(worker_state: WorkerState, worker_id: String, shutdown: Arc
                 consecutive_errors = 0;
             }
             Err(e) => {
-                consecutive_errors += 1;
+                consecutive_errors = consecutive_errors.saturating_add(1);
                 error!(
                     error = %e,
                     consecutive_errors = consecutive_errors,
                     "Error fetching job from queue"
                 );
 
-                // Exponential backoff on consecutive errors
-                let delay = Duration::from_secs(std::cmp::min(1 << consecutive_errors, 30));
-                debug!(delay_secs = ?delay.as_secs(), "Backing off before retry");
+                // Exponential backoff on consecutive errors (capped at 30 seconds)
+                // Using checked_shl to avoid overflow, capping shift at 4 (2^4 = 16, then min with 30)
+                let shift_amount = std::cmp::min(consecutive_errors, 4);
+                let delay_secs = 1u64
+                    .checked_shl(shift_amount)
+                    .map(|v| std::cmp::min(v, 30))
+                    .unwrap_or(30);
+                let delay = Duration::from_secs(delay_secs);
+                debug!(delay_secs = delay_secs, "Backing off before retry");
                 tokio::time::sleep(delay).await;
             }
         }

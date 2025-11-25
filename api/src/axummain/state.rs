@@ -87,15 +87,41 @@ async fn get_redis_connection(redis_url: &str) -> Result<ConnectionManager, Redi
 /// Mask password in database URL for safe logging
 fn mask_database_url(url: &str) -> String {
     // Simple password masking - find :password@ pattern and replace
+    // Returns original URL if parsing fails (safe fallback)
     if let Some(at_pos) = url.rfind('@') {
+        // Ensure we have content before @
+        if at_pos == 0 {
+            return url.to_string();
+        }
+
         if let Some(colon_pos) = url[..at_pos].rfind(':') {
+            // Ensure colon is not at the start
+            if colon_pos == 0 {
+                return url.to_string();
+            }
+
             if let Some(slash_pos) = url[..colon_pos].rfind('/') {
-                let prefix = &url[..slash_pos + 3]; // Include ://
+                // Validate indices before slicing
                 let user_start = slash_pos + 3;
-                if let Some(user_colon) = url[user_start..colon_pos].find(':') {
-                    let user = &url[user_start..user_start + user_colon];
-                    let suffix = &url[at_pos..];
-                    return format!("{}{}:***{}", prefix, user, suffix);
+                if user_start >= colon_pos || user_start >= url.len() {
+                    return url.to_string();
+                }
+
+                // Ensure the slice is valid
+                if let Some(user_colon) = url.get(user_start..colon_pos).and_then(|s| s.find(':')) {
+                    // Validate user slice bounds
+                    let user_end = user_start + user_colon;
+                    if user_end > url.len() {
+                        return url.to_string();
+                    }
+
+                    if let (Some(prefix), Some(user), Some(suffix)) = (
+                        url.get(..user_start),
+                        url.get(user_start..user_end),
+                        url.get(at_pos..),
+                    ) {
+                        return format!("{}{}:***{}", prefix, user, suffix);
+                    }
                 }
             }
         }

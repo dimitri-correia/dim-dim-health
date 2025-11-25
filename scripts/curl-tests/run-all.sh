@@ -26,6 +26,7 @@ echo ""
 PASSED=0
 FAILED=0
 SKIPPED=0
+TEST_COUNT=0
 
 run_test() {
     local test_script="$1"
@@ -44,9 +45,21 @@ run_test() {
     fi
 }
 
+# Check for test files
+shopt -s nullglob
+test_files=("$SCRIPT_DIR"/[0-9][0-9]-*.sh)
+shopt -u nullglob
+
+if [ ${#test_files[@]} -eq 0 ]; then
+    echo -e "${YELLOW}No test files found matching pattern [0-9][0-9]-*.sh${NC}"
+    echo "Expected files like: 01-health-check.sh, 02-register-user.sh, etc."
+    exit 1
+fi
+
 # Run tests in order
-for test_file in "$SCRIPT_DIR"/[0-9][0-9]-*.sh; do
+for test_file in "${test_files[@]}"; do
     if [ -f "$test_file" ]; then
+        ((TEST_COUNT++))
         run_test "$test_file"
     fi
 done
@@ -56,6 +69,7 @@ echo ""
 echo "=========================================="
 echo -e "${BLUE}Test Summary${NC}"
 echo "=========================================="
+echo -e "  Total:   $TEST_COUNT"
 echo -e "  ${GREEN}Passed:${NC}  $PASSED"
 echo -e "  ${RED}Failed:${NC}  $FAILED"
 echo -e "  ${YELLOW}Skipped:${NC} $SKIPPED"
