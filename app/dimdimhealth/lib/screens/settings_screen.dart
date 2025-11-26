@@ -561,9 +561,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _formatDate(String dateStr) {
     try {
       final date = DateTime.parse(dateStr);
-      return '${date.day}/${date.month}/${date.year}';
+      final day = date.day.toString().padLeft(2, '0');
+      final month = date.month.toString().padLeft(2, '0');
+      final year = date.year.toString();
+      return '$day/$month/$year';
     } catch (e) {
-      return dateStr;
+      return 'Unknown date';
     }
   }
 }
