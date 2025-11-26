@@ -1,0 +1,75 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start PostgreSQL with pg_cron
+        run: |
+          docker build -t postgres-pgcron:18 -f scripts/dev-db/Dockerfile .
+          docker run -d \
+            --name postgres \
+            -e POSTGRES_USER=test \
+            -e POSTGRES_PASSWORD=test-db \
+            -e POSTGRES_DB=dimdimhealthtest \
+            -p 5433:5432 \
+            postgres-pgcron:18 \
+            -c shared_preload_libraries=pg_cron \
+            -c cron.database_name=dimdimhealthtest
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do
+            if docker exec postgres pg_isready -U test -d dimdimhealthtest > /dev/null 2>&1; then
+              echo "PostgreSQL is ready"
+              break
+            fi
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          # Create pg_cron extension
+          docker exec postgres psql -U test -d dimdimhealthtest -c "CREATE EXTENSION IF NOT EXISTS pg_cron;"
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-action@stable
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Run tests
+        env:
+          DATABASE_URL: postgres://test:test-db@localhost:5433/dimdimhealthtest
+        run: cargo test --workspace
