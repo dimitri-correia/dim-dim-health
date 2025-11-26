@@ -11,6 +11,8 @@ import 'screens/reset_password_screen.dart';
 import 'screens/verify_email_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/weight_screen.dart';
+import 'screens/manage_watchers_screen.dart';
+import 'screens/watching_screen.dart';
 
 import 'utils/app_config.dart';
 
@@ -43,6 +45,8 @@ class MyApp extends StatelessWidget {
               const GuestGuard(child: ForgotPasswordScreen()),
           '/home': (context) => const AuthGuard(child: HomeScreen()),
           '/weight': (context) => const AuthGuard(child: WeightScreen()),
+          '/manage-watchers': (context) => const AuthGuard(child: ManageWatchersScreen()),
+          '/watching': (context) => const AuthGuard(child: WatchingScreen()),
         },
         onGenerateRoute: (settings) {
           if (settings.name?.startsWith('/reset-password') ?? false) {
