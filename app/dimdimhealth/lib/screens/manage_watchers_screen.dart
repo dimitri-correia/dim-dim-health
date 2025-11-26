@@ -176,7 +176,7 @@ class _ManageWatchersScreenState extends State<ManageWatchersScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Revoke Access'),
-        content: Text('Are you sure you want to revoke ${watcher.username}\'s access to your profile?'),
+        content: Text("Are you sure you want to revoke ${watcher.username}'s access to your profile?"),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -212,7 +212,7 @@ class _ManageWatchersScreenState extends State<ManageWatchersScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${watcher.username}\'s access has been revoked'),
+            content: Text("${watcher.username}'s access has been revoked"),
             backgroundColor: Colors.green,
           ),
         );
@@ -383,7 +383,7 @@ class _ManageWatchersScreenState extends State<ManageWatchersScreen> {
                       leading: CircleAvatar(
                         backgroundColor: AppConfig.blueColor,
                         child: Text(
-                          user.username[0].toUpperCase(),
+                          user.username.isNotEmpty ? user.username[0].toUpperCase() : '?',
                           style: const TextStyle(color: AppConfig.whiteColor),
                         ),
                       ),
@@ -473,7 +473,7 @@ class _ManageWatchersScreenState extends State<ManageWatchersScreen> {
         leading: CircleAvatar(
           backgroundColor: AppConfig.blueColor,
           child: Text(
-            watcher.username[0].toUpperCase(),
+            watcher.username.isNotEmpty ? watcher.username[0].toUpperCase() : '?',
             style: const TextStyle(
               color: AppConfig.goldColor,
               fontWeight: FontWeight.bold,

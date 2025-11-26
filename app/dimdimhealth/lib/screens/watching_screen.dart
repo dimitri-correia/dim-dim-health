@@ -228,7 +228,7 @@ class _WatchingScreenState extends State<WatchingScreen> {
         leading: CircleAvatar(
           backgroundColor: AppConfig.blueColor,
           child: Text(
-            user.username[0].toUpperCase(),
+            user.username.isNotEmpty ? user.username[0].toUpperCase() : '?',
             style: const TextStyle(
               color: AppConfig.goldColor,
               fontWeight: FontWeight.bold,
