@@ -493,7 +493,7 @@ class _WeightScreenState extends State<WeightScreen> {
             end: Alignment.bottomRight,
             colors: [
               AppConfig.blueColor,
-              AppConfig.blueColor.withAlpha(204),
+              AppConfig.blueColor.withOpacity(0.8),
             ],
           ),
           borderRadius: BorderRadius.circular(20),
@@ -527,7 +527,7 @@ class _WeightScreenState extends State<WeightScreen> {
                 _formatDate(latestWeight.recordedAt),
                 style: TextStyle(
                   fontSize: 14,
-                  color: AppConfig.whiteColor.withAlpha(179),
+                  color: AppConfig.whiteColor.withOpacity(0.7),
                 ),
               ),
             ],
@@ -536,7 +536,7 @@ class _WeightScreenState extends State<WeightScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: weightChange <= 0 ? Colors.green.withAlpha(51) : AppConfig.redColor.withAlpha(51),
+                  color: weightChange <= 0 ? Colors.green.withOpacity(0.2) : AppConfig.redColor.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -635,7 +635,7 @@ class _WeightScreenState extends State<WeightScreen> {
                     horizontalInterval: (chartMaxY - chartMinY) / 4,
                     getDrawingHorizontalLine: (value) {
                       return FlLine(
-                        color: Colors.grey.withAlpha(51),
+                        color: Colors.grey.withOpacity(0.2),
                         strokeWidth: 1,
                       );
                     },
@@ -720,8 +720,8 @@ class _WeightScreenState extends State<WeightScreen> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            AppConfig.blueColor.withAlpha(77),
-                            AppConfig.blueColor.withAlpha(13),
+                            AppConfig.blueColor.withOpacity(0.3),
+                            AppConfig.blueColor.withOpacity(0.05),
                           ],
                         ),
                       ),
@@ -730,7 +730,7 @@ class _WeightScreenState extends State<WeightScreen> {
                   lineTouchData: LineTouchData(
                     enabled: true,
                     touchTooltipData: LineTouchTooltipData(
-                      getTooltipColor: (touchedSpot) => AppConfig.blueColor.withAlpha(230),
+                      getTooltipColor: (touchedSpot) => AppConfig.blueColor.withOpacity(0.9),
                       tooltipRoundedRadius: 8,
                       getTooltipItems: (touchedSpots) {
                         return touchedSpots.map((spot) {
@@ -867,7 +867,7 @@ class _WeightScreenState extends State<WeightScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppConfig.blueColor.withAlpha(13),
+        color: AppConfig.blueColor.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -917,9 +917,9 @@ class _WeightScreenState extends State<WeightScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withAlpha(26),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withAlpha(51)),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
