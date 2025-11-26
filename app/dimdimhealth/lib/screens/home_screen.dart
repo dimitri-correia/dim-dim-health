@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/user.dart';
 import '../services/auth_provider.dart';
 import '../utils/app_config.dart';
+import '../widgets/user_avatar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,6 +28,13 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('Welcome ${user?.username ?? 'User'}'),
         backgroundColor: AppConfig.blueColor,
         foregroundColor: AppConfig.goldColor,
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: UserAvatar(
+            profileImage: user?.profileImage,
+            username: user?.username,
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
