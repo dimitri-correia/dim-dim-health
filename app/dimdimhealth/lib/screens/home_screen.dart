@@ -69,43 +69,52 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Action Cards Grid
+                        // Action Cards Grid - Responsive layout
                         Expanded(
-                          child: GridView.count(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 16,
-                            crossAxisSpacing: 16,
-                            children: [
-                              _buildActionCard(
-                                context,
-                                icon: Icons.monitor_weight,
-                                title: 'Weight',
-                                subtitle: 'Track your weight',
-                                color: AppConfig.blueColor,
-                                route: '/weight',
-                              ),
-                              _buildActionCard(
-                                context,
-                                icon: Icons.restaurant,
-                                title: 'Meals',
-                                subtitle: 'Log your meals',
-                                color: AppConfig.redColor,
-                              ),
-                              _buildActionCard(
-                                context,
-                                icon: Icons.fitness_center,
-                                title: 'Workouts',
-                                subtitle: 'Plan workouts',
-                                color: AppConfig.goldColor,
-                              ),
-                              _buildActionCard(
-                                context,
-                                icon: Icons.person,
-                                title: 'Profile',
-                                subtitle: 'View profile',
-                                color: Colors.teal,
-                              ),
-                            ],
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              // Determine number of columns based on available width
+                              // 2 columns for mobile (< 600px)
+                              // 4 columns for desktop (>= 600px)
+                              final crossAxisCount = constraints.maxWidth >= 600 ? 4 : 2;
+                              
+                              return GridView.count(
+                                crossAxisCount: crossAxisCount,
+                                mainAxisSpacing: 16,
+                                crossAxisSpacing: 16,
+                                children: [
+                                  _buildActionCard(
+                                    context,
+                                    icon: Icons.monitor_weight,
+                                    title: 'Weight',
+                                    subtitle: 'Track your weight',
+                                    color: AppConfig.blueColor,
+                                    route: '/weight',
+                                  ),
+                                  _buildActionCard(
+                                    context,
+                                    icon: Icons.restaurant,
+                                    title: 'Meals',
+                                    subtitle: 'Log your meals',
+                                    color: AppConfig.redColor,
+                                  ),
+                                  _buildActionCard(
+                                    context,
+                                    icon: Icons.fitness_center,
+                                    title: 'Workouts',
+                                    subtitle: 'Plan workouts',
+                                    color: AppConfig.goldColor,
+                                  ),
+                                  _buildActionCard(
+                                    context,
+                                    icon: Icons.person,
+                                    title: 'Profile',
+                                    subtitle: 'View profile',
+                                    color: Colors.teal,
+                                  ),
+                                ],
+                              );
+                            },
                           ),
                         ),
                       ],
