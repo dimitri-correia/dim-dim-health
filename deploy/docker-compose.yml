@@ -121,6 +121,20 @@ services:
     networks:
       - dimdim-network
 
+  # Vector - Log collector for Postgres, Redis, and all container logs
+  vector:
+    image: timberio/vector:latest-alpine
+    container_name: dimdim-health-vector
+    restart: unless-stopped
+    volumes:
+      - ./vector/vector.toml:/etc/vector/vector.toml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      openobserve:
+        condition: service_healthy
+    networks:
+      - dimdim-network
+
 networks:
   dimdim-network:
     driver: bridge
