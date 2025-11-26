@@ -627,7 +627,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onPressed: (!canJoinGroup || authProvider.isLoading)
                     ? null
                     : () async {
-                        bool success;
+                        final bool success;
                         if (isInPublicGroup) {
                           success = await authProvider.leavePublicGroup();
                         } else {
