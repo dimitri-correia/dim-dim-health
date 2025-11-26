@@ -74,9 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: LayoutBuilder(
                             builder: (context, constraints) {
                               // Determine number of columns based on available width
-                              // 2 columns for mobile (< 600px)
-                              // 4 columns for desktop (>= 600px)
-                              final crossAxisCount = constraints.maxWidth >= 600 ? 4 : 2;
+                              // 2 columns for mobile, 4 columns for desktop
+                              final crossAxisCount = constraints.maxWidth >= AppConfig.desktopBreakpoint ? 4 : 2;
                               
                               return GridView.count(
                                 crossAxisCount: crossAxisCount,
