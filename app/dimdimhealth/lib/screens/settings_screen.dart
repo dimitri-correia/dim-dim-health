@@ -38,6 +38,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _initializeFields();
+    _fetchUserGroups();
   }
 
   void _initializeFields() {
@@ -48,6 +49,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _emailController.text = user.email;
       _selectedAvatar = user.profileImage;
     }
+  }
+
+  Future<void> _fetchUserGroups() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    await authProvider.fetchUserGroups();
   }
 
   @override
@@ -352,6 +358,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 32),
 
+                  // Public Group Section
+                  _buildSectionTitle('Public Group'),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Join the public group to share your progress with others',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppConfig.whiteColor.withOpacity(0.8),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildPublicGroupCard(authProvider),
+                  const SizedBox(height: 32),
+
                   // Save Button
                   SizedBox(
                     width: double.infinity,
@@ -517,6 +537,133 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 );
               }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPublicGroupCard(AuthProvider authProvider) {
+    final isInPublicGroup = authProvider.isInPublicGroup;
+    final user = authProvider.user;
+    final isGuest = user?.isGuest ?? false;
+    final isEmailVerified = user?.emailVerified ?? false;
+    final canJoinGroup = !isGuest && isEmailVerified;
+
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Icon(
+                  isInPublicGroup ? Icons.group : Icons.group_outlined,
+                  color: isInPublicGroup ? Colors.green : Colors.grey,
+                  size: 32,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isInPublicGroup ? 'Member of Public Group' : 'Not in Public Group',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isInPublicGroup ? Colors.green.shade700 : Colors.grey.shade700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isInPublicGroup 
+                            ? 'Your progress is visible to other members'
+                            : 'Join to share your progress',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (!canJoinGroup) ...[
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.orange.shade700, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        isGuest 
+                            ? 'Guest accounts cannot join groups'
+                            : 'Verify your email to join groups',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.orange.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: (!canJoinGroup || authProvider.isLoading)
+                    ? null
+                    : () async {
+                        bool success;
+                        if (isInPublicGroup) {
+                          success = await authProvider.leavePublicGroup();
+                        } else {
+                          success = await authProvider.joinPublicGroup();
+                        }
+                        
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                success
+                                    ? (isInPublicGroup ? 'Left public group' : 'Joined public group')
+                                    : (authProvider.error ?? 'Operation failed'),
+                              ),
+                              backgroundColor: success ? Colors.green : Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                icon: authProvider.isLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(isInPublicGroup ? Icons.logout : Icons.login),
+                label: Text(isInPublicGroup ? 'Leave Public Group' : 'Join Public Group'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isInPublicGroup ? Colors.red.shade400 : Colors.green.shade400,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: Colors.grey.shade300,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
             ),
           ],
         ),

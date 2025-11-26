@@ -408,4 +408,69 @@ class ApiService {
       );
     }
   }
+
+  // User Groups API methods
+  Future<List<String>> getUserGroups(String accessToken) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/user-groups/myself'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return List<String>.from(data['groups'] ?? []);
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else {
+      throw ApiException(
+        'Failed to fetch user groups',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  Future<void> joinPublicGroup(String accessToken) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/user-groups/join-public'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return;
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else {
+      throw ApiException(
+        'Failed to join public group',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  Future<void> leavePublicGroup(String accessToken) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/user-groups/leave-public'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return;
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else {
+      throw ApiException(
+        'Failed to leave public group',
+        statusCode: response.statusCode,
+      );
+    }
+  }
 }

@@ -12,12 +12,15 @@ class AuthProvider with ChangeNotifier {
   String? _refreshToken;
   bool _isLoading = false;
   String? _error;
+  List<String> _userGroups = [];
 
   User? get user => _user;
   String? get accessToken => _accessToken;
   bool get isAuthenticated => _user != null && _accessToken != null;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  List<String> get userGroups => _userGroups;
+  bool get isInPublicGroup => _userGroups.contains('PublicGroup');
 
   Future<void> loadSavedAuth() async {
     try {
@@ -304,5 +307,79 @@ class AuthProvider with ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  // User Groups methods
+  Future<bool> fetchUserGroups() async {
+    if (_accessToken == null) {
+      return false;
+    }
+
+    try {
+      _userGroups = await _apiService.getUserGroups(_accessToken!);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      // If fetch fails, don't update anything
+      return false;
+    }
+  }
+
+  Future<bool> joinPublicGroup() async {
+    if (_accessToken == null) {
+      _error = 'Not authenticated';
+      return false;
+    }
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _apiService.joinPublicGroup(_accessToken!);
+      await fetchUserGroups();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Network error. Please check your connection.';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> leavePublicGroup() async {
+    if (_accessToken == null) {
+      _error = 'Not authenticated';
+      return false;
+    }
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _apiService.leavePublicGroup(_accessToken!);
+      await fetchUserGroups();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Network error. Please check your connection.';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
   }
 }
