@@ -49,6 +49,9 @@ dependencies:
   
   # Form validation
   email_validator: ^2.1.17
+  
+  # Charts for data visualization
+  fl_chart: ^0.68.0
 
 dev_dependencies:
   flutter_test:
