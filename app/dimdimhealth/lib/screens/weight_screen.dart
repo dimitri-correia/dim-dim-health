@@ -6,6 +6,7 @@ import '../models/weight.dart';
 import '../services/api_service.dart';
 import '../services/auth_provider.dart';
 import '../utils/app_config.dart';
+import '../widgets/user_avatar.dart';
 
 class WeightScreen extends StatefulWidget {
   const WeightScreen({super.key});
@@ -373,11 +374,20 @@ class _WeightScreenState extends State<WeightScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final user = authProvider.user;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Weight Tracker'),
         backgroundColor: AppConfig.blueColor,
         foregroundColor: AppConfig.goldColor,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: UserAvatar(profileImage: user?.profileImage),
+          ),
+        ],
       ),
       body: Container(
         width: double.infinity,
@@ -656,8 +666,10 @@ class _WeightScreenState extends State<WeightScreen> {
     if (chartWeights.isEmpty) return const SizedBox.shrink();
 
     // Parse dates and create data points using actual date values (milliseconds since epoch)
-    final List<DateTime> dates = chartWeights.map((w) => DateTime.parse(w.recordedAt)).toList();
-    
+    final List<DateTime> dates = chartWeights
+        .map((w) => DateTime.parse(w.recordedAt))
+        .toList();
+
     // Use milliseconds since epoch for X axis to properly space dates
     final double minX = dates.first.millisecondsSinceEpoch.toDouble();
     final double maxX = dates.last.millisecondsSinceEpoch.toDouble();
@@ -665,14 +677,18 @@ class _WeightScreenState extends State<WeightScreen> {
     // Create data points with actual date values
     final spots = <FlSpot>[];
     for (int i = 0; i < chartWeights.length; i++) {
-      spots.add(FlSpot(
-        dates[i].millisecondsSinceEpoch.toDouble(),
-        chartWeights[i].weightInKg,
-      ));
+      spots.add(
+        FlSpot(
+          dates[i].millisecondsSinceEpoch.toDouble(),
+          chartWeights[i].weightInKg,
+        ),
+      );
     }
 
     // Calculate average weight for the filtered period
-    final averageWeight = chartWeights.fold<double>(0.0, (sum, w) => sum + w.weightInKg) / chartWeights.length;
+    final averageWeight =
+        chartWeights.fold<double>(0.0, (sum, w) => sum + w.weightInKg) /
+        chartWeights.length;
 
     // Create average line spots
     final averageSpots = [
@@ -701,7 +717,8 @@ class _WeightScreenState extends State<WeightScreen> {
     // Create a map from milliseconds to weight data for tooltip lookup
     final Map<double, UserWeight> dateToWeight = {};
     for (int i = 0; i < chartWeights.length; i++) {
-      dateToWeight[dates[i].millisecondsSinceEpoch.toDouble()] = chartWeights[i];
+      dateToWeight[dates[i].millisecondsSinceEpoch.toDouble()] =
+          chartWeights[i];
     }
 
     return Card(
@@ -747,11 +764,7 @@ class _WeightScreenState extends State<WeightScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    width: 16,
-                    height: 2,
-                    color: Colors.orange,
-                  ),
+                  Container(width: 16, height: 2, color: Colors.orange),
                   const SizedBox(width: 8),
                   Text(
                     'Average: ${averageWeight.toStringAsFixed(1)} kg',
@@ -799,7 +812,9 @@ class _WeightScreenState extends State<WeightScreen> {
                           if (value == meta.min || value == meta.max) {
                             return const Text('');
                           }
-                          final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                          final date = DateTime.fromMillisecondsSinceEpoch(
+                            value.toInt(),
+                          );
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
