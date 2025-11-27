@@ -8,24 +8,24 @@ class AppConfig {
 
   static const int splashScreenDurationInSeconds = 3;
 
+  // Responsive layout breakpoint (width in pixels)
+  static const double desktopBreakpoint = 600.0;
+
   static const Color blueColor = Color(0xFF004170);
   static const Color redColor = Color(0xFFDA291C);
   static const Color goldColor = Color(0xFFCEAB5D);
   static const Color whiteColor = Color(0xFFFFFFFF);
   static const Color blackColor = Color(0xFF000000);
 
-  // Placeholder avatar images (online URLs)
+  // Placeholder avatar images (local assets)
   static const List<String> placeholderAvatars = [
-    'https://i.pravatar.cc/150?img=1',
-    'https://i.pravatar.cc/150?img=2',
-    'https://i.pravatar.cc/150?img=3',
-    'https://i.pravatar.cc/150?img=4',
-    'https://i.pravatar.cc/150?img=5',
-    'https://i.pravatar.cc/150?img=6',
-    'https://i.pravatar.cc/150?img=7',
-    'https://i.pravatar.cc/150?img=8',
+    'assets/avatars/avatar1.png',
+    'assets/avatars/avatar2.png',
+    'assets/avatars/avatar3.png',
+    'assets/avatars/avatar4.png',
+    'assets/avatars/avatar5.png',
   ];
 
   // Default placeholder avatar
-  static const String defaultAvatar = 'https://i.pravatar.cc/150?img=1';
+  static const String defaultAvatar = 'assets/avatars/avatar1.png';
 }

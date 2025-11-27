@@ -7,6 +7,7 @@ use opentelemetry_sdk::{
     trace::{RandomIdGenerator, Sampler, SdkTracerProvider},
 };
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::sync::OnceLock;
 use tracing_subscriber::{EnvFilter, Layer, layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -34,6 +35,8 @@ pub struct Settings {
     pub gmail_password: String,
 
     pub openobserve_endpoint: String,
+    pub openobserve_user: String,
+    pub openobserve_password: String,
 }
 
 impl Settings {
@@ -55,10 +58,20 @@ impl Settings {
         let filter =
             EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(&self.env_filter));
 
+        // Create Basic Auth header for OpenObserve
+        use base64::Engine;
+        let credentials = format!("{}:{}", self.openobserve_user, self.openobserve_password);
+        let encoded = base64::engine::general_purpose::STANDARD.encode(credentials.as_bytes());
+        let auth_header = format!("Basic {}", encoded);
+
+        let mut headers = HashMap::new();
+        headers.insert("Authorization".to_string(), auth_header);
+
         let exporter = HttpExporterBuilder::default()
             .with_endpoint(&self.openobserve_endpoint)
             .with_timeout(std::time::Duration::from_secs(3))
             .with_http_client(reqwest::Client::new())
+            .with_headers(headers)
             .build_span_exporter()?;
 
         let resource = Resource::builder_empty()

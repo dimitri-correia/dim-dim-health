@@ -2,6 +2,15 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'weight.g.dart';
 
+double _doubleFromJson(dynamic value) {
+  if (value is num) {
+    return value.toDouble();
+  } else if (value is String) {
+    return double.parse(value);
+  }
+  throw ArgumentError('Cannot convert $value to double');
+}
+
 @JsonSerializable()
 class UserWeight {
   final String id;
@@ -22,8 +31,16 @@ class UserWeight {
     required this.createdAt,
   });
 
-  factory UserWeight.fromJson(Map<String, dynamic> json) =>
-      _$UserWeightFromJson(json);
+  factory UserWeight.fromJson(Map<String, dynamic> json) {
+    return UserWeight(
+      id: json['id'] as String,
+      userId: json['user_id'] as String,
+      weightInKg: _doubleFromJson(json['weight_in_kg']),
+      recordedAt: json['recorded_at'] as String,
+      createdAt: json['created_at'] as String,
+    );
+  }
+
   Map<String, dynamic> toJson() => _$UserWeightToJson(this);
 }
 
@@ -66,8 +83,30 @@ class UserWeightInfos {
     required this.minWeightDate,
   });
 
-  factory UserWeightInfos.fromJson(Map<String, dynamic> json) =>
-      _$UserWeightInfosFromJson(json);
+  factory UserWeightInfos.fromJson(Map<String, dynamic> json) {
+    return UserWeightInfos(
+      last3Weights: (json['last_3_weights'] as List<dynamic>)
+          .map((e) => UserWeight.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      averageWeight: _doubleFromJson(json['average_weight']),
+      numberOfWeightEntries: json['number_of_weight_entries'] as int,
+      averageWeightLast7Days: _doubleFromJson(
+        json['average_weight_last_7_days'],
+      ),
+      numberOfWeightEntriesLast7Days:
+          json['number_of_weight_entries_last_7_days'] as int,
+      averageWeightLast30Days: _doubleFromJson(
+        json['average_weight_last_30_days'],
+      ),
+      numberOfWeightEntriesLast30Days:
+          json['number_of_weight_entries_last_30_days'] as int,
+      maxWeight: _doubleFromJson(json['max_weight']),
+      maxWeightDate: json['max_weight_date'] as String,
+      minWeight: _doubleFromJson(json['min_weight']),
+      minWeightDate: json['min_weight_date'] as String,
+    );
+  }
+
   Map<String, dynamic> toJson() => _$UserWeightInfosToJson(this);
 }
 
@@ -78,10 +117,7 @@ class CreateWeightRequest {
   @JsonKey(name: 'recorded_at')
   final String recordedAt;
 
-  CreateWeightRequest({
-    required this.weightInKg,
-    required this.recordedAt,
-  });
+  CreateWeightRequest({required this.weightInKg, required this.recordedAt});
 
   factory CreateWeightRequest.fromJson(Map<String, dynamic> json) =>
       _$CreateWeightRequestFromJson(json);
@@ -95,10 +131,7 @@ class UpdateWeightRequest {
   @JsonKey(name: 'recorded_at')
   final String recordedAt;
 
-  UpdateWeightRequest({
-    required this.weightInKg,
-    required this.recordedAt,
-  });
+  UpdateWeightRequest({required this.weightInKg, required this.recordedAt});
 
   factory UpdateWeightRequest.fromJson(Map<String, dynamic> json) =>
       _$UpdateWeightRequestFromJson(json);

@@ -34,13 +34,13 @@ class _UserAvatarState extends State<UserAvatar> {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = _getValidImageUrl();
+    final imageProvider = _getImageProvider();
     
-    if (imageUrl != null && !_imageLoadFailed) {
+    if (imageProvider != null && !_imageLoadFailed) {
       return CircleAvatar(
         radius: widget.radius,
         backgroundColor: AppConfig.goldColor,
-        backgroundImage: NetworkImage(imageUrl),
+        backgroundImage: imageProvider,
         onBackgroundImageError: (_, __) {
           // Mark image as failed and rebuild with fallback
           if (mounted) {
@@ -68,13 +68,17 @@ class _UserAvatarState extends State<UserAvatar> {
     );
   }
 
-  /// Returns a valid HTTPS image URL, or null if not available.
-  /// Only HTTPS URLs are accepted for security reasons.
-  String? _getValidImageUrl() {
+  /// Returns an ImageProvider for the profile image.
+  /// Supports local assets (assets/) and HTTPS URLs.
+  ImageProvider? _getImageProvider() {
     if (widget.profileImage != null && widget.profileImage!.isNotEmpty) {
+      // Local asset path
+      if (widget.profileImage!.startsWith('assets/')) {
+        return AssetImage(widget.profileImage!);
+      }
       // Only accept HTTPS URLs for security
       if (widget.profileImage!.startsWith('https://')) {
-        return widget.profileImage;
+        return NetworkImage(widget.profileImage!);
       }
     }
     return null;
@@ -87,4 +91,3 @@ class _UserAvatarState extends State<UserAvatar> {
     return 'U';
   }
 }
-
