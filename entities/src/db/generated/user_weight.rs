@@ -11,7 +11,7 @@ pub struct Model {
     pub user_id: Uuid,
     #[sea_orm(column_type = "Decimal(Some((5, 2)))")]
     pub weight_in_kg: Decimal,
-    pub recorded_at: DateTimeWithTimeZone,
+    pub recorded_at: Date,
     pub updated_at: DateTimeWithTimeZone,
     pub created_at: DateTimeWithTimeZone,
 }

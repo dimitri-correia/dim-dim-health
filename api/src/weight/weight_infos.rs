@@ -29,8 +29,7 @@ pub fn user_weight_infos(
         Decimal::ZERO
     };
 
-    let seven_days_ago: chrono::DateTime<chrono::FixedOffset> =
-        (Utc::now() - Duration::days(7)).into();
+    let seven_days_ago = (Utc::now() - Duration::days(7)).date_naive();
     let weights_last_7_days: Vec<_> = sorted_weights
         .iter()
         .filter(|w| w.recorded_at >= seven_days_ago)
@@ -44,8 +43,7 @@ pub fn user_weight_infos(
         Decimal::ZERO
     };
 
-    let thirty_days_ago: chrono::DateTime<chrono::FixedOffset> =
-        (Utc::now() - Duration::days(30)).into();
+    let thirty_days_ago = (Utc::now() - Duration::days(30)).date_naive();
     let weights_last_30_days: Vec<_> = sorted_weights
         .iter()
         .filter(|w| w.recorded_at >= thirty_days_ago)
@@ -77,8 +75,18 @@ pub fn user_weight_infos(
         average_weight_last_30_days,
         number_of_weight_entries_last_30_days,
         max_weight: max_weight_entry.weight_in_kg,
-        max_weight_date: max_weight_entry.recorded_at,
+        max_weight_date: max_weight_entry
+            .recorded_at
+            .and_hms_opt(0, 0, 0)
+            .expect("Valid time should be constructible")
+            .and_local_timezone(chrono::FixedOffset::east_opt(0).unwrap())
+            .unwrap(),
         min_weight: min_weight_entry.weight_in_kg,
-        min_weight_date: min_weight_entry.recorded_at,
+        min_weight_date: min_weight_entry
+            .recorded_at
+            .and_hms_opt(0, 0, 0)
+            .expect("Valid time should be constructible")
+            .and_local_timezone(chrono::FixedOffset::east_opt(0).unwrap())
+            .unwrap(),
     })
 }

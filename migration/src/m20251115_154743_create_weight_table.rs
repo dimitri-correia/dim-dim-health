@@ -26,11 +26,7 @@ impl MigrationTrait for Migration {
                             .check(Expr::col(UserWeight::WeightInKg).gte(Expr::value(30.0)))
                             .check(Expr::col(UserWeight::WeightInKg).lte(Expr::value(200.0))),
                     )
-                    .col(
-                        ColumnDef::new(UserWeight::RecordedAt)
-                            .timestamp_with_time_zone()
-                            .not_null(),
-                    )
+                    .col(ColumnDef::new(UserWeight::RecordedAt).date().not_null())
                     .col(
                         ColumnDef::new(UserWeight::UpdatedAt)
                             .timestamp_with_time_zone()

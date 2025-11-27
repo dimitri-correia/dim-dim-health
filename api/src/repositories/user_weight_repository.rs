@@ -21,7 +21,7 @@ impl UserWeightRepository {
         &self,
         user_id: Uuid,
         weight_in_kg: Decimal,
-        recorded_at: chrono::DateTime<chrono::FixedOffset>,
+        recorded_at: chrono::NaiveDate,
     ) -> Result<user_weight::Model, sea_orm::DbErr> {
         let user_weight = user_weight::ActiveModel {
             id: NotSet,
@@ -71,7 +71,7 @@ impl UserWeightRepository {
         &self,
         id: Uuid,
         weight_in_kg: Decimal,
-        recorded_at: chrono::DateTime<chrono::FixedOffset>,
+        recorded_at: chrono::NaiveDate,
     ) -> Result<user_weight::Model, sea_orm::DbErr> {
         let user_weight = user_weight::ActiveModel {
             id: Set(id),
