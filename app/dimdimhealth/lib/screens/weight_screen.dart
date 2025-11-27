@@ -1,5 +1,7 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../models/weight.dart';
 import '../services/api_service.dart';
 import '../services/auth_provider.dart';
@@ -12,12 +14,16 @@ class WeightScreen extends StatefulWidget {
   State<WeightScreen> createState() => _WeightScreenState();
 }
 
+// Enum for time period filter
+enum TimePeriodFilter { all, sixMonths, threeMonths, oneMonth }
+
 class _WeightScreenState extends State<WeightScreen> {
   final ApiService _apiService = ApiService();
   List<UserWeight> _weights = [];
   UserWeightInfos? _weightInfos;
   bool _isLoading = true;
   String? _error;
+  TimePeriodFilter _selectedTimePeriod = TimePeriodFilter.all;
 
   @override
   void initState() {
@@ -78,8 +84,9 @@ class _WeightScreenState extends State<WeightScreen> {
             children: [
               TextField(
                 controller: weightController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Weight (kg)',
                   border: OutlineInputBorder(),
@@ -176,8 +183,9 @@ class _WeightScreenState extends State<WeightScreen> {
   }
 
   Future<void> _showEditWeightDialog(UserWeight weight) async {
-    final weightController =
-        TextEditingController(text: weight.weightInKg.toString());
+    final weightController = TextEditingController(
+      text: weight.weightInKg.toString(),
+    );
     DateTime selectedDate = DateTime.parse(weight.recordedAt);
 
     await showDialog(
@@ -190,8 +198,9 @@ class _WeightScreenState extends State<WeightScreen> {
             children: [
               TextField(
                 controller: weightController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Weight (kg)',
                   border: OutlineInputBorder(),
@@ -255,7 +264,10 @@ class _WeightScreenState extends State<WeightScreen> {
   }
 
   Future<void> _updateWeight(
-      String id, double weightInKg, DateTime recordedAt) async {
+    String id,
+    double weightInKg,
+    DateTime recordedAt,
+  ) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final accessToken = authProvider.accessToken;
 
@@ -324,10 +336,7 @@ class _WeightScreenState extends State<WeightScreen> {
     if (accessToken == null) return;
 
     try {
-      await _apiService.deleteWeight(
-        accessToken: accessToken,
-        id: id,
-      );
+      await _apiService.deleteWeight(accessToken: accessToken, id: id);
       await _loadData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -371,6 +380,8 @@ class _WeightScreenState extends State<WeightScreen> {
         foregroundColor: AppConfig.goldColor,
       ),
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary),
         child: SafeArea(
           child: RefreshIndicator(
@@ -382,59 +393,72 @@ class _WeightScreenState extends State<WeightScreen> {
                     ),
                   )
                 : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              size: 64,
-                              color: AppConfig.redColor,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              _error!,
-                              style: const TextStyle(
-                                color: AppConfig.whiteColor,
-                                fontSize: 16,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: _loadData,
-                              child: const Text('Retry'),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: AppConfig.redColor,
                         ),
-                      )
-                    : SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Statistics Card
-                            if (_weightInfos != null) _buildStatisticsCard(),
-                            const SizedBox(height: 16),
-
-                            // Weight History
-                            const Text(
-                              'Weight History',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: AppConfig.goldColor,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            if (_weights.isEmpty)
-                              _buildEmptyState()
-                            else
-                              ..._buildWeightList(),
-                          ],
+                        const SizedBox(height: 16),
+                        Text(
+                          _error!,
+                          style: const TextStyle(
+                            color: AppConfig.whiteColor,
+                            fontSize: 16,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _loadData,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  )
+                : SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12.0,
+                        vertical: 16.0,
                       ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Current Weight Summary
+                          if (_weightInfos != null) _buildCurrentWeightCard(),
+                          const SizedBox(height: 16),
+
+                          // Weight Trend Graph
+                          if (_weights.isNotEmpty) _buildWeightChartCard(),
+                          if (_weights.isNotEmpty) const SizedBox(height: 16),
+
+                          // Statistics Card
+                          if (_weightInfos != null) _buildStatisticsCard(),
+                          const SizedBox(height: 16),
+
+                          // Weight History
+                          const Text(
+                            'Weight History',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: AppConfig.goldColor,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          if (_weights.isEmpty)
+                            _buildEmptyState()
+                          else
+                            ..._buildWeightList(),
+                        ],
+                      ),
+                    ),
+                  ),
           ),
         ),
       ),
@@ -447,58 +471,451 @@ class _WeightScreenState extends State<WeightScreen> {
     );
   }
 
-  Widget _buildStatisticsCard() {
+  Widget _buildCurrentWeightCard() {
     final infos = _weightInfos!;
+    final latestWeight = infos.last3Weights.isNotEmpty
+        ? infos.last3Weights.first
+        : null;
+
+    // Calculate weight change (current vs 7-day average)
+    double? weightChange;
+    if (latestWeight != null && infos.averageWeightLast7Days > 0) {
+      weightChange = latestWeight.weightInKg - infos.averageWeightLast7Days;
+    }
+
+    return Card(
+      elevation: 6,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppConfig.blueColor, AppConfig.blueColor.withOpacity(0.8)],
+          ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text(
+              'Current Weight',
+              style: TextStyle(
+                fontSize: 16,
+                color: AppConfig.whiteColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              latestWeight != null
+                  ? _formatWeight(latestWeight.weightInKg)
+                  : '--',
+              style: const TextStyle(
+                fontSize: 42,
+                fontWeight: FontWeight.bold,
+                color: AppConfig.goldColor,
+              ),
+            ),
+            if (latestWeight != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                _formatDate(latestWeight.recordedAt),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppConfig.whiteColor.withOpacity(0.7),
+                ),
+              ),
+            ],
+            if (weightChange != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: weightChange <= 0
+                      ? Colors.green.withOpacity(0.2)
+                      : AppConfig.redColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      weightChange <= 0
+                          ? Icons.trending_down
+                          : Icons.trending_up,
+                      color: weightChange <= 0
+                          ? Colors.green
+                          : AppConfig.redColor,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${weightChange >= 0 ? '+' : ''}${weightChange.toStringAsFixed(1)} kg vs 7-day avg',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: weightChange <= 0
+                            ? Colors.green
+                            : AppConfig.redColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<UserWeight> _getFilteredWeights() {
+    // Sort weights by date ascending for the chart
+    final sortedWeights = List<UserWeight>.from(_weights)
+      ..sort((a, b) => a.recordedAt.compareTo(b.recordedAt));
+
+    if (_selectedTimePeriod == TimePeriodFilter.all) {
+      return sortedWeights;
+    }
+
+    final now = DateTime.now();
+    DateTime cutoffDate;
+    switch (_selectedTimePeriod) {
+      case TimePeriodFilter.sixMonths:
+        cutoffDate = now.subtract(const Duration(days: 180));
+        break;
+      case TimePeriodFilter.threeMonths:
+        cutoffDate = now.subtract(const Duration(days: 90));
+        break;
+      case TimePeriodFilter.oneMonth:
+        cutoffDate = now.subtract(const Duration(days: 30));
+        break;
+      case TimePeriodFilter.all:
+        return sortedWeights;
+    }
+
+    return sortedWeights.where((w) {
+      final date = DateTime.parse(w.recordedAt);
+      return date.isAfter(cutoffDate) || date.isAtSameMomentAs(cutoffDate);
+    }).toList();
+  }
+
+  String _getTimePeriodLabel(TimePeriodFilter filter) {
+    switch (filter) {
+      case TimePeriodFilter.all:
+        return 'All';
+      case TimePeriodFilter.sixMonths:
+        return '6M';
+      case TimePeriodFilter.threeMonths:
+        return '3M';
+      case TimePeriodFilter.oneMonth:
+        return '1M';
+    }
+  }
+
+  Widget _buildTimePeriodSelector() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: TimePeriodFilter.values.map((filter) {
+        final isSelected = _selectedTimePeriod == filter;
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: ChoiceChip(
+            label: Text(_getTimePeriodLabel(filter)),
+            selected: isSelected,
+            onSelected: (selected) {
+              if (selected) {
+                setState(() {
+                  _selectedTimePeriod = filter;
+                });
+              }
+            },
+            selectedColor: AppConfig.blueColor,
+            backgroundColor: Colors.grey[200],
+            labelStyle: TextStyle(
+              color: isSelected ? Colors.white : Colors.black87,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontSize: 12,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildWeightChartCard() {
+    // Get filtered weights based on selected time period
+    final chartWeights = _getFilteredWeights();
+
+    if (chartWeights.isEmpty) return const SizedBox.shrink();
+
+    // Parse dates and create data points using actual date values (milliseconds since epoch)
+    final List<DateTime> dates = chartWeights.map((w) => DateTime.parse(w.recordedAt)).toList();
+    
+    // Use milliseconds since epoch for X axis to properly space dates
+    final double minX = dates.first.millisecondsSinceEpoch.toDouble();
+    final double maxX = dates.last.millisecondsSinceEpoch.toDouble();
+
+    // Create data points with actual date values
+    final spots = <FlSpot>[];
+    for (int i = 0; i < chartWeights.length; i++) {
+      spots.add(FlSpot(
+        dates[i].millisecondsSinceEpoch.toDouble(),
+        chartWeights[i].weightInKg,
+      ));
+    }
+
+    // Calculate average weight for the filtered period
+    final averageWeight = chartWeights.fold<double>(0.0, (sum, w) => sum + w.weightInKg) / chartWeights.length;
+
+    // Create average line spots
+    final averageSpots = [
+      FlSpot(minX, averageWeight),
+      FlSpot(maxX, averageWeight),
+    ];
+
+    // Calculate min/max for better chart scaling
+    final minWeight = chartWeights.map((w) => w.weightInKg).reduce(math.min);
+    final maxWeight = chartWeights.map((w) => w.weightInKg).reduce(math.max);
+    const chartPaddingMultiplier = 0.15;
+    final padding = (maxWeight - minWeight) * chartPaddingMultiplier;
+    final chartMinY = (math.min(minWeight, averageWeight) - padding)
+        .clamp(0, double.infinity)
+        .toDouble();
+    final chartMaxY = (math.max(maxWeight, averageWeight) + padding).toDouble();
+
+    // Calculate Y interval, ensuring it's never 0
+    final range = chartMaxY - chartMinY;
+    final yInterval = range > 0 ? range / 4 : 1.0;
+
+    // Calculate X interval for labels (show roughly 5 labels)
+    final xRange = maxX - minX;
+    final xInterval = xRange > 0 ? xRange / 5 : 1.0;
+
+    // Create a map from milliseconds to weight data for tooltip lookup
+    final Map<double, UserWeight> dateToWeight = {};
+    for (int i = 0; i < chartWeights.length; i++) {
+      dateToWeight[dates[i].millisecondsSinceEpoch.toDouble()] = chartWeights[i];
+    }
+
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
+      child: Container(
+        width: double.infinity,
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Statistics',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppConfig.blueColor,
+            Row(
+              children: [
+                const Icon(Icons.show_chart, color: AppConfig.blueColor),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Weight Trend',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppConfig.blueColor,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${chartWeights.length} entries',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _buildTimePeriodSelector(),
+            const SizedBox(height: 8),
+            // Average display
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 16,
+                    height: 2,
+                    color: Colors.orange,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Average: ${averageWeight.toStringAsFixed(1)} kg',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.orange,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const Divider(),
-            const SizedBox(height: 8),
-            _buildStatRow(
-              'Total Entries',
-              '${infos.numberOfWeightEntries}',
-              Icons.format_list_numbered,
-            ),
-            _buildStatRow(
-              'Average Weight',
-              _formatWeight(infos.averageWeight),
-              Icons.analytics,
-            ),
-            _buildStatRow(
-              'Avg (Last 7 Days)',
-              _formatWeight(infos.averageWeightLast7Days),
-              Icons.calendar_view_week,
-            ),
-            _buildStatRow(
-              'Avg (Last 30 Days)',
-              _formatWeight(infos.averageWeightLast30Days),
-              Icons.calendar_month,
-            ),
-            const Divider(),
-            _buildStatRow(
-              'Max Weight',
-              '${_formatWeight(infos.maxWeight)} (${_formatDate(infos.maxWeightDate)})',
-              Icons.arrow_upward,
-              color: AppConfig.redColor,
-            ),
-            _buildStatRow(
-              'Min Weight',
-              '${_formatWeight(infos.minWeight)} (${_formatDate(infos.minWeightDate)})',
-              Icons.arrow_downward,
-              color: Colors.green,
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 200,
+              width: double.infinity,
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: yInterval,
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: Colors.grey.withOpacity(0.2),
+                        strokeWidth: 1,
+                      );
+                    },
+                  ),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 30,
+                        interval: xInterval,
+                        getTitlesWidget: (value, meta) {
+                          // Skip edge labels that would be cut off
+                          if (value == meta.min || value == meta.max) {
+                            return const Text('');
+                          }
+                          final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              '${date.day}/${date.month}',
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 10,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: yInterval,
+                        reservedSize: 45,
+                        getTitlesWidget: (value, meta) {
+                          return Text(
+                            value.toStringAsFixed(1),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 11,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  minX: minX,
+                  maxX: maxX,
+                  minY: chartMinY,
+                  maxY: chartMaxY,
+                  lineBarsData: [
+                    // Average line (drawn first so it appears behind the main line)
+                    LineChartBarData(
+                      spots: averageSpots,
+                      isCurved: false,
+                      color: Colors.orange,
+                      barWidth: 2,
+                      isStrokeCapRound: true,
+                      dotData: const FlDotData(show: false),
+                      dashArray: [5, 5],
+                    ),
+                    // Main weight line
+                    LineChartBarData(
+                      spots: spots,
+                      isCurved: true,
+                      curveSmoothness: 0.3,
+                      color: AppConfig.blueColor,
+                      barWidth: 3,
+                      isStrokeCapRound: true,
+                      dotData: FlDotData(
+                        show: chartWeights.length <= 15,
+                        getDotPainter: (spot, percent, barData, index) {
+                          return FlDotCirclePainter(
+                            radius: 4,
+                            color: AppConfig.goldColor,
+                            strokeWidth: 2,
+                            strokeColor: AppConfig.blueColor,
+                          );
+                        },
+                      ),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            AppConfig.blueColor.withOpacity(0.3),
+                            AppConfig.blueColor.withOpacity(0.05),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                  lineTouchData: LineTouchData(
+                    enabled: true,
+                    touchTooltipData: LineTouchTooltipData(
+                      getTooltipColor: (touchedSpot) =>
+                          AppConfig.blueColor.withOpacity(0.9),
+                      tooltipRoundedRadius: 8,
+                      getTooltipItems: (touchedSpots) {
+                        return touchedSpots.map((spot) {
+                          // Check if this is the average line (bar index 0)
+                          if (spot.barIndex == 0) {
+                            return LineTooltipItem(
+                              'Avg: ${averageWeight.toStringAsFixed(1)} kg',
+                              const TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            );
+                          }
+                          // Main weight line
+                          final weight = dateToWeight[spot.x];
+                          if (weight != null) {
+                            return LineTooltipItem(
+                              '${weight.weightInKg.toStringAsFixed(1)} kg\n${_formatDate(weight.recordedAt)}',
+                              const TextStyle(
+                                color: AppConfig.goldColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            );
+                          }
+                          return null;
+                        }).toList();
+                      },
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -506,31 +923,202 @@ class _WeightScreenState extends State<WeightScreen> {
     );
   }
 
-  Widget _buildStatRow(String label, String value, IconData icon,
-      {Color? color}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
+  Widget _buildStatisticsCard() {
+    final infos = _weightInfos!;
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.analytics, color: AppConfig.blueColor),
+                SizedBox(width: 8),
+                Text(
+                  'Statistics',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppConfig.blueColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Stats Grid
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatTile(
+                    'Total Entries',
+                    '${infos.numberOfWeightEntries}',
+                    Icons.format_list_numbered,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatTile(
+                    'Average',
+                    _formatWeight(infos.averageWeight),
+                    Icons.balance,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatTile(
+                    '7-Day Avg',
+                    _formatWeight(infos.averageWeightLast7Days),
+                    Icons.calendar_view_week,
+                    subtitle: '${infos.numberOfWeightEntriesLast7Days} entries',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatTile(
+                    '30-Day Avg',
+                    _formatWeight(infos.averageWeightLast30Days),
+                    Icons.calendar_month,
+                    subtitle:
+                        '${infos.numberOfWeightEntriesLast30Days} entries',
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 12),
+
+            // Min/Max Row
+            Row(
+              children: [
+                Expanded(
+                  child: _buildMinMaxTile(
+                    'Highest',
+                    _formatWeight(infos.maxWeight),
+                    _formatDate(infos.maxWeightDate),
+                    Icons.arrow_upward,
+                    AppConfig.redColor,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildMinMaxTile(
+                    'Lowest',
+                    _formatWeight(infos.minWeight),
+                    _formatDate(infos.minWeightDate),
+                    Icons.arrow_downward,
+                    Colors.green,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatTile(
+    String label,
+    String value,
+    IconData icon, {
+    String? subtitle,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppConfig.blueColor.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: color ?? AppConfig.blueColor),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
+          Row(
+            children: [
+              Icon(icon, size: 16, color: AppConfig.blueColor),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppConfig.blueColor,
             ),
           ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMinMaxTile(
+    String label,
+    String value,
+    String date,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 18, color: color),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
           Text(
             value,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: color ?? AppConfig.blueColor,
+              color: color,
             ),
           ),
+          const SizedBox(height: 2),
+          Text(date, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
         ],
       ),
     );
@@ -540,7 +1128,8 @@ class _WeightScreenState extends State<WeightScreen> {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
+      child: Container(
+        width: double.infinity,
         padding: const EdgeInsets.all(32.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -562,10 +1151,7 @@ class _WeightScreenState extends State<WeightScreen> {
             const SizedBox(height: 8),
             Text(
               'Tap the + button to add your first weight entry',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
               textAlign: TextAlign.center,
             ),
           ],
@@ -585,25 +1171,21 @@ class _WeightScreenState extends State<WeightScreen> {
         margin: const EdgeInsets.only(bottom: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
           leading: CircleAvatar(
             backgroundColor: AppConfig.blueColor,
-            child: const Icon(
-              Icons.monitor_weight,
-              color: AppConfig.goldColor,
-            ),
+            child: const Icon(Icons.monitor_weight, color: AppConfig.goldColor),
           ),
           title: Text(
             _formatWeight(weight.weightInKg),
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           subtitle: Text(
             _formatDate(weight.recordedAt),
-            style: TextStyle(
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(color: Colors.grey[600]),
           ),
           trailing: PopupMenuButton<String>(
             onSelected: (value) {
