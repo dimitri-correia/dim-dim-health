@@ -313,9 +313,12 @@ class ApiService {
     required double weightInKg,
     required DateTime recordedAt,
   }) async {
+    // Format date as YYYY-MM-DD for NaiveDate
+    final dateString =
+        '${recordedAt.year.toString().padLeft(4, '0')}-${recordedAt.month.toString().padLeft(2, '0')}-${recordedAt.day.toString().padLeft(2, '0')}';
     final request = CreateWeightRequest(
       weightInKg: weightInKg,
-      recordedAt: recordedAt.toUtc().toIso8601String(),
+      recordedAt: dateString,
     );
 
     final response = await http.post(
@@ -331,6 +334,12 @@ class ApiService {
       return UserWeight.fromJson(jsonDecode(response.body));
     } else if (response.statusCode == 401) {
       throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 409) {
+      final error = jsonDecode(response.body);
+      throw ApiException(
+        error['error'] ?? 'A weight entry already exists for this date',
+        statusCode: 409,
+      );
     } else if (response.statusCode == 400) {
       final error = jsonDecode(response.body);
       throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
@@ -348,9 +357,12 @@ class ApiService {
     required double weightInKg,
     required DateTime recordedAt,
   }) async {
+    // Format date as YYYY-MM-DD for NaiveDate
+    final dateString =
+        '${recordedAt.year.toString().padLeft(4, '0')}-${recordedAt.month.toString().padLeft(2, '0')}-${recordedAt.day.toString().padLeft(2, '0')}';
     final request = UpdateWeightRequest(
       weightInKg: weightInKg,
-      recordedAt: recordedAt.toUtc().toIso8601String(),
+      recordedAt: dateString,
     );
 
     final response = await http.put(
@@ -370,6 +382,12 @@ class ApiService {
       throw ApiException('Not allowed to modify this entry', statusCode: 403);
     } else if (response.statusCode == 404) {
       throw ApiException('Weight entry not found', statusCode: 404);
+    } else if (response.statusCode == 409) {
+      final error = jsonDecode(response.body);
+      throw ApiException(
+        error['error'] ?? 'A weight entry already exists for this date',
+        statusCode: 409,
+      );
     } else if (response.statusCode == 400) {
       final error = jsonDecode(response.body);
       throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);

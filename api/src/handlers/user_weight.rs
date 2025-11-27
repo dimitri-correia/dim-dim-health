@@ -8,10 +8,17 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
+use sea_orm::DbErr;
 use serde_json::json;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 use uuid::Uuid;
 use validator::Validate;
+
+/// Checks if a database error is a unique constraint violation
+fn is_unique_constraint_violation(err: &DbErr) -> bool {
+    let error_str = err.to_string().to_lowercase();
+    error_str.contains("unique constraint") || error_str.contains("duplicate key")
+}
 
 pub async fn create_user_weight(
     State(state): State<AppState>,
@@ -36,6 +43,17 @@ pub async fn create_user_weight(
     {
         Ok(user_weight) => Ok(Json(UserWeightResponse::from(user_weight))),
         Err(err) => {
+            if is_unique_constraint_violation(&err) {
+                warn!(
+                    "Duplicate weight entry attempt for user {} on date {}",
+                    user.id, payload.recorded_at
+                );
+                return Err((
+                    StatusCode::CONFLICT,
+                    Json(json!({"error": "A weight entry already exists for this date"})),
+                )
+                    .into_response());
+            }
             error!("Failed to create user weight: {}", err);
             Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
         }
@@ -150,6 +168,17 @@ pub async fn update_user_weight(
     {
         Ok(user_weight) => Ok(Json(UserWeightResponse::from(user_weight))),
         Err(err) => {
+            if is_unique_constraint_violation(&err) {
+                warn!(
+                    "Duplicate weight entry attempt for user {} on date {}",
+                    user.id, payload.recorded_at
+                );
+                return Err((
+                    StatusCode::CONFLICT,
+                    Json(json!({"error": "A weight entry already exists for this date"})),
+                )
+                    .into_response());
+            }
             error!("Failed to update user weight: {}", err);
             Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
         }
