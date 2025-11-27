@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/user.dart';
 import '../services/auth_provider.dart';
 import '../utils/app_config.dart';
+import '../widgets/user_avatar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,6 +28,10 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('Welcome ${user?.username ?? 'User'}'),
         backgroundColor: AppConfig.blueColor,
         foregroundColor: AppConfig.goldColor,
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: UserAvatar(profileImage: user?.profileImage),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -57,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           _buildGuestAccountBanner(context, user!),
                           const SizedBox(height: 16),
                         ],
-                        
+
                         // Quick Actions
                         const Text(
                           'Quick Actions',
@@ -75,8 +80,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             builder: (context, constraints) {
                               // Determine number of columns based on available width
                               // 2 columns for mobile, 4 columns for desktop
-                              final crossAxisCount = constraints.maxWidth >= AppConfig.desktopBreakpoint ? 4 : 2;
-                              
+                              final crossAxisCount =
+                                  constraints.maxWidth >=
+                                      AppConfig.desktopBreakpoint
+                                  ? 4
+                                  : 2;
+
                               return GridView.count(
                                 crossAxisCount: crossAxisCount,
                                 mainAxisSpacing: 16,
@@ -284,19 +293,21 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
-    
+
     final expiresAt = createdAt.add(const Duration(hours: 24));
     final now = DateTime.now();
     final hoursRemaining = expiresAt.difference(now).inHours;
-    
+
     String expirationText;
     if (hoursRemaining <= 0) {
       expirationText = 'This account has expired';
     } else if (hoursRemaining < 1) {
       final minutesRemaining = expiresAt.difference(now).inMinutes;
-      expirationText = 'This guest account will expire in $minutesRemaining ${minutesRemaining == 1 ? 'minute' : 'minutes'}';
+      expirationText =
+          'This guest account will expire in $minutesRemaining ${minutesRemaining == 1 ? 'minute' : 'minutes'}';
     } else {
-      expirationText = 'This guest account will expire in $hoursRemaining ${hoursRemaining == 1 ? 'hour' : 'hours'}';
+      expirationText =
+          'This guest account will expire in $hoursRemaining ${hoursRemaining == 1 ? 'hour' : 'hours'}';
     }
 
     return Card(
@@ -313,11 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.info_outline,
-                  color: AppConfig.redColor,
-                  size: 24,
-                ),
+                Icon(Icons.info_outline, color: AppConfig.redColor, size: 24),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
