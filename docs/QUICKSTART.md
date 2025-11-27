@@ -160,5 +160,6 @@ sudo swapon /swapfile
 ## Support
 
 - Full Documentation: docs/DEPLOYMENT.md
+- Internet Access (SFR Box): docs/PRODUCTION_INTERNET_ACCESS.md
 - Check Logs: `docker-compose -f deploy/docker-compose.yml logs -f`
 - GitHub Issues: https://github.com/dimitri-correia/dim-dim-health/issues

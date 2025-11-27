@@ -11,6 +11,8 @@ For a quick production setup, see [docs/QUICKSTART.md](docs/QUICKSTART.md).
 
 For detailed deployment documentation, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
+For internet access with SFR box, see [docs/PRODUCTION_INTERNET_ACCESS.md](docs/PRODUCTION_INTERNET_ACCESS.md).
+
 One-command setup:
 ```bash
 ./deploy/scripts/quick-start.sh
@@ -80,6 +82,7 @@ Set environment variable `APP_ENV=prod` to use production config.
 
 - [docs/QUICKSTART.md](docs/QUICKSTART.md) - Quick reference for common tasks
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - Comprehensive deployment guide
+- [docs/PRODUCTION_INTERNET_ACCESS.md](docs/PRODUCTION_INTERNET_ACCESS.md) - Internet access with SFR box
 
 ## todo
 
