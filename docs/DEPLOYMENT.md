@@ -453,6 +453,7 @@ For issues or questions:
 - GitHub Issues: https://github.com/dimitri-correia/dim-dim-health/issues
 - Check logs: `docker-compose -f deploy/docker-compose.yml logs -f`
 - Review this documentation
+- For internet access with SFR box: [PRODUCTION_INTERNET_ACCESS.md](PRODUCTION_INTERNET_ACCESS.md)
 
 ## Architecture Diagram
 
