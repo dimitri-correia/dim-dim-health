@@ -1,11 +1,12 @@
 use async_once_cell::OnceCell;
 use axum_test::TestServer;
-use dimdim_health_api::axummain::{env_loader::Settings, router, state};
+use dimdim_health_api::axummain::{router, state};
 
 static TEST_APP_STATE: OnceCell<state::AppState> = OnceCell::new();
 static DB_URL: &str = "postgres://test:test-db@localhost:5433/dimdimhealthtest";
 static REDIS_URL: &str = "redis://localhost:6379";
 
+use entities::env_loader::Settings;
 use sea_orm::{Database, DbErr};
 
 async fn init_test_db() {
@@ -49,12 +50,26 @@ pub async fn get_app_state() -> &'static state::AppState {
         .get_or_init(async {
             init_test_db().await;
             let settings = Settings {
+                env: "test".to_string(),
+
                 database_url: DB_URL.to_string(),
                 redis_url: REDIS_URL.to_string(),
-                jwt_secret: "test_secret".to_string(),
-                env_filter: "debug".to_string(),
+
+                frontend_url: "http://localhost:3000".to_string(),
                 listenner_addr: "127.0.0.1:0".to_string(),
+
+                env_filter: "debug".to_string(),
+
+                jwt_secret: "test_secret".to_string(),
+
+                number_workers: 1,
+
+                gmail_email: "notneeded".to_string(),
+                gmail_password: "notneeded".to_string(),
+
                 openobserve_endpoint: "notneeded".to_string(),
+                openobserve_user: "notneeded".to_string(),
+                openobserve_password: "notneeded".to_string(),
             };
 
             state::AppState::create_from_settings(&settings)
