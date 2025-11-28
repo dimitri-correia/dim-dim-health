@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{jobs::Jobs, repositories::Repositories};
+use crate::{jobs::Jobs, repositories::Repositories, services::Services};
 use axum::extract::FromRef;
 use entities::env_loader::Settings;
 use migration::{Migrator, MigratorTrait};
@@ -14,6 +14,7 @@ pub struct AppState {
     pub redis: ConnectionManager,
 
     pub repositories: Arc<Repositories>,
+    pub services: Arc<Services>,
     pub jobs: Arc<Jobs>,
 
     pub jwt_secret: String,
@@ -48,6 +49,7 @@ impl AppState {
     ) -> anyhow::Result<Self> {
         let jobs = Arc::new(Jobs::new(redis.clone()));
         let repositories = Arc::new(Repositories::new(db.clone()));
+        let services = Arc::new(Services::new(db.clone()));
 
         debug!("Application state components initialized");
 
@@ -55,6 +57,7 @@ impl AppState {
             db,
             redis,
             repositories,
+            services,
             jobs,
             jwt_secret,
         })
