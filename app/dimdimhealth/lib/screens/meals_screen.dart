@@ -858,10 +858,20 @@ class _MealsScreenState extends State<MealsScreen> {
                   return;
                 }
 
+                if (selectedFoodItem == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please select a food item'),
+                      backgroundColor: AppConfig.redColor,
+                    ),
+                  );
+                  return;
+                }
+
                 Navigator.pop(context);
                 await _addMealItem(
                   meal.id,
-                  selectedFoodItem!.id,
+                  selectedFoodItem.id,
                   quantity,
                 );
               },
@@ -1027,11 +1037,12 @@ class _MealItemsListState extends State<_MealItemsList> {
   }
 
   FoodItem? _getFoodItem(String id) {
-    try {
-      return widget.foodItems.firstWhere((item) => item.id == id);
-    } catch (e) {
-      return null;
+    for (final item in widget.foodItems) {
+      if (item.id == id) {
+        return item;
+      }
     }
+    return null;
   }
 
   Future<void> _confirmDeleteItem(MealItem item) async {

@@ -20,6 +20,11 @@ class ApiException implements Exception {
 class ApiService {
   final String baseUrl = AppConfig.apiUrl;
 
+  /// Formats a DateTime to YYYY-MM-DD string format for API calls
+  String _formatDate(DateTime date) {
+    return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
   Future<LoginResponse> register({
     required String username,
     required String email,
@@ -806,9 +811,7 @@ class ApiService {
   Future<List<Meal>> getMeals(String accessToken, {DateTime? date}) async {
     String url = '$baseUrl/api/meals';
     if (date != null) {
-      final dateString =
-          '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-      url += '?date=$dateString';
+      url += '?date=${_formatDate(date)}';
     }
 
     final response = await http.get(
@@ -839,11 +842,9 @@ class ApiService {
     required DateTime date,
     String? description,
   }) async {
-    final dateString =
-        '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     final request = CreateMealRequest(
       kind: kind.value,
-      date: dateString,
+      date: _formatDate(date),
       description: description,
     );
 
@@ -882,8 +883,7 @@ class ApiService {
     final Map<String, dynamic> body = {};
     if (kind != null) body['kind'] = kind.value;
     if (date != null) {
-      body['date'] =
-          '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      body['date'] = _formatDate(date);
     }
     if (description != null) body['description'] = description;
 
