@@ -13,3 +13,5 @@ pub use super::user_groups::Entity as UserGroups;
 pub use super::user_watch_permissions::Entity as UserWatchPermissions;
 pub use super::user_weight::Entity as UserWeight;
 pub use super::users::Entity as Users;
+pub use super::weekly_recap_queue::Entity as WeeklyRecapQueue;
+pub use super::yearly_recap_queue::Entity as YearlyRecapQueue;
