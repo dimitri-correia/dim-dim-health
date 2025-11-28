@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:email_validator/email_validator.dart';
 import '../services/auth_provider.dart';
 import '../utils/app_config.dart';
+import '../widgets/widgets.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -19,9 +20,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  bool _obscureCurrentPassword = true;
-  bool _obscureNewPassword = true;
-  bool _obscureConfirmPassword = true;
   bool _isSubmitting = false;
   String? _selectedAvatar;
 
@@ -135,16 +133,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _newPasswordController.clear();
         _confirmPasswordController.clear();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result), backgroundColor: Colors.green),
-        );
+        AppSnackBar.showSuccess(context, result);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authProvider.error ?? 'Update failed'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppSnackBar.showError(context, authProvider.error ?? 'Update failed');
       }
     }
   }
@@ -154,323 +145,197 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.user;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: AppConfig.blueColor,
-        foregroundColor: AppConfig.goldColor,
-      ),
-      body: Container(
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Avatar Selection Section
-                  _buildSectionTitle('Profile Avatar'),
-                  const SizedBox(height: 16),
-                  _buildAvatarSelector(),
-                  const SizedBox(height: 32),
+    return AppScreenWrapper(
+      appBar: const AppStandardAppBar(title: 'Settings'),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Avatar Selection Section
+              const SectionTitle(title: 'Profile Avatar'),
+              const SizedBox(height: 16),
+              _buildAvatarSelector(),
+              const SizedBox(height: 32),
 
-                  // Account Information Section
-                  _buildSectionTitle('Account Information'),
-                  const SizedBox(height: 16),
+              // Account Information Section
+              const SectionTitle(title: 'Account Information'),
+              const SizedBox(height: 16),
 
-                  // Username Field
-                  TextFormField(
-                    controller: _usernameController,
-                    decoration: InputDecoration(
-                      labelText: 'Username',
-                      prefixIcon: const Icon(Icons.person),
-                      filled: true,
-                      fillColor: AppConfig.whiteColor,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Username is required';
-                      }
-                      if (value.length < 3) {
-                        return 'Username must be at least 3 characters';
-                      }
-                      if (value.length > 20) {
-                        return 'Username must be at most 20 characters';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Email Field
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: const Icon(Icons.email),
-                      filled: true,
-                      fillColor: AppConfig.whiteColor,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      helperText: 'Email changes require verification',
-                      helperStyle: const TextStyle(color: AppConfig.goldColor),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Email is required';
-                      }
-                      if (!EmailValidator.validate(value)) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Change Password Section
-                  _buildSectionTitle('Change Password'),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Leave empty to keep current password',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppConfig.whiteColor.withOpacity(0.8),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Current Password Field
-                  TextFormField(
-                    controller: _currentPasswordController,
-                    obscureText: _obscureCurrentPassword,
-                    decoration: InputDecoration(
-                      labelText: 'Current Password',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscureCurrentPassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscureCurrentPassword = !_obscureCurrentPassword;
-                          });
-                        },
-                      ),
-                      filled: true,
-                      fillColor: AppConfig.whiteColor,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (_newPasswordController.text.isNotEmpty &&
-                          (value == null || value.isEmpty)) {
-                        return 'Current password is required to change password';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // New Password Field
-                  TextFormField(
-                    controller: _newPasswordController,
-                    obscureText: _obscureNewPassword,
-                    decoration: InputDecoration(
-                      labelText: 'New Password',
-                      prefixIcon: const Icon(Icons.lock),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscureNewPassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscureNewPassword = !_obscureNewPassword;
-                          });
-                        },
-                      ),
-                      filled: true,
-                      fillColor: AppConfig.whiteColor,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (_currentPasswordController.text.isNotEmpty &&
-                          (value == null || value.isEmpty)) {
-                        return 'New password is required';
-                      }
-                      if (value != null &&
-                          value.isNotEmpty &&
-                          value.length < 8) {
-                        return 'Password must be at least 8 characters';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Confirm New Password Field
-                  TextFormField(
-                    controller: _confirmPasswordController,
-                    obscureText: _obscureConfirmPassword,
-                    decoration: InputDecoration(
-                      labelText: 'Confirm New Password',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscureConfirmPassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscureConfirmPassword = !_obscureConfirmPassword;
-                          });
-                        },
-                      ),
-                      filled: true,
-                      fillColor: AppConfig.whiteColor,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (_newPasswordController.text.isNotEmpty &&
-                          value != _newPasswordController.text) {
-                        return 'Passwords do not match';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Public Group Section
-                  _buildSectionTitle('Public Group'),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Join the public group to share your progress with others',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppConfig.whiteColor.withOpacity(0.8),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildPublicGroupCard(authProvider),
-                  const SizedBox(height: 32),
-
-                  // Save Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: (_isSubmitting || !_hasChanges(authProvider))
-                          ? null
-                          : _handleSave,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppConfig.goldColor,
-                        foregroundColor: AppConfig.blueColor,
-                        disabledBackgroundColor: Colors.grey.shade400,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: _isSubmitting
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppConfig.blueColor,
-                                ),
-                              ),
-                            )
-                          : const Text(
-                              'Save Changes',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Account Info
-                  if (user != null) ...[
-                    const SizedBox(height: 16),
-                    Center(
-                      child: Text(
-                        'Account created: ${_formatDate(user.createdAt)}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppConfig.whiteColor.withOpacity(0.7),
-                        ),
-                      ),
-                    ),
-                    if (!user.emailVerified) ...[
-                      const SizedBox(height: 8),
-                      Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppConfig.redColor.withOpacity(0.8),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.warning,
-                                size: 16,
-                                color: AppConfig.whiteColor,
-                              ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Email not verified',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppConfig.whiteColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ],
+              // Username Field
+              AuthTextField(
+                controller: _usernameController,
+                labelText: 'Username',
+                prefixIcon: Icons.person,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Username is required';
+                  }
+                  if (value.length < 3) {
+                    return 'Username must be at least 3 characters';
+                  }
+                  if (value.length > 20) {
+                    return 'Username must be at most 20 characters';
+                  }
+                  return null;
+                },
               ),
-            ),
+              const SizedBox(height: 16),
+
+              // Email Field
+              AuthTextField(
+                controller: _emailController,
+                labelText: 'Email',
+                prefixIcon: Icons.email,
+                keyboardType: TextInputType.emailAddress,
+                helperText: 'Email changes require verification',
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Email is required';
+                  }
+                  if (!EmailValidator.validate(value)) {
+                    return 'Please enter a valid email';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 32),
+
+              // Change Password Section
+              const SectionTitle(title: 'Change Password'),
+              const SizedBox(height: 8),
+              Text(
+                'Leave empty to keep current password',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppConfig.whiteColor.withOpacity(0.8),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Current Password Field
+              PasswordTextField(
+                controller: _currentPasswordController,
+                labelText: 'Current Password',
+                prefixIcon: Icons.lock_outline,
+                validator: (value) {
+                  if (_newPasswordController.text.isNotEmpty &&
+                      (value == null || value.isEmpty)) {
+                    return 'Current password is required to change password';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // New Password Field
+              PasswordTextField(
+                controller: _newPasswordController,
+                labelText: 'New Password',
+                validator: (value) {
+                  if (_currentPasswordController.text.isNotEmpty &&
+                      (value == null || value.isEmpty)) {
+                    return 'New password is required';
+                  }
+                  if (value != null &&
+                      value.isNotEmpty &&
+                      value.length < 8) {
+                    return 'Password must be at least 8 characters';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Confirm New Password Field
+              PasswordTextField(
+                controller: _confirmPasswordController,
+                labelText: 'Confirm New Password',
+                prefixIcon: Icons.lock_outline,
+                validator: (value) {
+                  if (_newPasswordController.text.isNotEmpty &&
+                      value != _newPasswordController.text) {
+                    return 'Passwords do not match';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 32),
+
+              // Public Group Section
+              const SectionTitle(title: 'Public Group'),
+              const SizedBox(height: 8),
+              Text(
+                'Join the public group to share your progress with others',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppConfig.whiteColor.withOpacity(0.8),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildPublicGroupCard(authProvider),
+              const SizedBox(height: 32),
+
+              // Save Button
+              PrimaryButton(
+                text: 'Save Changes',
+                onPressed: _hasChanges(authProvider) ? _handleSave : null,
+                isLoading: _isSubmitting,
+              ),
+              const SizedBox(height: 16),
+
+              // Account Info
+              if (user != null) ...[
+                const SizedBox(height: 16),
+                Center(
+                  child: Text(
+                    'Account created: ${_formatDate(user.createdAt)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppConfig.whiteColor.withOpacity(0.7),
+                    ),
+                  ),
+                ),
+                if (!user.emailVerified) ...[
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppConfig.redColor.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.warning,
+                            size: 16,
+                            color: AppConfig.whiteColor,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Email not verified',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppConfig.whiteColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: AppConfig.goldColor,
       ),
     );
   }
