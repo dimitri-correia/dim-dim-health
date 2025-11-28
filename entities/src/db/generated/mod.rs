@@ -2,10 +2,12 @@
 
 pub mod prelude;
 
+pub mod email_preferences;
 pub mod email_verification_token;
 pub mod food_item;
 pub mod meal;
 pub mod meal_item;
+pub mod monthly_recap_queue;
 pub mod password_reset_token;
 pub mod refresh_token;
 pub mod sea_orm_active_enums;
@@ -14,3 +16,5 @@ pub mod user_groups;
 pub mod user_watch_permissions;
 pub mod user_weight;
 pub mod users;
+pub mod weekly_recap_queue;
+pub mod yearly_recap_queue;

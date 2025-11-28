@@ -11,6 +11,9 @@ pub enum EmailType {
     Registration,
     ResetPassword,
     EmailChange,
+    MonthlyRecap,
+    WeeklyRecap,
+    YearlyRecap,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -39,6 +42,24 @@ pub struct JobEmailResetPassword {
     pub token: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct JobEmailMonthlyRecap {
+    pub email: String,
+    pub username: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct JobEmailWeeklyRecap {
+    pub email: String,
+    pub username: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct JobEmailYearlyRecap {
+    pub email: String,
+    pub username: String,
+}
+
 impl fmt::Display for TaskType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -53,6 +74,9 @@ impl fmt::Display for EmailType {
             EmailType::Registration => write!(f, "Registration"),
             EmailType::ResetPassword => write!(f, "ResetPassword"),
             EmailType::EmailChange => write!(f, "EmailChange"),
+            EmailType::MonthlyRecap => write!(f, "MonthlyRecap"),
+            EmailType::WeeklyRecap => write!(f, "WeeklyRecap"),
+            EmailType::YearlyRecap => write!(f, "YearlyRecap"),
         }
     }
 }
