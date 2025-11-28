@@ -16,4 +16,16 @@ class AppConfig {
   static const Color goldColor = Color(0xFFCEAB5D);
   static const Color whiteColor = Color(0xFFFFFFFF);
   static const Color blackColor = Color(0xFF000000);
+
+  // Placeholder avatar images (local assets)
+  static const List<String> placeholderAvatars = [
+    'assets/avatars/avatar1.png',
+    'assets/avatars/avatar2.png',
+    'assets/avatars/avatar3.png',
+    'assets/avatars/avatar4.png',
+    'assets/avatars/avatar5.png',
+  ];
+
+  // Default placeholder avatar
+  static const String defaultAvatar = 'assets/avatars/avatar1.png';
 }

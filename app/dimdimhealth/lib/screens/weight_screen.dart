@@ -6,6 +6,7 @@ import '../models/weight.dart';
 import '../services/api_service.dart';
 import '../services/auth_provider.dart';
 import '../utils/app_config.dart';
+import '../widgets/user_avatar.dart';
 
 class WeightScreen extends StatefulWidget {
   const WeightScreen({super.key});
@@ -373,11 +374,23 @@ class _WeightScreenState extends State<WeightScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final user = authProvider.user;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Weight Tracker'),
         backgroundColor: AppConfig.blueColor,
         foregroundColor: AppConfig.goldColor,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: UserAvatar(
+              profileImage: user?.profileImage,
+              username: user?.username,
+            ),
+          ),
+        ],
       ),
       body: Container(
         width: double.infinity,
