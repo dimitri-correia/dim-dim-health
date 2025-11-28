@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/user.dart';
+import '../models/watch_permission.dart';
 import '../models/weight.dart';
 import '../utils/app_config.dart';
 
@@ -422,6 +423,148 @@ class ApiService {
     } else {
       throw ApiException(
         'Failed to delete weight entry',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  // Watch Permission API methods
+
+  /// Search for users by username (minimum 3 characters)
+  Future<List<UserSearchResult>> searchUsers({
+    required String accessToken,
+    required String query,
+  }) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/users/search?query=${Uri.encodeComponent(query)}'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final searchResponse = SearchUsersResponse.fromJson(data);
+      return searchResponse.users;
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw ApiException(error['error'] ?? 'Invalid query', statusCode: 400);
+    } else {
+      throw ApiException(
+        'Failed to search users',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Get list of users that I allow to watch me (watchers)
+  Future<List<WatchPermissionUser>> getWatchers(String accessToken) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/watch-permissions/watchers'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final watchersResponse = WatchersResponse.fromJson(data);
+      return watchersResponse.watchers;
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else {
+      throw ApiException(
+        'Failed to fetch watchers',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Get list of users that allow me to watch them (watching)
+  Future<List<WatchPermissionUser>> getWatching(String accessToken) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/watch-permissions/watching'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final watchingResponse = WatchingResponse.fromJson(data);
+      return watchingResponse.watching;
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else {
+      throw ApiException(
+        'Failed to fetch watching users',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Grant watch permission to another user (allow them to see my profile)
+  Future<void> grantWatchPermission({
+    required String accessToken,
+    required String userId,
+  }) async {
+    final request = GrantWatchPermissionRequest(userId: userId);
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/watch-permissions/grant'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+
+    if (response.statusCode == 201) {
+      return;
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 404) {
+      throw ApiException('User not found', statusCode: 404);
+    } else if (response.statusCode == 409) {
+      throw ApiException('Permission already granted', statusCode: 409);
+    } else {
+      throw ApiException(
+        'Failed to grant permission',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Revoke watch permission from a user
+  Future<void> revokeWatchPermission({
+    required String accessToken,
+    required String userId,
+  }) async {
+    final request = RevokeWatchPermissionRequest(userId: userId);
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/watch-permissions/revoke'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return;
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Permission not found', statusCode: 404);
+    } else {
+      throw ApiException(
+        'Failed to revoke permission',
         statusCode: response.statusCode,
       );
     }
