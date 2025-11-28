@@ -136,6 +136,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                     color: Colors.teal,
                                     route: '/watching',
                                   ),
+                                  _buildActionCard(
+                                    context,
+                                    icon: Icons.settings,
+                                    title: 'Settings',
+                                    subtitle: 'Edit profile',
+                                    color: Colors.teal,
+                                    route: '/settings',
+                                  ),
                                 ],
                               );
                             },
