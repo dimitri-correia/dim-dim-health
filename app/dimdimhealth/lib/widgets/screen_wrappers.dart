@@ -60,30 +60,23 @@ class AppScreenWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget body = Container(
-      width: double.infinity,
-      height: double.infinity,
-      decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary),
-      child: SafeArea(child: child),
-    );
-
+    Widget content = child;
+    
     if (onRefresh != null) {
-      body = Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary),
-        child: SafeArea(
-          child: RefreshIndicator(
-            onRefresh: onRefresh!,
-            child: child,
-          ),
-        ),
+      content = RefreshIndicator(
+        onRefresh: onRefresh!,
+        child: child,
       );
     }
 
     return Scaffold(
       appBar: appBar,
-      body: body,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary),
+        child: SafeArea(child: content),
+      ),
       floatingActionButton: floatingActionButton,
     );
   }

@@ -21,7 +21,7 @@ class AuthHeader extends StatelessWidget {
     return Column(
       children: [
         if (showLogo)
-          Image.asset('images/health.jpg', width: 80, height: 80)
+          Image.asset(AppConfig.healthImagePath, width: 80, height: 80)
         else if (icon != null)
           Icon(
             icon,
