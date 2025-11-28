@@ -4,9 +4,10 @@ use crate::{
 };
 use axum::{
     Json,
+    body::Body,
     extract::{Path, State},
     http::StatusCode,
-    response::IntoResponse,
+    response::{IntoResponse, Response},
 };
 use sea_orm::DbErr;
 use serde_json::json;
@@ -18,6 +19,29 @@ use validator::Validate;
 fn is_unique_constraint_violation(err: &DbErr) -> bool {
     let error_str = err.to_string().to_lowercase();
     error_str.contains("unique constraint") || error_str.contains("duplicate key")
+}
+
+/// Helper function to check if a user has permission to view another user's data
+async fn check_view_permission(
+    state: &AppState,
+    current_user_id: &Uuid,
+    target_user_id: &Uuid,
+) -> Result<(), Response<Body>> {
+    let can_view = state
+        .services
+        .authorization
+        .can_view_user_data(current_user_id, target_user_id)
+        .await
+        .map_err(|err| {
+            error!("Failed to check view permission: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?;
+
+    if !can_view {
+        return Err(StatusCode::FORBIDDEN.into_response());
+    }
+
+    Ok(())
 }
 
 pub async fn create_user_weight(
@@ -231,20 +255,7 @@ pub async fn get_other_user_weights(
         current_user.id, user_id
     );
 
-    // Check if current user has permission to view target user's weights
-    let can_view = state
-        .services
-        .authorization
-        .can_view_user_data(&current_user.id, &user_id)
-        .await
-        .map_err(|err| {
-            error!("Failed to check view permission: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
-        })?;
-
-    if !can_view {
-        return Err(StatusCode::FORBIDDEN.into_response());
-    }
+    check_view_permission(&state, &current_user.id, &user_id).await?;
 
     match state
         .repositories
@@ -275,20 +286,7 @@ pub async fn get_other_user_weight_infos(
         current_user.id, user_id
     );
 
-    // Check if current user has permission to view target user's weights
-    let can_view = state
-        .services
-        .authorization
-        .can_view_user_data(&current_user.id, &user_id)
-        .await
-        .map_err(|err| {
-            error!("Failed to check view permission: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
-        })?;
-
-    if !can_view {
-        return Err(StatusCode::FORBIDDEN.into_response());
-    }
+    check_view_permission(&state, &current_user.id, &user_id).await?;
 
     match state
         .repositories
@@ -315,20 +313,7 @@ pub async fn get_other_user_last_weight(
         current_user.id, user_id
     );
 
-    // Check if current user has permission to view target user's weights
-    let can_view = state
-        .services
-        .authorization
-        .can_view_user_data(&current_user.id, &user_id)
-        .await
-        .map_err(|err| {
-            error!("Failed to check view permission: {}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
-        })?;
-
-    if !can_view {
-        return Err(StatusCode::FORBIDDEN.into_response());
-    }
+    check_view_permission(&state, &current_user.id, &user_id).await?;
 
     match state
         .repositories

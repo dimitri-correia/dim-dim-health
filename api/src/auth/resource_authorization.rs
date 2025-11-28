@@ -8,8 +8,16 @@ use uuid::Uuid;
 
 /// Extractor that verifies the authenticated user has permission to view a specific user's data
 /// 
-/// Usage in handlers:
-/// ```
+/// **NOTE**: This is a future implementation pattern. Currently, handlers should use the
+/// `check_view_permission` helper or call `app_state.services.authorization.can_view_user_data()`
+/// directly, since path parameter extraction requires more complex handling.
+/// 
+/// The current implementation assumes the target user ID is already in request extensions,
+/// which requires middleware to set it up. For now, prefer using direct authorization checks
+/// in handlers as demonstrated in `user_weight.rs`.
+/// 
+/// Future usage example (requires additional setup):
+/// ```ignore
 /// async fn get_user_data(
 ///     ViewUserData(target_user_id): ViewUserData,
 ///     RequireAuth(requesting_user): RequireAuth,
