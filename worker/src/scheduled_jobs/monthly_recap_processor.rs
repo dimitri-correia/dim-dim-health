@@ -1,47 +1,54 @@
+use chrono::{Datelike, Timelike, Utc};
 use entities::{
-    monthly_recap_queue, users, EmailType, Job, JobEmail, JobEmailMonthlyRecap, TaskType,
+    email_preferences, users, EmailType, Job, JobEmail, JobEmailMonthlyRecap, TaskType,
 };
 use redis::AsyncCommands;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use std::time::Duration;
 use tracing::{error, info};
 
 use crate::worker_main::state::WorkerState;
 
-/// Process the monthly recap queue and enqueue email jobs to Redis
+/// Scheduled job for monthly recap emails
+/// Runs on the 1st of each month at 09:00 AM
 pub async fn process_monthly_recap_queue(worker_state: WorkerState) {
-    info!("Starting monthly recap queue processor");
+    info!("Starting monthly recap scheduler");
     
     loop {
-        match process_pending_recaps(&worker_state).await {
-            Ok(count) => {
-                if count > 0 {
-                    info!("Processed {} monthly recap jobs", count);
+        let now = Utc::now();
+        
+        // Check if it's the 1st of the month and around 9 AM (within a 5-minute window)
+        if now.day() == 1 && now.hour() == 9 && now.minute() < 5 {
+            info!("Triggering monthly recap emails");
+            match enqueue_monthly_recap_emails(&worker_state).await {
+                Ok(count) => {
+                    info!("Enqueued {} monthly recap emails", count);
+                }
+                Err(e) => {
+                    error!("Error enqueuing monthly recap emails: {}", e);
                 }
             }
-            Err(e) => {
-                error!("Error processing monthly recap queue: {}", e);
-            }
+            // Sleep for 1 hour to avoid re-triggering
+            tokio::time::sleep(Duration::from_secs(3600)).await;
+        } else {
+            // Check every 5 minutes
+            tokio::time::sleep(Duration::from_secs(300)).await;
         }
-        
-        // Check every 5 minutes
-        tokio::time::sleep(Duration::from_secs(300)).await;
     }
 }
 
-async fn process_pending_recaps(worker_state: &WorkerState) -> anyhow::Result<usize> {
-    // Find all unprocessed monthly recap queue items
-    let pending_items = monthly_recap_queue::Entity::find()
-        .filter(monthly_recap_queue::Column::Processed.eq(false))
+async fn enqueue_monthly_recap_emails(worker_state: &WorkerState) -> anyhow::Result<usize> {
+    // Find all users who have opted in for monthly recap
+    let users_with_prefs = email_preferences::Entity::find()
+        .filter(email_preferences::Column::MonthlyRecap.eq(true))
         .find_also_related(users::Entity)
         .all(&worker_state.db)
         .await?;
     
-    let count = pending_items.len();
+    let mut count = 0;
     
-    for (queue_item, user_opt) in pending_items {
+    for (_pref, user_opt) in users_with_prefs {
         if let Some(user) = user_opt {
-            // Create and enqueue the job
             let job_email_monthly_recap = JobEmailMonthlyRecap {
                 email: user.email.clone(),
                 username: user.username.clone(),
@@ -65,22 +72,12 @@ async fn process_pending_recaps(worker_state: &WorkerState) -> anyhow::Result<us
             {
                 Ok(_) => {
                     info!("Enqueued monthly recap email for user: {}", user.username);
-                    
-                    // Mark as processed
-                    let mut queue_item_active: monthly_recap_queue::ActiveModel = queue_item.into();
-                    queue_item_active.processed = Set(true);
-                    queue_item_active.processed_at = Set(Some(chrono::Utc::now().into()));
-                    
-                    if let Err(e) = queue_item_active.update(&worker_state.db).await {
-                        error!("Failed to mark queue item as processed: {}", e);
-                    }
+                    count += 1;
                 }
                 Err(e) => {
                     error!("Failed to enqueue job to Redis: {}", e);
                 }
             }
-        } else {
-            error!("User not found for queue item: {}", queue_item.id);
         }
     }
     

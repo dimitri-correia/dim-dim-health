@@ -1,47 +1,54 @@
+use chrono::{Datelike, Timelike, Utc, Weekday};
 use entities::{
-    weekly_recap_queue, users, EmailType, Job, JobEmail, JobEmailWeeklyRecap, TaskType,
+    email_preferences, users, EmailType, Job, JobEmail, JobEmailWeeklyRecap, TaskType,
 };
 use redis::AsyncCommands;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use std::time::Duration;
 use tracing::{error, info};
 
 use crate::worker_main::state::WorkerState;
 
-/// Process the weekly recap queue and enqueue email jobs to Redis
+/// Scheduled job for weekly recap emails
+/// Runs every Monday at 09:00 AM
 pub async fn process_weekly_recap_queue(worker_state: WorkerState) {
-    info!("Starting weekly recap queue processor");
+    info!("Starting weekly recap scheduler");
     
     loop {
-        match process_pending_recaps(&worker_state).await {
-            Ok(count) => {
-                if count > 0 {
-                    info!("Processed {} weekly recap jobs", count);
+        let now = Utc::now();
+        
+        // Check if it's Monday and around 9 AM (within a 5-minute window)
+        if now.weekday() == Weekday::Mon && now.hour() == 9 && now.minute() < 5 {
+            info!("Triggering weekly recap emails");
+            match enqueue_weekly_recap_emails(&worker_state).await {
+                Ok(count) => {
+                    info!("Enqueued {} weekly recap emails", count);
+                }
+                Err(e) => {
+                    error!("Error enqueuing weekly recap emails: {}", e);
                 }
             }
-            Err(e) => {
-                error!("Error processing weekly recap queue: {}", e);
-            }
+            // Sleep for 1 hour to avoid re-triggering
+            tokio::time::sleep(Duration::from_secs(3600)).await;
+        } else {
+            // Check every 5 minutes
+            tokio::time::sleep(Duration::from_secs(300)).await;
         }
-        
-        // Check every 5 minutes
-        tokio::time::sleep(Duration::from_secs(300)).await;
     }
 }
 
-async fn process_pending_recaps(worker_state: &WorkerState) -> anyhow::Result<usize> {
-    // Find all unprocessed weekly recap queue items
-    let pending_items = weekly_recap_queue::Entity::find()
-        .filter(weekly_recap_queue::Column::Processed.eq(false))
+async fn enqueue_weekly_recap_emails(worker_state: &WorkerState) -> anyhow::Result<usize> {
+    // Find all users who have opted in for weekly recap
+    let users_with_prefs = email_preferences::Entity::find()
+        .filter(email_preferences::Column::WeeklyRecap.eq(true))
         .find_also_related(users::Entity)
         .all(&worker_state.db)
         .await?;
     
-    let count = pending_items.len();
+    let mut count = 0;
     
-    for (queue_item, user_opt) in pending_items {
+    for (_pref, user_opt) in users_with_prefs {
         if let Some(user) = user_opt {
-            // Create and enqueue the job
             let job_email_weekly_recap = JobEmailWeeklyRecap {
                 email: user.email.clone(),
                 username: user.username.clone(),
@@ -65,22 +72,12 @@ async fn process_pending_recaps(worker_state: &WorkerState) -> anyhow::Result<us
             {
                 Ok(_) => {
                     info!("Enqueued weekly recap email for user: {}", user.username);
-                    
-                    // Mark as processed
-                    let mut queue_item_active: weekly_recap_queue::ActiveModel = queue_item.into();
-                    queue_item_active.processed = Set(true);
-                    queue_item_active.processed_at = Set(Some(chrono::Utc::now().into()));
-                    
-                    if let Err(e) = queue_item_active.update(&worker_state.db).await {
-                        error!("Failed to mark queue item as processed: {}", e);
-                    }
+                    count += 1;
                 }
                 Err(e) => {
                     error!("Failed to enqueue job to Redis: {}", e);
                 }
             }
-        } else {
-            error!("User not found for queue item: {}", queue_item.id);
         }
     }
     
