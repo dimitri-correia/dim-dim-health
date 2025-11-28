@@ -219,3 +219,128 @@ pub async fn delete_user_weight(
         }
     }
 }
+
+/// Get weights for another user if the current user has permission to view them
+pub async fn get_other_user_weights(
+    State(state): State<AppState>,
+    RequireVerifiedAuth(current_user): RequireVerifiedAuth,
+    Path(user_id): Path<Uuid>,
+) -> Result<Json<Vec<UserWeightResponse>>, impl IntoResponse> {
+    info!(
+        "User {} fetching weight entries for user: {}",
+        current_user.id, user_id
+    );
+
+    // Check if current user has permission to view target user's weights
+    let can_view = state
+        .services
+        .authorization
+        .can_view_user_data(&current_user.id, &user_id)
+        .await
+        .map_err(|err| {
+            error!("Failed to check view permission: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?;
+
+    if !can_view {
+        return Err(StatusCode::FORBIDDEN.into_response());
+    }
+
+    match state
+        .repositories
+        .user_weight_repository
+        .find_by_user_id(&user_id)
+        .await
+    {
+        Ok(weights) => {
+            let response: Vec<UserWeightResponse> =
+                weights.into_iter().map(UserWeightResponse::from).collect();
+            Ok(Json(response))
+        }
+        Err(err) => {
+            error!("Failed to fetch user weights: {}", err);
+            Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
+        }
+    }
+}
+
+/// Get weight infos for another user if the current user has permission to view them
+pub async fn get_other_user_weight_infos(
+    State(state): State<AppState>,
+    RequireVerifiedAuth(current_user): RequireVerifiedAuth,
+    Path(user_id): Path<Uuid>,
+) -> Result<Json<Option<UserWeightInfosResponse>>, impl IntoResponse> {
+    info!(
+        "User {} fetching weight infos for user: {}",
+        current_user.id, user_id
+    );
+
+    // Check if current user has permission to view target user's weights
+    let can_view = state
+        .services
+        .authorization
+        .can_view_user_data(&current_user.id, &user_id)
+        .await
+        .map_err(|err| {
+            error!("Failed to check view permission: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?;
+
+    if !can_view {
+        return Err(StatusCode::FORBIDDEN.into_response());
+    }
+
+    match state
+        .repositories
+        .user_weight_repository
+        .find_by_user_id(&user_id)
+        .await
+    {
+        Ok(weights) => Ok(Json(user_weight_infos(weights))),
+        Err(err) => {
+            error!("Failed to fetch user weights: {}", err);
+            Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
+        }
+    }
+}
+
+/// Get last weight for another user if the current user has permission to view them
+pub async fn get_other_user_last_weight(
+    State(state): State<AppState>,
+    RequireVerifiedAuth(current_user): RequireVerifiedAuth,
+    Path(user_id): Path<Uuid>,
+) -> Result<Json<UserWeightResponse>, impl IntoResponse> {
+    info!(
+        "User {} fetching last weight entry for user: {}",
+        current_user.id, user_id
+    );
+
+    // Check if current user has permission to view target user's weights
+    let can_view = state
+        .services
+        .authorization
+        .can_view_user_data(&current_user.id, &user_id)
+        .await
+        .map_err(|err| {
+            error!("Failed to check view permission: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?;
+
+    if !can_view {
+        return Err(StatusCode::FORBIDDEN.into_response());
+    }
+
+    match state
+        .repositories
+        .user_weight_repository
+        .find_last_by_user_id(&user_id)
+        .await
+    {
+        Ok(Some(weight)) => Ok(Json(UserWeightResponse::from(weight))),
+        Ok(None) => Err(StatusCode::NOT_FOUND.into_response()),
+        Err(err) => {
+            error!("Failed to fetch last user weight: {}", err);
+            Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
+        }
+    }
+}
