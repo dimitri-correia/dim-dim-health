@@ -28,7 +28,9 @@ class _UserAvatarState extends State<UserAvatar> {
     super.didUpdateWidget(oldWidget);
     // Reset error state when profile image changes
     if (oldWidget.profileImage != widget.profileImage) {
-      _imageLoadFailed = false;
+      setState(() {
+        _imageLoadFailed = false;
+      });
     }
   }
 
@@ -49,7 +51,6 @@ class _UserAvatarState extends State<UserAvatar> {
             });
           }
         },
-        child: null,
       );
     }
     
