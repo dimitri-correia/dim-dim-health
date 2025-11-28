@@ -120,6 +120,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                     subtitle: 'View profile',
                                     color: Colors.teal,
                                   ),
+                                  _buildActionCard(
+                                    context,
+                                    icon: Icons.people,
+                                    title: 'Watchers',
+                                    subtitle: 'Manage who can see you',
+                                    color: Colors.purple,
+                                    route: '/manage-watchers',
+                                  ),
+                                  _buildActionCard(
+                                    context,
+                                    icon: Icons.visibility,
+                                    title: 'Watching',
+                                    subtitle: 'Users who authorized me',
+                                    color: Colors.teal,
+                                    route: '/watching',
+                                  ),
                                 ],
                               );
                             },
