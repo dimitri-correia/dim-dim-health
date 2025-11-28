@@ -588,13 +588,13 @@ class _WeightScreenState extends State<WeightScreen> {
     DateTime cutoffDate;
     switch (_selectedTimePeriod) {
       case TimePeriodFilter.sixMonths:
-        cutoffDate = DateTime(now.year, now.month - 6, now.day);
+        cutoffDate = now.subtract(const Duration(days: 180));
         break;
       case TimePeriodFilter.threeMonths:
-        cutoffDate = DateTime(now.year, now.month - 3, now.day);
+        cutoffDate = now.subtract(const Duration(days: 90));
         break;
       case TimePeriodFilter.oneMonth:
-        cutoffDate = DateTime(now.year, now.month - 1, now.day);
+        cutoffDate = now.subtract(const Duration(days: 30));
         break;
       case TimePeriodFilter.all:
         return sortedWeights;
@@ -672,7 +672,7 @@ class _WeightScreenState extends State<WeightScreen> {
     }
 
     // Calculate average weight for the filtered period
-    final averageWeight = chartWeights.map((w) => w.weightInKg).reduce((a, b) => a + b) / chartWeights.length;
+    final averageWeight = chartWeights.fold<double>(0.0, (sum, w) => sum + w.weightInKg) / chartWeights.length;
 
     // Create average line spots
     final averageSpots = [
@@ -683,7 +683,8 @@ class _WeightScreenState extends State<WeightScreen> {
     // Calculate min/max for better chart scaling
     final minWeight = chartWeights.map((w) => w.weightInKg).reduce(math.min);
     final maxWeight = chartWeights.map((w) => w.weightInKg).reduce(math.max);
-    final padding = (maxWeight - minWeight) * 0.15;
+    const chartPaddingMultiplier = 0.15;
+    final padding = (maxWeight - minWeight) * chartPaddingMultiplier;
     final chartMinY = (math.min(minWeight, averageWeight) - padding)
         .clamp(0, double.infinity)
         .toDouble();
