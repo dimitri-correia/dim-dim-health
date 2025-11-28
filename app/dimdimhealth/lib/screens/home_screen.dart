@@ -105,6 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     title: 'Meals',
                                     subtitle: 'Log your meals',
                                     color: AppConfig.redColor,
+                                    route: '/meals',
                                   ),
                                   _buildActionCard(
                                     context,
