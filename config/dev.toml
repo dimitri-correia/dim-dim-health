@@ -11,7 +11,8 @@ jwt_secret = "dev_jwt_secret_key"
 number_workers = 5
 
 gmail_email = "dimdimhealth@gmail.com"
-# gmail_password is defined in common.toml
+# gmail_password is overrided in common.toml
+gmail_password = "see common.toml"
 
 # OpenObserve configuration (matches docker-compose.yml defaults for local development)
 openobserve_endpoint = "http://localhost:5080/api/default/v1/traces"
