@@ -14,12 +14,16 @@ class WeightScreen extends StatefulWidget {
   State<WeightScreen> createState() => _WeightScreenState();
 }
 
+// Enum for time period filter
+enum TimePeriodFilter { all, sixMonths, threeMonths, oneMonth }
+
 class _WeightScreenState extends State<WeightScreen> {
   final ApiService _apiService = ApiService();
   List<UserWeight> _weights = [];
   UserWeightInfos? _weightInfos;
   bool _isLoading = true;
   String? _error;
+  TimePeriodFilter _selectedTimePeriod = TimePeriodFilter.all;
 
   @override
   void initState() {
@@ -363,15 +367,6 @@ class _WeightScreenState extends State<WeightScreen> {
     }
   }
 
-  String _formatShortDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return '${date.day}/${date.month}';
-    } catch (e) {
-      return dateString;
-    }
-  }
-
   String _formatWeight(double weight) {
     return '${weight.toStringAsFixed(1)} kg';
   }
@@ -580,36 +575,133 @@ class _WeightScreenState extends State<WeightScreen> {
     );
   }
 
-  Widget _buildWeightChartCard() {
+  List<UserWeight> _getFilteredWeights() {
     // Sort weights by date ascending for the chart
     final sortedWeights = List<UserWeight>.from(_weights)
       ..sort((a, b) => a.recordedAt.compareTo(b.recordedAt));
 
-    // Take last 30 entries for the chart
-    final chartWeights = sortedWeights.length > 30
-        ? sortedWeights.sublist(sortedWeights.length - 30)
-        : sortedWeights;
+    if (_selectedTimePeriod == TimePeriodFilter.all) {
+      return sortedWeights;
+    }
+
+    final now = DateTime.now();
+    DateTime cutoffDate;
+    switch (_selectedTimePeriod) {
+      case TimePeriodFilter.sixMonths:
+        cutoffDate = DateTime(now.year, now.month - 6, now.day);
+        break;
+      case TimePeriodFilter.threeMonths:
+        cutoffDate = DateTime(now.year, now.month - 3, now.day);
+        break;
+      case TimePeriodFilter.oneMonth:
+        cutoffDate = DateTime(now.year, now.month - 1, now.day);
+        break;
+      case TimePeriodFilter.all:
+        return sortedWeights;
+    }
+
+    return sortedWeights.where((w) {
+      final date = DateTime.parse(w.recordedAt);
+      return date.isAfter(cutoffDate) || date.isAtSameMomentAs(cutoffDate);
+    }).toList();
+  }
+
+  String _getTimePeriodLabel(TimePeriodFilter filter) {
+    switch (filter) {
+      case TimePeriodFilter.all:
+        return 'All';
+      case TimePeriodFilter.sixMonths:
+        return '6M';
+      case TimePeriodFilter.threeMonths:
+        return '3M';
+      case TimePeriodFilter.oneMonth:
+        return '1M';
+    }
+  }
+
+  Widget _buildTimePeriodSelector() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: TimePeriodFilter.values.map((filter) {
+        final isSelected = _selectedTimePeriod == filter;
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: ChoiceChip(
+            label: Text(_getTimePeriodLabel(filter)),
+            selected: isSelected,
+            onSelected: (selected) {
+              if (selected) {
+                setState(() {
+                  _selectedTimePeriod = filter;
+                });
+              }
+            },
+            selectedColor: AppConfig.blueColor,
+            backgroundColor: Colors.grey[200],
+            labelStyle: TextStyle(
+              color: isSelected ? Colors.white : Colors.black87,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontSize: 12,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildWeightChartCard() {
+    // Get filtered weights based on selected time period
+    final chartWeights = _getFilteredWeights();
 
     if (chartWeights.isEmpty) return const SizedBox.shrink();
 
-    // Create data points
+    // Parse dates and create data points using actual date values (milliseconds since epoch)
+    final List<DateTime> dates = chartWeights.map((w) => DateTime.parse(w.recordedAt)).toList();
+    
+    // Use milliseconds since epoch for X axis to properly space dates
+    final double minX = dates.first.millisecondsSinceEpoch.toDouble();
+    final double maxX = dates.last.millisecondsSinceEpoch.toDouble();
+
+    // Create data points with actual date values
     final spots = <FlSpot>[];
     for (int i = 0; i < chartWeights.length; i++) {
-      spots.add(FlSpot(i.toDouble(), chartWeights[i].weightInKg));
+      spots.add(FlSpot(
+        dates[i].millisecondsSinceEpoch.toDouble(),
+        chartWeights[i].weightInKg,
+      ));
     }
+
+    // Calculate average weight for the filtered period
+    final averageWeight = chartWeights.map((w) => w.weightInKg).reduce((a, b) => a + b) / chartWeights.length;
+
+    // Create average line spots
+    final averageSpots = [
+      FlSpot(minX, averageWeight),
+      FlSpot(maxX, averageWeight),
+    ];
 
     // Calculate min/max for better chart scaling
     final minWeight = chartWeights.map((w) => w.weightInKg).reduce(math.min);
     final maxWeight = chartWeights.map((w) => w.weightInKg).reduce(math.max);
-    final padding = (maxWeight - minWeight) * 0.1;
-    final chartMinY = (minWeight - padding)
+    final padding = (maxWeight - minWeight) * 0.15;
+    final chartMinY = (math.min(minWeight, averageWeight) - padding)
         .clamp(0, double.infinity)
         .toDouble();
-    final chartMaxY = (maxWeight + padding).toDouble();
+    final chartMaxY = (math.max(maxWeight, averageWeight) + padding).toDouble();
 
-    // Calculate interval, ensuring it's never 0
+    // Calculate Y interval, ensuring it's never 0
     final range = chartMaxY - chartMinY;
-    final interval = range > 0 ? range / 4 : 1.0;
+    final yInterval = range > 0 ? range / 4 : 1.0;
+
+    // Calculate X interval for labels (show roughly 5 labels)
+    final xRange = maxX - minX;
+    final xInterval = xRange > 0 ? xRange / 5 : 1.0;
+
+    // Create a map from milliseconds to weight data for tooltip lookup
+    final Map<double, UserWeight> dateToWeight = {};
+    for (int i = 0; i < chartWeights.length; i++) {
+      dateToWeight[dates[i].millisecondsSinceEpoch.toDouble()] = chartWeights[i];
+    }
 
     return Card(
       elevation: 4,
@@ -635,12 +727,43 @@ class _WeightScreenState extends State<WeightScreen> {
                   ),
                 ),
                 Text(
-                  'Last ${chartWeights.length} entries',
+                  '${chartWeights.length} entries',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
+            _buildTimePeriodSelector(),
+            const SizedBox(height: 8),
+            // Average display
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 16,
+                    height: 2,
+                    color: Colors.orange,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Average: ${averageWeight.toStringAsFixed(1)} kg',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.orange,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
             SizedBox(
               height: 200,
               width: double.infinity,
@@ -649,7 +772,7 @@ class _WeightScreenState extends State<WeightScreen> {
                   gridData: FlGridData(
                     show: true,
                     drawVerticalLine: false,
-                    horizontalInterval: interval,
+                    horizontalInterval: yInterval,
                     getDrawingHorizontalLine: (value) {
                       return FlLine(
                         color: Colors.grey.withOpacity(0.2),
@@ -669,37 +792,34 @@ class _WeightScreenState extends State<WeightScreen> {
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 30,
-                        interval: chartWeights.length > 10
-                            ? (chartWeights.length / 5).ceilToDouble()
-                            : 1,
+                        interval: xInterval,
                         getTitlesWidget: (value, meta) {
-                          final index = value.toInt();
-                          if (index >= 0 && index < chartWeights.length) {
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Text(
-                                _formatShortDate(
-                                  chartWeights[index].recordedAt,
-                                ),
-                                style: const TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 10,
-                                ),
-                              ),
-                            );
+                          // Skip edge labels that would be cut off
+                          if (value == meta.min || value == meta.max) {
+                            return const Text('');
                           }
-                          return const Text('');
+                          final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              '${date.day}/${date.month}',
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 10,
+                              ),
+                            ),
+                          );
                         },
                       ),
                     ),
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        interval: interval,
+                        interval: yInterval,
                         reservedSize: 45,
                         getTitlesWidget: (value, meta) {
                           return Text(
-                            '${value.toStringAsFixed(1)}',
+                            value.toStringAsFixed(1),
                             style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 11,
@@ -710,11 +830,22 @@ class _WeightScreenState extends State<WeightScreen> {
                     ),
                   ),
                   borderData: FlBorderData(show: false),
-                  minX: 0,
-                  maxX: (chartWeights.length - 1).toDouble(),
+                  minX: minX,
+                  maxX: maxX,
                   minY: chartMinY,
                   maxY: chartMaxY,
                   lineBarsData: [
+                    // Average line (drawn first so it appears behind the main line)
+                    LineChartBarData(
+                      spots: averageSpots,
+                      isCurved: false,
+                      color: Colors.orange,
+                      barWidth: 2,
+                      isStrokeCapRound: true,
+                      dotData: const FlDotData(show: false),
+                      dashArray: [5, 5],
+                    ),
+                    // Main weight line
                     LineChartBarData(
                       spots: spots,
                       isCurved: true,
@@ -754,10 +885,22 @@ class _WeightScreenState extends State<WeightScreen> {
                       tooltipRoundedRadius: 8,
                       getTooltipItems: (touchedSpots) {
                         return touchedSpots.map((spot) {
-                          final index = spot.x.toInt();
-                          if (index >= 0 && index < chartWeights.length) {
+                          // Check if this is the average line (bar index 0)
+                          if (spot.barIndex == 0) {
                             return LineTooltipItem(
-                              '${chartWeights[index].weightInKg.toStringAsFixed(1)} kg\n${_formatDate(chartWeights[index].recordedAt)}',
+                              'Avg: ${averageWeight.toStringAsFixed(1)} kg',
+                              const TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            );
+                          }
+                          // Main weight line
+                          final weight = dateToWeight[spot.x];
+                          if (weight != null) {
+                            return LineTooltipItem(
+                              '${weight.weightInKg.toStringAsFixed(1)} kg\n${_formatDate(weight.recordedAt)}',
                               const TextStyle(
                                 color: AppConfig.goldColor,
                                 fontWeight: FontWeight.bold,
