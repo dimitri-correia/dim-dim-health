@@ -53,7 +53,7 @@ fi
 
 if ! podman container exists "$DB_CONTAINER"; then
     echo "Creating and starting PostgreSQL container..."
-    podman run --rm --name "$DB_CONTAINER" \
+    podman run --name "$DB_CONTAINER" \
         -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
         -e POSTGRES_USER="$POSTGRES_USER" \
         -e POSTGRES_DB="$POSTGRES_DB" \
@@ -96,7 +96,7 @@ if podman container exists "$REDIS_CONTAINER"; then
     fi
 else
     echo "Creating and starting Redis container..."
-    podman run --rm --name "$REDIS_CONTAINER" \
+    podman run --name "$REDIS_CONTAINER" \
         -p "$REDIS_PORT:6379" \
         -d redis:7-alpine
     sleep 1

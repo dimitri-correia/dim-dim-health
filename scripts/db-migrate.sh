@@ -47,7 +47,7 @@ if ! podman container exists "$DB_CONTAINER"; then
         -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
         -e POSTGRES_USER="$POSTGRES_USER" \
         -e POSTGRES_DB="$POSTGRES_DB" \
-        -v "$DB_VOLUME:/var/lib/postgresql" \
+        -v "$DB_VOLUME:/var/lib/postgresql/data" \
         -p "$DB_PORT:5432" \
         -d "$DB_IMAGE" \
         -c shared_preload_libraries=pg_cron \
