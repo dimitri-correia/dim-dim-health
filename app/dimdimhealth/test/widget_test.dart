@@ -23,8 +23,8 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (_) => AuthProvider(),
-        child: const MaterialApp(
-          home: AuthWrapper(),
+        child: MaterialApp(
+          home: const AuthWrapper(),
         ),
       ),
     );
