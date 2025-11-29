@@ -11,6 +11,9 @@ class AppConfig {
   // Responsive layout breakpoint (width in pixels)
   static const double desktopBreakpoint = 600.0;
 
+  // Asset paths
+  static const String healthImagePath = 'images/health.jpg';
+
   static const Color blueColor = Color(0xFF004170);
   static const Color redColor = Color(0xFFDA291C);
   static const Color goldColor = Color(0xFFCEAB5D);
