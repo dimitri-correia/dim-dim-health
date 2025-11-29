@@ -94,7 +94,7 @@ class _WatchingScreenState extends State<WatchingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.error_outline,
             size: 64,
             color: AppConfig.redColor,
@@ -134,11 +134,11 @@ class _WatchingScreenState extends State<WatchingScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  const Row(
                     children: [
                       Icon(Icons.info_outline, color: AppConfig.blueColor),
-                      const SizedBox(width: 8),
-                      const Text(
+                      SizedBox(width: 8),
+                      Text(
                         'About Watching',
                         style: TextStyle(
                           fontSize: 18,

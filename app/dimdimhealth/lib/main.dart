@@ -2,19 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'services/auth_provider.dart';
-
-import 'screens/splash_screen.dart';
-import 'screens/login_screen.dart';
-import 'screens/register_screen.dart';
-import 'screens/forgot_password_screen.dart';
-import 'screens/reset_password_screen.dart';
-import 'screens/verify_email_screen.dart';
-import 'screens/home_screen.dart';
-import 'screens/weight_screen.dart';
-import 'screens/manage_watchers_screen.dart';
-import 'screens/watching_screen.dart';
-import 'screens/settings_screen.dart';
-
+import 'screens/screens.dart';
 import 'utils/app_config.dart';
 
 void main() {
