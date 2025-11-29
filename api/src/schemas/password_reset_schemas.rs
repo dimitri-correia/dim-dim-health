@@ -45,7 +45,7 @@ mod tests {
         };
 
         let debug_output = format!("{:?}", data);
-        
+
         // Password should be redacted
         assert!(debug_output.contains("[REDACTED]"));
         // Password should NOT be visible

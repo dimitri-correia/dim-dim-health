@@ -1,4 +1,4 @@
-use crate::helpers::test_server::get_app_state;
+use crate::helpers::{test_data::TestData, test_server::get_app_state};
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 use once_cell::sync::Lazy;
 use uuid::Uuid;
@@ -10,15 +10,16 @@ static EXPIRES_AT: Lazy<DateTime<FixedOffset>> = Lazy::new(|| {
 
 #[tokio::test]
 async fn test_without_valid_user() {
+    let td = TestData::new();
     let user_id = Uuid::new_v4();
-    let token = "token";
+    let token = td.token("token");
 
     let app_state = get_app_state().await;
 
     let res = app_state
         .repositories
         .email_verification_repository
-        .create_token(&user_id, token, &EXPIRES_AT)
+        .create_token(&user_id, &token, &EXPIRES_AT)
         .await;
 
     assert!(res.is_err());
@@ -34,8 +35,9 @@ async fn test_without_valid_user() {
 
 #[tokio::test]
 async fn test_email_verif_repo_create_and_get() {
-    let username = "testrepoemailverif";
-    let email = format!("{username}@test.fr");
+    let td = TestData::new();
+    let username = td.username("testrepoemailverif");
+    let email = td.email("testrepoemailverif");
     let password_hash = "securepassword";
 
     let app_state = get_app_state().await;
@@ -43,18 +45,18 @@ async fn test_email_verif_repo_create_and_get() {
     let user = app_state
         .repositories
         .user_repository
-        .create(username, &email, password_hash, false)
+        .create(&username, &email, password_hash, false)
         .await
         .unwrap();
 
     assert!(!user.email_verified);
 
-    let token = "token";
+    let token = td.token("token");
 
     let res = app_state
         .repositories
         .email_verification_repository
-        .create_token(&user.id, token, &EXPIRES_AT)
+        .create_token(&user.id, &token, &EXPIRES_AT)
         .await
         .unwrap();
 
@@ -68,7 +70,7 @@ async fn test_email_verif_repo_create_and_get() {
     let res = app_state
         .repositories
         .email_verification_repository
-        .find_by_token(token)
+        .find_by_token(&token)
         .await
         .unwrap()
         .unwrap();
@@ -79,7 +81,7 @@ async fn test_email_verif_repo_create_and_get() {
     let res = app_state
         .repositories
         .email_verification_repository
-        .delete_by_token(token)
+        .delete_by_token(&token)
         .await
         .unwrap();
     assert!(res);
@@ -87,7 +89,7 @@ async fn test_email_verif_repo_create_and_get() {
     let res = app_state
         .repositories
         .email_verification_repository
-        .find_by_token(token)
+        .find_by_token(&token)
         .await
         .unwrap();
     assert!(res.is_none());
@@ -96,18 +98,18 @@ async fn test_email_verif_repo_create_and_get() {
     let res = app_state
         .repositories
         .email_verification_repository
-        .delete_by_token(token)
+        .delete_by_token(&token)
         .await
         .unwrap();
     assert!(!res);
 
     // test expired token
-    let expired_token = "expiredtoken";
+    let expired_token = td.token("expiredtoken");
     let expires_at = EXPIRES_AT.fixed_offset() - Duration::days(3);
     let res = app_state
         .repositories
         .email_verification_repository
-        .create_token(&user.id, expired_token, &expires_at)
+        .create_token(&user.id, &expired_token, &expires_at)
         .await
         .unwrap();
 
@@ -116,7 +118,7 @@ async fn test_email_verif_repo_create_and_get() {
     let res = app_state
         .repositories
         .email_verification_repository
-        .find_by_token(expired_token)
+        .find_by_token(&expired_token)
         .await
         .unwrap();
 

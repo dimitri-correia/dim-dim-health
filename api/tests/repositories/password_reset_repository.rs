@@ -2,7 +2,7 @@ use chrono::{DateTime, Duration, FixedOffset, Utc};
 use once_cell::sync::Lazy;
 use uuid::Uuid;
 
-use crate::helpers::test_server::get_app_state;
+use crate::helpers::{test_data::TestData, test_server::get_app_state};
 
 static EXPIRES_AT: Lazy<DateTime<FixedOffset>> = Lazy::new(|| {
     let offset = FixedOffset::east_opt(0).unwrap();
@@ -11,15 +11,16 @@ static EXPIRES_AT: Lazy<DateTime<FixedOffset>> = Lazy::new(|| {
 
 #[tokio::test]
 async fn test_without_valid_user() {
+    let td = TestData::new();
     let user_id = Uuid::new_v4();
-    let token = "token";
+    let token = td.token("token");
 
     let app_state = get_app_state().await;
 
     let res = app_state
         .repositories
         .password_reset_repository
-        .create_token(&user_id, token, &EXPIRES_AT)
+        .create_token(&user_id, &token, &EXPIRES_AT)
         .await;
 
     assert!(res.is_err());
@@ -27,8 +28,9 @@ async fn test_without_valid_user() {
 
 #[tokio::test]
 async fn test_password_reset_repo_create_and_get() {
-    let username = "testrepopasswordreset";
-    let email = format!("{username}@test.fr");
+    let td = TestData::new();
+    let username = td.username("testrepopasswordreset");
+    let email = td.email("testrepopasswordreset");
     let password_hash = "securepassword";
 
     let app_state = get_app_state().await;
@@ -36,16 +38,16 @@ async fn test_password_reset_repo_create_and_get() {
     let user = app_state
         .repositories
         .user_repository
-        .create(username, &email, password_hash, false)
+        .create(&username, &email, password_hash, false)
         .await
         .unwrap();
 
-    let token = "token";
+    let token = td.token("token");
 
     let res = app_state
         .repositories
         .password_reset_repository
-        .create_token(&user.id, token, &EXPIRES_AT)
+        .create_token(&user.id, &token, &EXPIRES_AT)
         .await
         .unwrap();
 
@@ -59,7 +61,7 @@ async fn test_password_reset_repo_create_and_get() {
     let res = app_state
         .repositories
         .password_reset_repository
-        .find_by_token(token)
+        .find_by_token(&token)
         .await
         .unwrap()
         .unwrap();
@@ -70,7 +72,7 @@ async fn test_password_reset_repo_create_and_get() {
     let res = app_state
         .repositories
         .password_reset_repository
-        .delete_by_token(token)
+        .delete_by_token(&token)
         .await
         .unwrap();
     assert!(res);
@@ -78,7 +80,7 @@ async fn test_password_reset_repo_create_and_get() {
     let res = app_state
         .repositories
         .password_reset_repository
-        .find_by_token(token)
+        .find_by_token(&token)
         .await
         .unwrap();
     assert!(res.is_none());
@@ -87,18 +89,18 @@ async fn test_password_reset_repo_create_and_get() {
     let res = app_state
         .repositories
         .password_reset_repository
-        .delete_by_token(token)
+        .delete_by_token(&token)
         .await
         .unwrap();
     assert!(!res);
 
     // test expired token
-    let expired_token = "expiredtoken";
+    let expired_token = td.token("expiredtoken");
     let expires_at = EXPIRES_AT.fixed_offset() - Duration::days(3);
     let res = app_state
         .repositories
         .password_reset_repository
-        .create_token(&user.id, expired_token, &expires_at)
+        .create_token(&user.id, &expired_token, &expires_at)
         .await
         .unwrap();
 
@@ -107,7 +109,7 @@ async fn test_password_reset_repo_create_and_get() {
     let res = app_state
         .repositories
         .password_reset_repository
-        .find_by_token(expired_token)
+        .find_by_token(&expired_token)
         .await
         .unwrap();
 
@@ -116,8 +118,9 @@ async fn test_password_reset_repo_create_and_get() {
 
 #[tokio::test]
 async fn test_delete_all_user_tokens() {
-    let username = "testrepopasswordresetdeleteall";
-    let email = format!("{username}@test.fr");
+    let td = TestData::new();
+    let username = td.username("testrepopasswordresetdeleteall");
+    let email = td.email("testrepopasswordresetdeleteall");
     let password_hash = "securepassword";
 
     let app_state = get_app_state().await;
@@ -125,33 +128,33 @@ async fn test_delete_all_user_tokens() {
     let user = app_state
         .repositories
         .user_repository
-        .create(username, &email, password_hash, false)
+        .create(&username, &email, password_hash, false)
         .await
         .unwrap();
 
     // Create multiple tokens for the same user
-    let token1 = "token1";
-    let token2 = "token2";
-    let token3 = "token3";
+    let token1 = td.token("token1");
+    let token2 = td.token("token2");
+    let token3 = td.token("token3");
 
     app_state
         .repositories
         .password_reset_repository
-        .create_token(&user.id, token1, &EXPIRES_AT)
+        .create_token(&user.id, &token1, &EXPIRES_AT)
         .await
         .unwrap();
 
     app_state
         .repositories
         .password_reset_repository
-        .create_token(&user.id, token2, &EXPIRES_AT)
+        .create_token(&user.id, &token2, &EXPIRES_AT)
         .await
         .unwrap();
 
     app_state
         .repositories
         .password_reset_repository
-        .create_token(&user.id, token3, &EXPIRES_AT)
+        .create_token(&user.id, &token3, &EXPIRES_AT)
         .await
         .unwrap();
 
@@ -159,7 +162,7 @@ async fn test_delete_all_user_tokens() {
     let res1 = app_state
         .repositories
         .password_reset_repository
-        .find_by_token(token1)
+        .find_by_token(&token1)
         .await
         .unwrap();
     assert!(res1.is_some());
@@ -167,7 +170,7 @@ async fn test_delete_all_user_tokens() {
     let res2 = app_state
         .repositories
         .password_reset_repository
-        .find_by_token(token2)
+        .find_by_token(&token2)
         .await
         .unwrap();
     assert!(res2.is_some());
@@ -175,7 +178,7 @@ async fn test_delete_all_user_tokens() {
     let res3 = app_state
         .repositories
         .password_reset_repository
-        .find_by_token(token3)
+        .find_by_token(&token3)
         .await
         .unwrap();
     assert!(res3.is_some());
@@ -193,7 +196,7 @@ async fn test_delete_all_user_tokens() {
     let res1 = app_state
         .repositories
         .password_reset_repository
-        .find_by_token(token1)
+        .find_by_token(&token1)
         .await
         .unwrap();
     assert!(res1.is_none());
@@ -201,7 +204,7 @@ async fn test_delete_all_user_tokens() {
     let res2 = app_state
         .repositories
         .password_reset_repository
-        .find_by_token(token2)
+        .find_by_token(&token2)
         .await
         .unwrap();
     assert!(res2.is_none());
@@ -209,7 +212,7 @@ async fn test_delete_all_user_tokens() {
     let res3 = app_state
         .repositories
         .password_reset_repository
-        .find_by_token(token3)
+        .find_by_token(&token3)
         .await
         .unwrap();
     assert!(res3.is_none());
