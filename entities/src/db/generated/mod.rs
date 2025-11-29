@@ -2,6 +2,7 @@
 
 pub mod prelude;
 
+pub mod email_preferences;
 pub mod email_verification_token;
 pub mod food_item;
 pub mod meal;

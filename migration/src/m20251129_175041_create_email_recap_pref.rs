@@ -1,0 +1,97 @@
+use sea_orm_migration::prelude::*;
+
+use crate::helpers::{create_updated_at_trigger, drop_updated_at_trigger};
+
+#[derive(DeriveMigrationName)]
+pub struct Migration;
+
+#[async_trait::async_trait]
+impl MigrationTrait for Migration {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .create_table(
+                Table::create()
+                    .table(EmailPreferences::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(EmailPreferences::UserId)
+                            .primary_key()
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(EmailPreferences::MonthlyRecap)
+                            .boolean()
+                            .not_null()
+                            .default(false),
+                    )
+                    .col(
+                        ColumnDef::new(EmailPreferences::WeeklyRecap)
+                            .boolean()
+                            .not_null()
+                            .default(false),
+                    )
+                    .col(
+                        ColumnDef::new(EmailPreferences::YearlyRecap)
+                            .boolean()
+                            .not_null()
+                            .default(false),
+                    )
+                    .col(
+                        ColumnDef::new(EmailPreferences::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null()
+                            .default(Expr::current_timestamp()),
+                    )
+                    .col(
+                        ColumnDef::new(EmailPreferences::UpdatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null()
+                            .default(Expr::current_timestamp()),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk_email_preferences_user_id")
+                            .from(EmailPreferences::Table, EmailPreferences::UserId)
+                            .to(Users::Table, Users::Id)
+                            .on_delete(ForeignKeyAction::Cascade),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        // Add trigger for updated_at
+        create_updated_at_trigger(manager, "email_preferences").await?;
+
+        Ok(())
+    }
+
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        // Drop trigger
+        drop_updated_at_trigger(manager, "email_preferences").await?;
+
+        // Drop table
+        manager
+            .drop_table(Table::drop().table(EmailPreferences::Table).to_owned())
+            .await?;
+
+        Ok(())
+    }
+}
+
+#[derive(DeriveIden)]
+enum EmailPreferences {
+    Table,
+    UserId,
+    MonthlyRecap,
+    WeeklyRecap,
+    YearlyRecap,
+    CreatedAt,
+    UpdatedAt,
+}
+
+#[derive(DeriveIden)]
+enum Users {
+    Table,
+    Id,
+}
