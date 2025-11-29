@@ -34,18 +34,16 @@ pub async fn create_food_item(
             .into_response());
     }
 
-    match state
+    state
         .repositories
         .food_item_repository
         .create(payload, user.id)
         .await
-    {
-        Ok(food_item) => Ok(Json(FoodItemResponse::from(food_item))),
-        Err(err) => {
+        .map(|food_item| Json(FoodItemResponse::from(food_item)))
+        .map_err(|err| {
             error!("Failed to create food item: {}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
-        }
-    }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })
 }
 
 pub async fn get_food_items(
@@ -55,46 +53,29 @@ pub async fn get_food_items(
 ) -> Result<Json<Vec<FoodItemResponse>>, impl IntoResponse> {
     info!("Fetching food items");
 
-    let food_items = if let Some(scan_code) = query.scan_code {
-        match state
+    let food_items_result = if let Some(scan_code) = query.scan_code {
+        state
             .repositories
             .food_item_repository
             .find_by_scan_code(&scan_code)
             .await
-        {
-            Ok(Some(item)) => vec![item],
-            Ok(None) => vec![],
-            Err(err) => {
-                error!("Failed to fetch food items by scan code: {}", err);
-                return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-            }
-        }
+            .map(|opt| opt.into_iter().collect())
     } else if let Some(name) = query.name {
-        match state
+        state
             .repositories
             .food_item_repository
             .find_by_name(&name)
             .await
-        {
-            Ok(items) => items,
-            Err(err) => {
-                error!("Failed to fetch food items by name: {}", err);
-                return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-            }
-        }
     } else {
-        match state.repositories.food_item_repository.find_all().await {
-            Ok(items) => items,
-            Err(err) => {
-                error!("Failed to fetch all food items: {}", err);
-                return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-            }
-        }
+        state.repositories.food_item_repository.find_all().await
     };
 
-    let response: Vec<FoodItemResponse> =
-        food_items.into_iter().map(FoodItemResponse::from).collect();
-    Ok(Json(response))
+    food_items_result
+        .map(|items| Json(items.into_iter().map(FoodItemResponse::from).collect()))
+        .map_err(|err| {
+            error!("Failed to fetch food items: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })
 }
 
 pub async fn update_food_item(
@@ -114,36 +95,31 @@ pub async fn update_food_item(
     }
 
     // Check if the food item exists and belongs to the user
-    match state
+    let food_item = state
         .repositories
         .food_item_repository
         .find_by_id(&id)
         .await
-    {
-        Ok(Some(food_item)) => {
-            if food_item.added_by != user.id {
-                return Err(StatusCode::FORBIDDEN.into_response());
-            }
-        }
-        Ok(None) => return Err(StatusCode::NOT_FOUND.into_response()),
-        Err(err) => {
+        .map_err(|err| {
             error!("Failed to fetch food item: {}", err);
-            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-        }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?
+        .ok_or_else(|| StatusCode::NOT_FOUND.into_response())?;
+
+    if food_item.added_by != user.id {
+        return Err(StatusCode::FORBIDDEN.into_response());
     }
 
-    match state
+    state
         .repositories
         .food_item_repository
         .update(id, payload)
         .await
-    {
-        Ok(food_item) => Ok(Json(FoodItemResponse::from(food_item))),
-        Err(err) => {
+        .map(|food_item| Json(FoodItemResponse::from(food_item)))
+        .map_err(|err| {
             error!("Failed to update food item: {}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
-        }
-    }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })
 }
 
 pub async fn delete_food_item(
@@ -154,29 +130,29 @@ pub async fn delete_food_item(
     info!("Deleting food item {} for user: {}", id, user.id);
 
     // Check if the food item exists and belongs to the user
-    match state
+    let food_item = state
         .repositories
         .food_item_repository
         .find_by_id(&id)
         .await
-    {
-        Ok(Some(food_item)) => {
-            if food_item.added_by != user.id {
-                return Err(StatusCode::FORBIDDEN.into_response());
-            }
-        }
-        Ok(None) => return Err(StatusCode::NOT_FOUND.into_response()),
-        Err(err) => {
+        .map_err(|err| {
             error!("Failed to fetch food item: {}", err);
-            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-        }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?
+        .ok_or_else(|| StatusCode::NOT_FOUND.into_response())?;
+
+    if food_item.added_by != user.id {
+        return Err(StatusCode::FORBIDDEN.into_response());
     }
 
-    match state.repositories.food_item_repository.delete(&id).await {
-        Ok(_) => Ok(StatusCode::NO_CONTENT),
-        Err(err) => {
+    state
+        .repositories
+        .food_item_repository
+        .delete(&id)
+        .await
+        .map(|_| StatusCode::NO_CONTENT)
+        .map_err(|err| {
             error!("Failed to delete food item: {}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
-        }
-    }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })
 }

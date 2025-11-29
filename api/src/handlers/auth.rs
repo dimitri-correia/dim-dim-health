@@ -204,18 +204,14 @@ pub async fn login(
         .user_repository
         .find_by_email(&payload.user.email)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
-
-    let user = match user {
-        Some(user) => user,
-        None => {
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?
+        .ok_or_else(|| {
             info!(
                 "Login attempt with non-existing email: {}",
                 payload.user.email
             );
-            return Err(StatusCode::UNAUTHORIZED.into_response());
-        }
-    };
+            StatusCode::UNAUTHORIZED.into_response()
+        })?;
 
     let password_valid = verify_password(&payload.user.password, &user.password_hash)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
@@ -237,23 +233,20 @@ pub async fn login(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
-    let user_data = UserData::from_user(user);
-    let response = LoginResponse {
-        user: user_data,
+    Ok(Json(LoginResponse {
+        user: UserData::from_user(user),
         access_token,
         refresh_token,
-    };
-
-    Ok(Json(response))
+    }))
 }
 
 pub async fn current_user(
     RequireAuth(user): RequireAuth,
 ) -> Result<Json<UserResponse>, StatusCode> {
     info!("Fetching current user: {}", user.email);
-    let user_data = UserData::from_user(user);
-    let response = UserResponse { user: user_data };
-    Ok(Json(response))
+    Ok(Json(UserResponse {
+        user: UserData::from_user(user),
+    }))
 }
 
 pub async fn verify_email(
@@ -269,15 +262,11 @@ pub async fn verify_email(
         .email_verification_repository
         .find_by_token(token)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    let verification_token = match verification_token {
-        Some(token) => token,
-        None => {
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+        .ok_or_else(|| {
             info!("Verification token not found: {}", token);
-            return Err(StatusCode::NOT_FOUND);
-        }
-    };
+            StatusCode::NOT_FOUND
+        })?;
 
     // Should not happen due to query filter, but just in case
     // We delete expired tokens
@@ -443,14 +432,11 @@ pub async fn reset_password(
         .password_reset_repository
         .find_by_token(&payload.token)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
-    let reset_token = match reset_token {
-        Some(token) => token,
-        None => {
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?
+        .ok_or_else(|| {
             info!("Password reset token not found: {}", payload.token);
-            return Err(StatusCode::NOT_FOUND.into_response());
-        }
-    };
+            StatusCode::NOT_FOUND.into_response()
+        })?;
 
     // Should not happen due to query filter, but just in case
     // We delete expired tokens

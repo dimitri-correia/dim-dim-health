@@ -40,9 +40,7 @@ impl UserWeightRepository {
         &self,
         id: &Uuid,
     ) -> Result<Option<user_weight::Model>, sea_orm::DbErr> {
-        user_weight::Entity::find_by_id(id.to_owned())
-            .one(&self.db)
-            .await
+        user_weight::Entity::find_by_id(*id).one(&self.db).await
     }
 
     pub async fn find_by_user_id(
@@ -50,7 +48,7 @@ impl UserWeightRepository {
         user_id: &Uuid,
     ) -> Result<Vec<user_weight::Model>, sea_orm::DbErr> {
         user_weight::Entity::find()
-            .filter(user_weight::Column::UserId.eq(user_id.to_owned()))
+            .filter(user_weight::Column::UserId.eq(*user_id))
             .order_by_desc(user_weight::Column::RecordedAt)
             .all(&self.db)
             .await
@@ -61,7 +59,7 @@ impl UserWeightRepository {
         user_id: &Uuid,
     ) -> Result<Option<user_weight::Model>, sea_orm::DbErr> {
         user_weight::Entity::find()
-            .filter(user_weight::Column::UserId.eq(user_id.to_owned()))
+            .filter(user_weight::Column::UserId.eq(*user_id))
             .order_by_desc(user_weight::Column::RecordedAt)
             .one(&self.db)
             .await
@@ -85,7 +83,7 @@ impl UserWeightRepository {
     }
 
     pub async fn delete(&self, id: &Uuid) -> Result<(), sea_orm::DbErr> {
-        user_weight::Entity::delete_by_id(id.to_owned())
+        user_weight::Entity::delete_by_id(*id)
             .exec(&self.db)
             .await?;
         Ok(())

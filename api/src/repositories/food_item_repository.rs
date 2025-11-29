@@ -42,9 +42,7 @@ impl FoodItemRepository {
     }
 
     pub async fn find_by_id(&self, id: &Uuid) -> Result<Option<food_item::Model>, sea_orm::DbErr> {
-        food_item::Entity::find_by_id(id.to_owned())
-            .one(&self.db)
-            .await
+        food_item::Entity::find_by_id(*id).one(&self.db).await
     }
 
     pub async fn find_by_added_by(
@@ -73,7 +71,7 @@ impl FoodItemRepository {
         scan_code: &str,
     ) -> Result<Option<food_item::Model>, sea_orm::DbErr> {
         food_item::Entity::find()
-            .filter(food_item::Column::ScanCode.eq(scan_code.to_owned()))
+            .filter(food_item::Column::ScanCode.eq(scan_code))
             .one(&self.db)
             .await
     }
@@ -113,13 +111,11 @@ impl FoodItemRepository {
             food_item.fat_per100g = Set(fat);
         }
 
-        let food_item = food_item.update(&self.db).await?;
-
-        Ok(food_item)
+        food_item.update(&self.db).await
     }
 
     pub async fn delete(&self, id: &Uuid) -> Result<(), sea_orm::DbErr> {
-        food_item::Entity::delete_by_id(id.to_owned())
+        food_item::Entity::delete_by_id(*id)
             .exec(&self.db)
             .await?;
         Ok(())

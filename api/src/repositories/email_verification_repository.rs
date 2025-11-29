@@ -28,13 +28,11 @@ impl EmailVerificationRepository {
             id: NotSet,
             user_id: Set(*user_id),
             token: Set(token.to_owned()),
-            expires_at: Set(expires_at.to_owned()),
+            expires_at: Set(*expires_at),
             created_at: NotSet,
             pending_email: NotSet,
         };
-        let email_verification_token = email_verification_token.insert(&self.db).await?;
-
-        Ok(email_verification_token)
+        email_verification_token.insert(&self.db).await
     }
 
     pub async fn find_by_token(
@@ -85,15 +83,13 @@ impl EmailVerificationRepository {
     ) -> Result<email_verification_token::Model, sea_orm::DbErr> {
         let email_verification_token = email_verification_token::ActiveModel {
             id: NotSet,
-            user_id: Set(user_id.to_owned()),
+            user_id: Set(*user_id),
             token: Set(token.to_owned()),
-            expires_at: Set(expires_at.to_owned()),
+            expires_at: Set(*expires_at),
             created_at: NotSet,
             pending_email: Set(Some(pending_email.to_owned())),
         };
-        let email_verification_token = email_verification_token.insert(&self.db).await?;
-
-        Ok(email_verification_token)
+        email_verification_token.insert(&self.db).await
     }
 
     pub async fn update_user_email(
@@ -102,7 +98,7 @@ impl EmailVerificationRepository {
         new_email: &str,
     ) -> Result<users::Model, sea_orm::DbErr> {
         let mut active = users::ActiveModel {
-            id: Set(user_id.to_owned()),
+            id: Set(*user_id),
             ..Default::default()
         };
 

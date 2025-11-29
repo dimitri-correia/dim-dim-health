@@ -46,7 +46,7 @@ impl UserRepository {
 
     pub async fn find_by_email(&self, email: &str) -> Result<Option<users::Model>, sea_orm::DbErr> {
         users::Entity::find()
-            .filter(users::Column::Email.eq(email.to_owned()))
+            .filter(users::Column::Email.eq(email))
             .one(&self.db)
             .await
     }
@@ -56,14 +56,14 @@ impl UserRepository {
         username: &str,
     ) -> Result<Option<users::Model>, sea_orm::DbErr> {
         users::Entity::find()
-            .filter(users::Column::Username.eq(username.to_owned()))
+            .filter(users::Column::Username.eq(username))
             .one(&self.db)
             .await
     }
 
     pub async fn ensure_username_not_taken(&self, username: &str) -> Result<bool, sea_orm::DbErr> {
         let count = users::Entity::find()
-            .filter(users::Column::Username.eq(username.to_owned()))
+            .filter(users::Column::Username.eq(username))
             .count(&self.db)
             .await?;
 
@@ -155,7 +155,7 @@ impl UserRepository {
         profile_image: entities::sea_orm_active_enums::UserProfileImage,
     ) -> Result<users::Model, sea_orm::DbErr> {
         let active = users::ActiveModel {
-            id: Set(id.to_owned()),
+            id: Set(*id),
             profile_image: Set(profile_image),
             ..Default::default()
         };

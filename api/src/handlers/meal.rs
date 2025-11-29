@@ -34,18 +34,16 @@ pub async fn create_meal(
             .into_response());
     }
 
-    match state
+    state
         .repositories
         .meal_repository
         .create(user.id, payload.kind, payload.date, payload.description)
         .await
-    {
-        Ok(meal) => Ok(Json(MealResponse::from(meal))),
-        Err(err) => {
+        .map(|meal| Json(MealResponse::from(meal)))
+        .map_err(|err| {
             error!("Failed to create meal: {}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
-        }
-    }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })
 }
 
 pub async fn get_meals(
@@ -55,36 +53,26 @@ pub async fn get_meals(
 ) -> Result<Json<Vec<MealResponse>>, impl IntoResponse> {
     info!("Fetching meals for user: {}", user.id);
 
-    let meals = if let Some(date) = query.date {
-        match state
+    let meals_result = if let Some(date) = query.date {
+        state
             .repositories
             .meal_repository
             .find_by_user_and_date(&user.id, date)
             .await
-        {
-            Ok(meals) => meals,
-            Err(err) => {
-                error!("Failed to fetch meals by date: {}", err);
-                return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-            }
-        }
     } else {
-        match state
+        state
             .repositories
             .meal_repository
             .find_by_user_id(&user.id)
             .await
-        {
-            Ok(meals) => meals,
-            Err(err) => {
-                error!("Failed to fetch meals: {}", err);
-                return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-            }
-        }
     };
 
-    let response: Vec<MealResponse> = meals.into_iter().map(MealResponse::from).collect();
-    Ok(Json(response))
+    meals_result
+        .map(|meals| Json(meals.into_iter().map(MealResponse::from).collect()))
+        .map_err(|err| {
+            error!("Failed to fetch meals: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })
 }
 
 pub async fn update_meal(
@@ -104,31 +92,31 @@ pub async fn update_meal(
     }
 
     // Check if the meal exists and belongs to the user
-    match state.repositories.meal_repository.find_by_id(&id).await {
-        Ok(Some(meal)) => {
-            if meal.user_id != user.id {
-                return Err(StatusCode::FORBIDDEN.into_response());
-            }
-        }
-        Ok(None) => return Err(StatusCode::NOT_FOUND.into_response()),
-        Err(err) => {
+    let meal = state
+        .repositories
+        .meal_repository
+        .find_by_id(&id)
+        .await
+        .map_err(|err| {
             error!("Failed to fetch meal: {}", err);
-            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-        }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?
+        .ok_or_else(|| StatusCode::NOT_FOUND.into_response())?;
+
+    if meal.user_id != user.id {
+        return Err(StatusCode::FORBIDDEN.into_response());
     }
 
-    match state
+    state
         .repositories
         .meal_repository
         .update(id, payload.kind, payload.date, payload.description)
         .await
-    {
-        Ok(meal) => Ok(Json(MealResponse::from(meal))),
-        Err(err) => {
+        .map(|meal| Json(MealResponse::from(meal)))
+        .map_err(|err| {
             error!("Failed to update meal: {}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
-        }
-    }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })
 }
 
 pub async fn delete_meal(
@@ -139,26 +127,31 @@ pub async fn delete_meal(
     info!("Deleting meal {} for user: {}", id, user.id);
 
     // Check if the meal exists and belongs to the user
-    match state.repositories.meal_repository.find_by_id(&id).await {
-        Ok(Some(meal)) => {
-            if meal.user_id != user.id {
-                return Err(StatusCode::FORBIDDEN.into_response());
-            }
-        }
-        Ok(None) => return Err(StatusCode::NOT_FOUND.into_response()),
-        Err(err) => {
+    let meal = state
+        .repositories
+        .meal_repository
+        .find_by_id(&id)
+        .await
+        .map_err(|err| {
             error!("Failed to fetch meal: {}", err);
-            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-        }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?
+        .ok_or_else(|| StatusCode::NOT_FOUND.into_response())?;
+
+    if meal.user_id != user.id {
+        return Err(StatusCode::FORBIDDEN.into_response());
     }
 
-    match state.repositories.meal_repository.delete(&id).await {
-        Ok(_) => Ok(StatusCode::NO_CONTENT),
-        Err(err) => {
+    state
+        .repositories
+        .meal_repository
+        .delete(&id)
+        .await
+        .map(|_| StatusCode::NO_CONTENT)
+        .map_err(|err| {
             error!("Failed to delete meal: {}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
-        }
-    }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })
 }
 
 // Meal item handlers
@@ -179,57 +172,50 @@ pub async fn add_meal_item(
     }
 
     // Check if the meal exists and belongs to the user
-    match state
+    let meal = state
         .repositories
         .meal_repository
         .find_by_id(&meal_id)
         .await
-    {
-        Ok(Some(meal)) => {
-            if meal.user_id != user.id {
-                return Err(StatusCode::FORBIDDEN.into_response());
-            }
-        }
-        Ok(None) => return Err(StatusCode::NOT_FOUND.into_response()),
-        Err(err) => {
+        .map_err(|err| {
             error!("Failed to fetch meal: {}", err);
-            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-        }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?
+        .ok_or_else(|| StatusCode::NOT_FOUND.into_response())?;
+
+    if meal.user_id != user.id {
+        return Err(StatusCode::FORBIDDEN.into_response());
     }
 
     // Check if the food item exists
-    match state
+    if state
         .repositories
         .food_item_repository
         .find_by_id(&payload.food_item_id)
         .await
-    {
-        Ok(Some(_)) => {}
-        Ok(None) => {
-            return Err((
-                StatusCode::BAD_REQUEST,
-                Json(json!({"error": "Food item not found"})),
-            )
-                .into_response());
-        }
-        Err(err) => {
+        .map_err(|err| {
             error!("Failed to fetch food item: {}", err);
-            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-        }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?
+        .is_none()
+    {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "Food item not found"})),
+        )
+            .into_response());
     }
 
-    match state
+    state
         .repositories
         .meal_item_repository
         .create(meal_id, payload.food_item_id, payload.quantity_in_grams)
         .await
-    {
-        Ok(meal_item) => Ok(Json(MealItemResponse::from(meal_item))),
-        Err(err) => {
+        .map(|meal_item| Json(MealItemResponse::from(meal_item)))
+        .map_err(|err| {
             error!("Failed to add meal item: {}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
-        }
-    }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })
 }
 
 pub async fn get_meal_items(
@@ -240,40 +226,31 @@ pub async fn get_meal_items(
     info!("Fetching items for meal {} for user: {}", meal_id, user.id);
 
     // Check if the meal exists and belongs to the user
-    match state
+    let meal = state
         .repositories
         .meal_repository
         .find_by_id(&meal_id)
         .await
-    {
-        Ok(Some(meal)) => {
-            if meal.user_id != user.id {
-                return Err(StatusCode::FORBIDDEN.into_response());
-            }
-        }
-        Ok(None) => return Err(StatusCode::NOT_FOUND.into_response()),
-        Err(err) => {
+        .map_err(|err| {
             error!("Failed to fetch meal: {}", err);
-            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-        }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?
+        .ok_or_else(|| StatusCode::NOT_FOUND.into_response())?;
+
+    if meal.user_id != user.id {
+        return Err(StatusCode::FORBIDDEN.into_response());
     }
 
-    match state
+    state
         .repositories
         .meal_item_repository
         .find_by_meal_id(&meal_id)
         .await
-    {
-        Ok(meal_items) => {
-            let response: Vec<MealItemResponse> =
-                meal_items.into_iter().map(MealItemResponse::from).collect();
-            Ok(Json(response))
-        }
-        Err(err) => {
+        .map(|meal_items| Json(meal_items.into_iter().map(MealItemResponse::from).collect()))
+        .map_err(|err| {
             error!("Failed to fetch meal items: {}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
-        }
-    }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })
 }
 
 pub async fn update_meal_item(
@@ -296,36 +273,31 @@ pub async fn update_meal_item(
     }
 
     // Check if the meal exists and belongs to the user
-    match state
+    let meal = state
         .repositories
         .meal_repository
         .find_by_id(&meal_id)
         .await
-    {
-        Ok(Some(meal)) => {
-            if meal.user_id != user.id {
-                return Err(StatusCode::FORBIDDEN.into_response());
-            }
-        }
-        Ok(None) => return Err(StatusCode::NOT_FOUND.into_response()),
-        Err(err) => {
+        .map_err(|err| {
             error!("Failed to fetch meal: {}", err);
-            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-        }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?
+        .ok_or_else(|| StatusCode::NOT_FOUND.into_response())?;
+
+    if meal.user_id != user.id {
+        return Err(StatusCode::FORBIDDEN.into_response());
     }
 
-    match state
+    state
         .repositories
         .meal_item_repository
         .update(item_id, payload.quantity_in_grams)
         .await
-    {
-        Ok(meal_item) => Ok(Json(MealItemResponse::from(meal_item))),
-        Err(err) => {
+        .map(|meal_item| Json(MealItemResponse::from(meal_item)))
+        .map_err(|err| {
             error!("Failed to update meal item: {}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
-        }
-    }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })
 }
 
 pub async fn delete_meal_item(
@@ -339,34 +311,29 @@ pub async fn delete_meal_item(
     );
 
     // Check if the meal exists and belongs to the user
-    match state
+    let meal = state
         .repositories
         .meal_repository
         .find_by_id(&meal_id)
         .await
-    {
-        Ok(Some(meal)) => {
-            if meal.user_id != user.id {
-                return Err(StatusCode::FORBIDDEN.into_response());
-            }
-        }
-        Ok(None) => return Err(StatusCode::NOT_FOUND.into_response()),
-        Err(err) => {
+        .map_err(|err| {
             error!("Failed to fetch meal: {}", err);
-            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
-        }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })?
+        .ok_or_else(|| StatusCode::NOT_FOUND.into_response())?;
+
+    if meal.user_id != user.id {
+        return Err(StatusCode::FORBIDDEN.into_response());
     }
 
-    match state
+    state
         .repositories
         .meal_item_repository
         .delete(&item_id)
         .await
-    {
-        Ok(_) => Ok(StatusCode::NO_CONTENT),
-        Err(err) => {
+        .map(|_| StatusCode::NO_CONTENT)
+        .map_err(|err| {
             error!("Failed to delete meal item: {}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
-        }
-    }
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        })
 }
