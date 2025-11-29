@@ -163,3 +163,106 @@ impl UserRepository {
         active.update(&self.db).await
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::{FixedOffset, Utc};
+    use entities::sea_orm_active_enums::UserProfileImage;
+    use sea_orm::{DatabaseBackend, MockDatabase};
+
+    fn create_mock_user(id: Uuid) -> users::Model {
+        let fixed_offset = FixedOffset::east_opt(0).expect("Invalid timezone offset");
+        let now = Utc::now().with_timezone(&fixed_offset);
+        users::Model {
+            id,
+            username: "testuser".to_string(),
+            email: "test@example.com".to_string(),
+            password_hash: "hashed_password".to_string(),
+            created_at: now,
+            updated_at: now,
+            email_verified: false,
+            profile_image: UserProfileImage::Avatar1,
+        }
+    }
+
+    #[tokio::test]
+    async fn test_find_by_id_returns_user() {
+        let user_id = Uuid::new_v4();
+        let mock_user = create_mock_user(user_id);
+
+        let db = MockDatabase::new(DatabaseBackend::Postgres)
+            .append_query_results(vec![vec![mock_user.clone()]])
+            .into_connection();
+
+        let repo = UserRepository::new(db);
+        let result = repo.find_by_id(&user_id).await.unwrap();
+
+        assert!(result.is_some());
+        let user = result.unwrap();
+        assert_eq!(user.id, user_id);
+        assert_eq!(user.username, "testuser");
+    }
+
+    #[tokio::test]
+    async fn test_find_by_id_returns_none() {
+        let user_id = Uuid::new_v4();
+
+        let db = MockDatabase::new(DatabaseBackend::Postgres)
+            .append_query_results::<users::Model, _, _>(vec![vec![]])
+            .into_connection();
+
+        let repo = UserRepository::new(db);
+        let result = repo.find_by_id(&user_id).await.unwrap();
+
+        assert!(result.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_find_by_email_returns_user() {
+        let user_id = Uuid::new_v4();
+        let mock_user = create_mock_user(user_id);
+
+        let db = MockDatabase::new(DatabaseBackend::Postgres)
+            .append_query_results(vec![vec![mock_user.clone()]])
+            .into_connection();
+
+        let repo = UserRepository::new(db);
+        let result = repo.find_by_email("test@example.com").await.unwrap();
+
+        assert!(result.is_some());
+        let user = result.unwrap();
+        assert_eq!(user.email, "test@example.com");
+    }
+
+    #[tokio::test]
+    async fn test_find_by_username_returns_user() {
+        let user_id = Uuid::new_v4();
+        let mock_user = create_mock_user(user_id);
+
+        let db = MockDatabase::new(DatabaseBackend::Postgres)
+            .append_query_results(vec![vec![mock_user.clone()]])
+            .into_connection();
+
+        let repo = UserRepository::new(db);
+        let result = repo.find_by_username("testuser").await.unwrap();
+
+        assert!(result.is_some());
+        let user = result.unwrap();
+        assert_eq!(user.username, "testuser");
+    }
+
+    #[tokio::test]
+    async fn test_update_requires_at_least_one_field() {
+        let user_id = Uuid::new_v4();
+
+        let db = MockDatabase::new(DatabaseBackend::Postgres).into_connection();
+
+        let repo = UserRepository::new(db);
+        let result = repo.update(&user_id, None, None).await;
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(matches!(err, sea_orm::DbErr::Custom(_)));
+    }
+}
