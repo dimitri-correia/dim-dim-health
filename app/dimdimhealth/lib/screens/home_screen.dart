@@ -174,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.email_outlined,
                     size: 80,
                     color: AppConfig.blueColor,
@@ -204,11 +204,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 32),
                   const Divider(),
                   const SizedBox(height: 16),
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.refresh, size: 20, color: AppConfig.blueColor),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         'Pull down to refresh after verifying',
                         style: TextStyle(
@@ -259,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [color.withOpacity(0.8), color],
+              colors: [color.withValues(alpha: 0.8), color],
             ),
             borderRadius: BorderRadius.circular(16),
           ),
@@ -281,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 subtitle,
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppConfig.whiteColor.withOpacity(0.9),
+                  color: AppConfig.whiteColor.withValues(alpha: 0.9),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -299,13 +299,13 @@ class _HomeScreenState extends State<HomeScreen> {
       // If we can't parse the date, show a generic message
       return Card(
         elevation: 6,
-        color: AppConfig.goldColor.withOpacity(0.95),
+        color: AppConfig.goldColor.withValues(alpha: 0.95),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: AppConfig.redColor, width: 2),
+          side: const BorderSide(color: AppConfig.redColor, width: 2),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+        child: const Padding(
+          padding: EdgeInsets.all(16.0),
           child: Text(
             'Guest Account - Limited Access',
             style: TextStyle(
@@ -336,20 +336,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Card(
       elevation: 6,
-      color: AppConfig.goldColor.withOpacity(0.95),
+      color: AppConfig.goldColor.withValues(alpha: 0.95),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppConfig.redColor, width: 2),
+        side: const BorderSide(color: AppConfig.redColor, width: 2),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
                 Icon(Icons.info_outline, color: AppConfig.redColor, size: 24),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Guest Account',
@@ -365,7 +365,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 12),
             Text(
               expirationText,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: AppConfig.blueColor,
@@ -374,7 +374,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 12),
             const Divider(color: AppConfig.blueColor, thickness: 1),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               'If you log out, you can reconnect using:',
               style: TextStyle(
                 fontSize: 14,
@@ -386,7 +386,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppConfig.whiteColor.withOpacity(0.7),
+                color: AppConfig.whiteColor.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -394,9 +394,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.email, size: 16, color: AppConfig.blueColor),
+                      const Icon(Icons.email, size: 16, color: AppConfig.blueColor),
                       const SizedBox(width: 8),
-                      Text(
+                      const Text(
                         'Email: ',
                         style: TextStyle(
                           fontSize: 13,
@@ -407,7 +407,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: Text(
                           user.email,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 13,
                             color: AppConfig.blueColor,
                           ),
@@ -416,10 +416,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Row(
+                  const Row(
                     children: [
                       Icon(Icons.lock, size: 16, color: AppConfig.blueColor),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         'Password: ',
                         style: TextStyle(

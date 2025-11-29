@@ -241,7 +241,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'Leave empty to keep current password',
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppConfig.whiteColor.withOpacity(0.8),
+                      color: AppConfig.whiteColor.withValues(alpha: 0.8),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -363,7 +363,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'Join the public group to share your progress with others',
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppConfig.whiteColor.withOpacity(0.8),
+                      color: AppConfig.whiteColor.withValues(alpha: 0.8),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -416,7 +416,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         'Account created: ${_formatDate(user.createdAt)}',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppConfig.whiteColor.withOpacity(0.7),
+                          color: AppConfig.whiteColor.withValues(alpha: 0.7),
                         ),
                       ),
                     ),
@@ -429,7 +429,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: AppConfig.redColor.withOpacity(0.8),
+                            color: AppConfig.redColor.withValues(alpha: 0.8),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Row(
@@ -514,7 +514,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: AppConfig.blueColor.withOpacity(0.3),
+                                color: AppConfig.blueColor.withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 spreadRadius: 2,
                               ),
