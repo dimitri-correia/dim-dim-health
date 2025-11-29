@@ -5,6 +5,7 @@ import '../models/watch_permission.dart';
 import '../services/api_service.dart';
 import '../services/auth_provider.dart';
 import '../utils/app_config.dart';
+import '../widgets/widgets.dart';
 
 class ManageWatchersScreen extends StatefulWidget {
   const ManageWatchersScreen({super.key});
@@ -118,12 +119,7 @@ class _ManageWatchersScreenState extends State<ManageWatchersScreen> {
         _isSearching = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: AppConfig.redColor,
-          ),
-        );
+        AppSnackBar.showError(context, e.message);
       }
     } catch (e) {
       setState(() {
@@ -152,21 +148,14 @@ class _ManageWatchersScreenState extends State<ManageWatchersScreen> {
       await _loadWatchers();
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${user.username} can now see your profile'),
-            backgroundColor: Colors.green,
-          ),
+        AppSnackBar.showSuccess(
+          context,
+          '${user.username} can now see your profile',
         );
       }
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: AppConfig.redColor,
-          ),
-        );
+        AppSnackBar.showError(context, e.message);
       }
     }
   }
@@ -210,79 +199,28 @@ class _ManageWatchersScreenState extends State<ManageWatchersScreen> {
       await _loadWatchers();
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("${watcher.username}'s access has been revoked"),
-            backgroundColor: Colors.green,
-          ),
+        AppSnackBar.showSuccess(
+          context,
+          "${watcher.username}'s access has been revoked",
         );
       }
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: AppConfig.redColor,
-          ),
-        );
+        AppSnackBar.showError(context, e.message);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Manage Watchers'),
-        backgroundColor: AppConfig.blueColor,
-        foregroundColor: AppConfig.goldColor,
-      ),
-      body: Container(
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary),
-        child: SafeArea(
-          child: RefreshIndicator(
-            onRefresh: _loadWatchers,
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: AppConfig.goldColor,
-                    ),
-                  )
-                : _error != null
-                    ? _buildErrorState()
-                    : _buildContent(),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: AppConfig.redColor,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _error!,
-            style: const TextStyle(
-              color: AppConfig.whiteColor,
-              fontSize: 16,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _loadWatchers,
-            child: const Text('Retry'),
-          ),
-        ],
-      ),
+    return AppScreenWrapper(
+      appBar: const AppStandardAppBar(title: 'Manage Watchers'),
+      onRefresh: _loadWatchers,
+      child: _isLoading
+          ? const DataLoadingView()
+          : _error != null
+              ? DataErrorView(error: _error!, onRetry: _loadWatchers)
+              : _buildContent(),
     );
   }
 
@@ -294,51 +232,15 @@ class _ManageWatchersScreenState extends State<ManageWatchersScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Description
-          Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.info_outline, color: AppConfig.blueColor),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'About Watchers',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppConfig.blueColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Watchers are users you authorize to view your profile and data. Search for users below and add them as watchers.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[700],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          const InfoCard(
+            icon: Icons.info_outline,
+            title: 'About Watchers',
+            description: 'Watchers are users you authorize to view your profile and data. Search for users below and add them as watchers.',
           ),
           const SizedBox(height: 16),
 
           // Search Section
-          const Text(
-            'Add New Watcher',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppConfig.goldColor,
-            ),
-          ),
+          const SectionTitle(title: 'Add New Watcher'),
           const SizedBox(height: 8),
           Card(
             elevation: 4,
@@ -408,58 +310,17 @@ class _ManageWatchersScreenState extends State<ManageWatchersScreen> {
           const SizedBox(height: 24),
 
           // Current Watchers Section
-          const Text(
-            'Current Watchers',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppConfig.goldColor,
-            ),
-          ),
+          const SectionTitle(title: 'Current Watchers'),
           const SizedBox(height: 8),
           if (_watchers.isEmpty)
-            _buildEmptyWatchersState()
+            const EmptyStateView(
+              icon: Icons.people_outline,
+              title: 'No watchers yet',
+              message: 'Search for users above to add them as watchers',
+            )
           else
             ..._watchers.map((watcher) => _buildWatcherCard(watcher)),
         ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyWatchersState() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.people_outline,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No watchers yet',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Search for users above to add them as watchers',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
       ),
     );
   }

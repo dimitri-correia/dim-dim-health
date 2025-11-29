@@ -6,7 +6,7 @@ import '../models/weight.dart';
 import '../services/api_service.dart';
 import '../services/auth_provider.dart';
 import '../utils/app_config.dart';
-import '../widgets/user_avatar.dart';
+import '../widgets/widgets.dart';
 
 class WeightScreen extends StatefulWidget {
   const WeightScreen({super.key});
@@ -126,12 +126,7 @@ class _WeightScreenState extends State<WeightScreen> {
               onPressed: () async {
                 final weight = double.tryParse(weightController.text);
                 if (weight == null || weight <= 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please enter a valid weight'),
-                      backgroundColor: AppConfig.redColor,
-                    ),
-                  );
+                  AppSnackBar.showError(context, 'Please enter a valid weight');
                   return;
                 }
 
@@ -164,21 +159,11 @@ class _WeightScreenState extends State<WeightScreen> {
       );
       await _loadData();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Weight entry added successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AppSnackBar.showSuccess(context, 'Weight entry added successfully');
       }
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: AppConfig.redColor,
-          ),
-        );
+        AppSnackBar.showError(context, e.message);
       }
     }
   }
@@ -240,12 +225,7 @@ class _WeightScreenState extends State<WeightScreen> {
               onPressed: () async {
                 final newWeight = double.tryParse(weightController.text);
                 if (newWeight == null || newWeight <= 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please enter a valid weight'),
-                      backgroundColor: AppConfig.redColor,
-                    ),
-                  );
+                  AppSnackBar.showError(context, 'Please enter a valid weight');
                   return;
                 }
 
@@ -283,21 +263,11 @@ class _WeightScreenState extends State<WeightScreen> {
       );
       await _loadData();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Weight entry updated successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AppSnackBar.showSuccess(context, 'Weight entry updated successfully');
       }
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: AppConfig.redColor,
-          ),
-        );
+        AppSnackBar.showError(context, e.message);
       }
     }
   }
@@ -340,21 +310,11 @@ class _WeightScreenState extends State<WeightScreen> {
       await _apiService.deleteWeight(accessToken: accessToken, id: id);
       await _loadData();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Weight entry deleted successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AppSnackBar.showSuccess(context, 'Weight entry deleted successfully');
       }
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: AppConfig.redColor,
-          ),
-        );
+        AppSnackBar.showError(context, e.message);
       }
     }
   }
@@ -377,11 +337,9 @@ class _WeightScreenState extends State<WeightScreen> {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.user;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Weight Tracker'),
-        backgroundColor: AppConfig.blueColor,
-        foregroundColor: AppConfig.goldColor,
+    return AppScreenWrapper(
+      appBar: AppStandardAppBar(
+        title: 'Weight Tracker',
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12.0),
@@ -389,95 +347,54 @@ class _WeightScreenState extends State<WeightScreen> {
           ),
         ],
       ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary),
-        child: SafeArea(
-          child: RefreshIndicator(
-            onRefresh: _loadData,
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: AppConfig.goldColor,
-                    ),
-                  )
-                : _error != null
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: AppConfig.redColor,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _error!,
-                          style: const TextStyle(
-                            color: AppConfig.whiteColor,
-                            fontSize: 16,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _loadData,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  )
-                : SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12.0,
-                        vertical: 16.0,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Current Weight Summary
-                          if (_weightInfos != null) _buildCurrentWeightCard(),
-                          const SizedBox(height: 16),
-
-                          // Weight Trend Graph
-                          if (_weights.isNotEmpty) _buildWeightChartCard(),
-                          if (_weights.isNotEmpty) const SizedBox(height: 16),
-
-                          // Statistics Card
-                          if (_weightInfos != null) _buildStatisticsCard(),
-                          const SizedBox(height: 16),
-
-                          // Weight History
-                          const Text(
-                            'Weight History',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: AppConfig.goldColor,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          if (_weights.isEmpty)
-                            _buildEmptyState()
-                          else
-                            ..._buildWeightList(),
-                        ],
-                      ),
-                    ),
-                  ),
-          ),
-        ),
-      ),
+      onRefresh: _loadData,
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddWeightDialog,
         backgroundColor: AppConfig.goldColor,
         foregroundColor: AppConfig.blueColor,
         child: const Icon(Icons.add),
       ),
+      child: _isLoading
+          ? const DataLoadingView()
+          : _error != null
+              ? DataErrorView(error: _error!, onRetry: _loadData)
+              : SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12.0,
+                      vertical: 16.0,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Current Weight Summary
+                        if (_weightInfos != null) _buildCurrentWeightCard(),
+                        const SizedBox(height: 16),
+
+                        // Weight Trend Graph
+                        if (_weights.isNotEmpty) _buildWeightChartCard(),
+                        if (_weights.isNotEmpty) const SizedBox(height: 16),
+
+                        // Statistics Card
+                        if (_weightInfos != null) _buildStatisticsCard(),
+                        const SizedBox(height: 16),
+
+                        // Weight History
+                        const SectionTitle(title: 'Weight History'),
+                        const SizedBox(height: 8),
+                        if (_weights.isEmpty)
+                          const EmptyStateView(
+                            icon: Icons.monitor_weight_outlined,
+                            title: 'No weight entries yet',
+                            message: 'Tap the + button to add your first weight entry',
+                          )
+                        else
+                          ..._buildWeightList(),
+                      ],
+                    ),
+                  ),
+                ),
     );
   }
 
@@ -1135,42 +1052,6 @@ class _WeightScreenState extends State<WeightScreen> {
           const SizedBox(height: 2),
           Text(date, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
         ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.monitor_weight_outlined,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No weight entries yet',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Tap the + button to add your first weight entry',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
       ),
     );
   }

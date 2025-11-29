@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/user.dart';
 import '../services/auth_provider.dart';
 import '../utils/app_config.dart';
-import '../widgets/user_avatar.dart';
+import '../widgets/widgets.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,11 +23,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.user;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Welcome ${user?.username ?? 'User'}'),
-        backgroundColor: AppConfig.blueColor,
-        foregroundColor: AppConfig.goldColor,
+    return AppScreenWrapper(
+      appBar: AppStandardAppBar(
+        title: 'Welcome ${user?.username ?? 'User'}',
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: UserAvatar(profileImage: user?.profileImage),
@@ -45,116 +43,108 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary),
-        child: SafeArea(
-          child: RefreshIndicator(
-            onRefresh: _handleRefresh,
-            child: user?.emailVerified == false
-                ? _buildEmailVerificationRequired(context)
-                : Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Guest Account Banner
-                        if (user?.isGuest == true) ...[
-                          _buildGuestAccountBanner(context, user!),
-                          const SizedBox(height: 16),
-                        ],
+      onRefresh: _handleRefresh,
+      child: user?.emailVerified == false
+          ? _buildEmailVerificationRequired(context)
+          : Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Guest Account Banner
+                  if (user?.isGuest == true) ...[
+                    _buildGuestAccountBanner(context, user!),
+                    const SizedBox(height: 16),
+                  ],
 
-                        // Quick Actions
-                        const Text(
-                          'Quick Actions',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: AppConfig.blueColor,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Action Cards Grid - Responsive layout
-                        Expanded(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              // Determine number of columns based on available width
-                              // 2 columns for mobile, 4 columns for desktop
-                              final crossAxisCount =
-                                  constraints.maxWidth >=
-                                      AppConfig.desktopBreakpoint
-                                  ? 4
-                                  : 2;
-
-                              return GridView.count(
-                                crossAxisCount: crossAxisCount,
-                                mainAxisSpacing: 16,
-                                crossAxisSpacing: 16,
-                                children: [
-                                  _buildActionCard(
-                                    context,
-                                    icon: Icons.monitor_weight,
-                                    title: 'Weight',
-                                    subtitle: 'Track your weight',
-                                    color: AppConfig.blueColor,
-                                    route: '/weight',
-                                  ),
-                                  _buildActionCard(
-                                    context,
-                                    icon: Icons.restaurant,
-                                    title: 'Meals',
-                                    subtitle: 'Log your meals',
-                                    color: AppConfig.redColor,
-                                  ),
-                                  _buildActionCard(
-                                    context,
-                                    icon: Icons.fitness_center,
-                                    title: 'Workouts',
-                                    subtitle: 'Plan workouts',
-                                    color: AppConfig.goldColor,
-                                  ),
-                                  _buildActionCard(
-                                    context,
-                                    icon: Icons.person,
-                                    title: 'Profile',
-                                    subtitle: 'View profile',
-                                    color: Colors.teal,
-                                  ),
-                                  _buildActionCard(
-                                    context,
-                                    icon: Icons.people,
-                                    title: 'Watchers',
-                                    subtitle: 'Manage who can see you',
-                                    color: Colors.purple,
-                                    route: '/manage-watchers',
-                                  ),
-                                  _buildActionCard(
-                                    context,
-                                    icon: Icons.visibility,
-                                    title: 'Watching',
-                                    subtitle: 'Users who authorized me',
-                                    color: Colors.teal,
-                                    route: '/watching',
-                                  ),
-                                  _buildActionCard(
-                                    context,
-                                    icon: Icons.settings,
-                                    title: 'Settings',
-                                    subtitle: 'Edit profile',
-                                    color: Colors.teal,
-                                    route: '/settings',
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+                  // Quick Actions
+                  const Text(
+                    'Quick Actions',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: AppConfig.blueColor,
                     ),
                   ),
-          ),
-        ),
-      ),
+                  const SizedBox(height: 16),
+
+                  // Action Cards Grid - Responsive layout
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Determine number of columns based on available width
+                        // 2 columns for mobile, 4 columns for desktop
+                        final crossAxisCount =
+                            constraints.maxWidth >= AppConfig.desktopBreakpoint
+                                ? 4
+                                : 2;
+
+                        return GridView.count(
+                          crossAxisCount: crossAxisCount,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          children: [
+                            _buildActionCard(
+                              context,
+                              icon: Icons.monitor_weight,
+                              title: 'Weight',
+                              subtitle: 'Track your weight',
+                              color: AppConfig.blueColor,
+                              route: '/weight',
+                            ),
+                            _buildActionCard(
+                              context,
+                              icon: Icons.restaurant,
+                              title: 'Meals',
+                              subtitle: 'Log your meals',
+                              color: AppConfig.redColor,
+                            ),
+                            _buildActionCard(
+                              context,
+                              icon: Icons.fitness_center,
+                              title: 'Workouts',
+                              subtitle: 'Plan workouts',
+                              color: AppConfig.goldColor,
+                            ),
+                            _buildActionCard(
+                              context,
+                              icon: Icons.person,
+                              title: 'Profile',
+                              subtitle: 'View profile',
+                              color: Colors.teal,
+                            ),
+                            _buildActionCard(
+                              context,
+                              icon: Icons.people,
+                              title: 'Watchers',
+                              subtitle: 'Manage who can see you',
+                              color: Colors.purple,
+                              route: '/manage-watchers',
+                            ),
+                            _buildActionCard(
+                              context,
+                              icon: Icons.visibility,
+                              title: 'Watching',
+                              subtitle: 'Users who authorized me',
+                              color: Colors.teal,
+                              route: '/watching',
+                            ),
+                            _buildActionCard(
+                              context,
+                              icon: Icons.settings,
+                              title: 'Settings',
+                              subtitle: 'Edit profile',
+                              color: Colors.teal,
+                              route: '/settings',
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 
@@ -244,12 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (route != null) {
             Navigator.of(context).pushNamed(route);
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('$title feature coming soon!'),
-                duration: const Duration(seconds: 2),
-              ),
-            );
+            AppSnackBar.showInfo(context, '$title feature coming soon!');
           }
         },
         borderRadius: BorderRadius.circular(16),
