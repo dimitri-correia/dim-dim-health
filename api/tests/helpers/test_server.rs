@@ -45,6 +45,9 @@ async fn init_test_db() {
     panic!("DB not ready after retries");
 }
 
+/// Returns a shared AppState for integration tests that use a real database.
+/// The database is initialized once and reused across all tests.
+/// Tests should use unique identifiers (via TestData) to avoid conflicts.
 pub async fn get_app_state() -> &'static state::AppState {
     TEST_APP_STATE
         .get_or_init(async {

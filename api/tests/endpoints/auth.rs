@@ -1,5 +1,6 @@
 use crate::helpers::{
     app_paths::APP_PATHS,
+    test_data::TestData,
     test_server::{get_app_state, get_test_server},
 };
 use axum::http::{HeaderValue, StatusCode};
@@ -8,8 +9,9 @@ use serde_json::json;
 
 #[tokio::test]
 async fn test_create_user() {
-    let username = "testcreateuser";
-    let email = format!("{username}@dimdim.fr");
+    let td = TestData::new();
+    let username = td.username("testcreateuser");
+    let email = td.email("testcreateuser");
     let password = "securepassword";
 
     let app_test = get_app_state().await;
@@ -64,8 +66,9 @@ async fn test_create_user() {
 
 #[tokio::test]
 async fn test_create_user_too_small_username() {
+    let td = TestData::new();
     let username = "t";
-    let email = format!("{username}@dimdim.fr");
+    let email = td.email("t");
     let password = "securepassword";
 
     let app_test = get_app_state().await;
@@ -110,8 +113,9 @@ async fn test_create_user_invalid_email() {
 
 #[tokio::test]
 async fn test_create_user_weak_password() {
-    let username = "testweakpassword";
-    let email = format!("{username}@email.fr");
+    let td = TestData::new();
+    let username = td.username("testweakpassword");
+    let email = td.email("testweakpassword");
     let password = "123";
 
     let app_test = get_app_state().await;
@@ -133,9 +137,10 @@ async fn test_create_user_weak_password() {
 
 #[tokio::test]
 async fn test_create_user_duplicate_username() {
-    let username = "duplicateuser";
-    let email1 = format!("{username}1@dimdim.fr");
-    let email2 = format!("{username}2@dimdim.fr");
+    let td = TestData::new();
+    let username = td.username("duplicateuser");
+    let email1 = td.email("duplicateuser1");
+    let email2 = td.email("duplicateuser2");
     let password = "securepassword";
 
     let app_test = get_app_state().await;

@@ -1,5 +1,6 @@
 use crate::helpers::{
     app_paths::APP_PATHS,
+    test_data::TestData,
     test_server::{get_app_state, get_test_server},
 };
 use axum::http::{HeaderValue, StatusCode};
@@ -8,8 +9,9 @@ use serde_json::json;
 
 #[tokio::test]
 async fn test_join_public_group_already_member() {
-    let username = "testalreadymember";
-    let email = format!("{username}@dimdim.fr");
+    let td = TestData::new();
+    let username = td.username("testalreadymember");
+    let email = td.email("testalreadymember");
     let password = "securepassword";
 
     let app_test = get_app_state().await;
@@ -32,7 +34,7 @@ async fn test_join_public_group_already_member() {
     let user_id = app_test
         .repositories
         .user_repository
-        .find_by_username(username)
+        .find_by_username(&username)
         .await
         .unwrap()
         .unwrap()

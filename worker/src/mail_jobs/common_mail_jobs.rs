@@ -1,7 +1,6 @@
 use crate::{
     mail_jobs::{
-        email_change_mail::handle_email_change_email,
-        register_mail::handle_registration_email,
+        email_change_mail::handle_email_change_email, register_mail::handle_registration_email,
         reset_password_mail::handle_reset_password_email,
     },
     worker_main::state::WorkerState,

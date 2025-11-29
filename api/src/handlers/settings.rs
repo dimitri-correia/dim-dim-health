@@ -8,7 +8,7 @@ use crate::{
     utils::{get_now_time_paris::now_paris_fixed, token_generator::generate_verification_token},
 };
 
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
 use chrono::Duration;
 use log::error;
 use serde_json::json;
@@ -57,7 +57,7 @@ pub async fn update_settings(
                 .update(&user.id, Some(username), None)
                 .await
                 .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
-            
+
             message.push("Username updated successfully".to_string());
         }
     }
@@ -72,7 +72,7 @@ pub async fn update_settings(
                 .update_profile_image(&user.id, profile_image)
                 .await
                 .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
-            
+
             message.push("Profile image updated successfully".to_string());
         }
     }
@@ -102,7 +102,7 @@ pub async fn update_settings(
             .update_password(&user.id, &new_password_hash)
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
-        
+
         message.push("Password updated successfully".to_string());
     }
 
