@@ -150,6 +150,8 @@ async fn test_user_repo_create_and_update() {
 #[tokio::test]
 async fn test_sql_injection() {
     let td = TestData::new();
+    // Intentionally malformed email to test SQL injection protection
+    // The database should properly escape this and store it as literal text
     let email = format!(
         "{}_attack'); DROP TABLE users; --@attack.fr",
         td.username("attacker")

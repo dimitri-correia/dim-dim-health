@@ -208,6 +208,7 @@ mod tests {
     async fn test_find_by_id_returns_none() {
         let user_id = Uuid::new_v4();
 
+        // Need to specify the Model type so SeaORM knows what table to mock
         let db = MockDatabase::new(DatabaseBackend::Postgres)
             .append_query_results::<users::Model, _, _>(vec![vec![]])
             .into_connection();
