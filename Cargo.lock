@@ -889,6 +889,7 @@ name = "dimdim-health-worker"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "config",
  "entities",
  "lettre",
@@ -898,6 +899,7 @@ dependencies = [
  "opentelemetry-otlp",
  "opentelemetry_sdk",
  "redis",
+ "sea-orm",
  "serde",
  "serde_json",
  "tokio",
