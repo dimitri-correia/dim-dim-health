@@ -4,6 +4,7 @@ pub mod prelude;
 
 pub mod email_preferences;
 pub mod email_verification_token;
+pub mod exercise_muscle;
 pub mod food_item;
 pub mod gym_exercise;
 pub mod gym_session;

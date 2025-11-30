@@ -1,5 +1,6 @@
 pub mod auth_schemas;
 pub mod food_item_schemas;
+pub mod gym_schemas;
 pub mod meal_schemas;
 pub mod password_reset_schemas;
 pub mod settings_schemas;

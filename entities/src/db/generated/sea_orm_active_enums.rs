@@ -60,6 +60,14 @@ pub enum MuscleEnum {
     LowerBack,
 }
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "muscle_role_enum")]
+pub enum MuscleRoleEnum {
+    #[sea_orm(string_value = "primary")]
+    Primary,
+    #[sea_orm(string_value = "secondary")]
+    Secondary,
+}
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "user_group")]
 pub enum UserGroup {
     #[sea_orm(string_value = "admin_group")]
