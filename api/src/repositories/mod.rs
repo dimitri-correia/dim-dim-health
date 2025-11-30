@@ -2,8 +2,10 @@ use sea_orm::DatabaseConnection;
 
 use crate::repositories::{
     email_verification_repository::EmailVerificationRepository,
-    food_item_repository::FoodItemRepository, meal_item_repository::MealItemRepository,
-    meal_repository::MealRepository, password_reset_repository::PasswordResetRepository,
+    food_item_repository::FoodItemRepository, gym_exercise_repository::GymExerciseRepository,
+    gym_session_repository::GymSessionRepository, gym_set_repository::GymSetRepository,
+    meal_item_repository::MealItemRepository, meal_repository::MealRepository,
+    password_reset_repository::PasswordResetRepository,
     refresh_token_repository::RefreshTokenRepository, user_group_repository::UserGroupsRepository,
     user_info_repository::UserInfoRepository, user_repository::UserRepository,
     user_watch_permission_repository::UserWatchPermissionRepository,
@@ -12,6 +14,9 @@ use crate::repositories::{
 
 pub mod email_verification_repository;
 pub mod food_item_repository;
+pub mod gym_exercise_repository;
+pub mod gym_session_repository;
+pub mod gym_set_repository;
 pub mod meal_item_repository;
 pub mod meal_repository;
 pub mod password_reset_repository;
@@ -35,6 +40,9 @@ pub struct Repositories {
     pub food_item_repository: FoodItemRepository,
     pub meal_repository: MealRepository,
     pub meal_item_repository: MealItemRepository,
+    pub gym_exercise_repository: GymExerciseRepository,
+    pub gym_session_repository: GymSessionRepository,
+    pub gym_set_repository: GymSetRepository,
 }
 
 impl Repositories {
@@ -50,6 +58,9 @@ impl Repositories {
         let food_item_repository = FoodItemRepository::new(db.clone());
         let meal_repository = MealRepository::new(db.clone());
         let meal_item_repository = MealItemRepository::new(db.clone());
+        let gym_exercise_repository = GymExerciseRepository::new(db.clone());
+        let gym_session_repository = GymSessionRepository::new(db.clone());
+        let gym_set_repository = GymSetRepository::new(db.clone());
 
         Self {
             user_repository,
@@ -63,6 +74,9 @@ impl Repositories {
             food_item_repository,
             meal_repository,
             meal_item_repository,
+            gym_exercise_repository,
+            gym_session_repository,
+            gym_set_repository,
         }
     }
 }
