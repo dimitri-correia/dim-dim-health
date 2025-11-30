@@ -3,6 +3,9 @@
 pub use super::email_preferences::Entity as EmailPreferences;
 pub use super::email_verification_token::Entity as EmailVerificationToken;
 pub use super::food_item::Entity as FoodItem;
+pub use super::gym_exercise::Entity as GymExercise;
+pub use super::gym_session::Entity as GymSession;
+pub use super::gym_set::Entity as GymSet;
 pub use super::meal::Entity as Meal;
 pub use super::meal_item::Entity as MealItem;
 pub use super::password_reset_token::Entity as PasswordResetToken;

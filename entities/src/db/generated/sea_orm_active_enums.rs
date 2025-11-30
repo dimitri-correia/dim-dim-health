@@ -26,6 +26,40 @@ pub enum MealTypeEnum {
     Dinner,
 }
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "muscle_enum")]
+pub enum MuscleEnum {
+    #[sea_orm(string_value = "chest")]
+    Chest,
+    #[sea_orm(string_value = "back")]
+    Back,
+    #[sea_orm(string_value = "shoulders")]
+    Shoulders,
+    #[sea_orm(string_value = "biceps")]
+    Biceps,
+    #[sea_orm(string_value = "triceps")]
+    Triceps,
+    #[sea_orm(string_value = "forearms")]
+    Forearms,
+    #[sea_orm(string_value = "quadriceps")]
+    Quadriceps,
+    #[sea_orm(string_value = "hamstrings")]
+    Hamstrings,
+    #[sea_orm(string_value = "glutes")]
+    Glutes,
+    #[sea_orm(string_value = "calves")]
+    Calves,
+    #[sea_orm(string_value = "abs")]
+    Abs,
+    #[sea_orm(string_value = "obliques")]
+    Obliques,
+    #[sea_orm(string_value = "traps")]
+    Traps,
+    #[sea_orm(string_value = "lats")]
+    Lats,
+    #[sea_orm(string_value = "lower_back")]
+    LowerBack,
+}
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "user_group")]
 pub enum UserGroup {
     #[sea_orm(string_value = "admin_group")]
