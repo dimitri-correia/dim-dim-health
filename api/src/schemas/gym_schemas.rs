@@ -2,9 +2,21 @@ use chrono::{DateTime, FixedOffset, NaiveDate};
 use sea_orm::prelude::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use validator::Validate;
+use validator::{Validate, ValidationError};
 
 use entities::sea_orm_active_enums::MuscleEnum;
+
+// Validation helper for weight_kg
+fn validate_weight_kg(weight: &Decimal) -> Result<(), ValidationError> {
+    if *weight < Decimal::ZERO {
+        return Err(ValidationError::new("weight_kg must be non-negative"));
+    }
+    // Max weight of 9999.99 kg (reasonable upper limit)
+    if *weight > Decimal::new(999999, 2) {
+        return Err(ValidationError::new("weight_kg must be less than 10000 kg"));
+    }
+    Ok(())
+}
 
 // ===== Gym Exercise Schemas =====
 
@@ -123,6 +135,7 @@ pub struct CreateGymSetRequest {
     pub set_number: i32,
     #[validate(range(min = 0, max = 1000, message = "Repetitions must be between 0 and 1000"))]
     pub repetitions: i32,
+    #[validate(custom(function = "validate_weight_kg"))]
     pub weight_kg: Decimal,
     #[validate(length(max = 500, message = "Notes must be less than 500 characters"))]
     pub notes: Option<String>,
@@ -134,6 +147,7 @@ pub struct UpdateGymSetRequest {
     pub set_number: Option<i32>,
     #[validate(range(min = 0, max = 1000, message = "Repetitions must be between 0 and 1000"))]
     pub repetitions: Option<i32>,
+    #[validate(custom(function = "validate_weight_kg"))]
     pub weight_kg: Option<Decimal>,
     #[validate(length(max = 500, message = "Notes must be less than 500 characters"))]
     pub notes: Option<Option<String>>,
