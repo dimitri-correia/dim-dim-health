@@ -31,6 +31,10 @@ pub enum Relation {
     EmailVerificationToken,
     #[sea_orm(has_many = "super::food_item::Entity")]
     FoodItem,
+    #[sea_orm(has_many = "super::gym_exercise::Entity")]
+    GymExercise,
+    #[sea_orm(has_many = "super::gym_session::Entity")]
+    GymSession,
     #[sea_orm(has_many = "super::meal::Entity")]
     Meal,
     #[sea_orm(has_many = "super::password_reset_token::Entity")]
@@ -63,6 +67,18 @@ impl Related<super::email_verification_token::Entity> for Entity {
 impl Related<super::food_item::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::FoodItem.def()
+    }
+}
+
+impl Related<super::gym_exercise::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::GymExercise.def()
+    }
+}
+
+impl Related<super::gym_session::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::GymSession.def()
     }
 }
 
