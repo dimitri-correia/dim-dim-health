@@ -12,8 +12,6 @@ pub struct Model {
     pub name: String,
     #[sea_orm(column_type = "Text", nullable)]
     pub description: Option<String>,
-    pub primary_muscle: MuscleEnum,
-    pub secondary_muscles: Vec<MuscleEnum>,
     pub added_by: Uuid,
     pub created_at: DateTimeWithTimeZone,
     pub updated_at: DateTimeWithTimeZone,
@@ -21,6 +19,8 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_many = "super::exercise_muscle::Entity")]
+    ExerciseMuscle,
     #[sea_orm(has_many = "super::gym_set::Entity")]
     GymSet,
     #[sea_orm(
@@ -31,6 +31,12 @@ pub enum Relation {
         on_delete = "Cascade"
     )]
     Users,
+}
+
+impl Related<super::exercise_muscle::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::ExerciseMuscle.def()
+    }
 }
 
 impl Related<super::gym_set::Entity> for Entity {

@@ -2,6 +2,7 @@
 
 pub use super::email_preferences::Entity as EmailPreferences;
 pub use super::email_verification_token::Entity as EmailVerificationToken;
+pub use super::exercise_muscle::Entity as ExerciseMuscle;
 pub use super::food_item::Entity as FoodItem;
 pub use super::gym_exercise::Entity as GymExercise;
 pub use super::gym_session::Entity as GymSession;
