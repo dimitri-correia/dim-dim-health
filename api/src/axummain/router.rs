@@ -14,6 +14,11 @@ use crate::handlers::auth::{
 use crate::handlers::food_item::{
     create_food_item, delete_food_item, get_food_items, update_food_item,
 };
+use crate::handlers::gym::{
+    create_gym_exercise, create_gym_session, create_gym_set, delete_gym_exercise,
+    delete_gym_session, delete_gym_set, get_gym_exercise, get_gym_exercises, get_gym_session,
+    get_gym_sessions, get_gym_sets, update_gym_exercise, update_gym_session, update_gym_set,
+};
 use crate::handlers::meal::{
     add_meal_item, create_meal, delete_meal, delete_meal_item, get_meal_items, get_meals,
     update_meal, update_meal_item,
@@ -116,6 +121,29 @@ pub fn get_main_router(app_state: AppState) -> Router {
         .route(
             "/api/watch-permissions/revoke",
             post(revoke_watch_permission),
+        )
+        // Gym exercise routes
+        .route("/api/gym/exercises", post(create_gym_exercise))
+        .route("/api/gym/exercises", get(get_gym_exercises))
+        .route("/api/gym/exercises/{id}", get(get_gym_exercise))
+        .route("/api/gym/exercises/{id}", put(update_gym_exercise))
+        .route("/api/gym/exercises/{id}", delete(delete_gym_exercise))
+        // Gym session routes
+        .route("/api/gym/sessions", post(create_gym_session))
+        .route("/api/gym/sessions", get(get_gym_sessions))
+        .route("/api/gym/sessions/{id}", get(get_gym_session))
+        .route("/api/gym/sessions/{id}", put(update_gym_session))
+        .route("/api/gym/sessions/{id}", delete(delete_gym_session))
+        // Gym set routes
+        .route("/api/gym/sessions/{session_id}/sets", post(create_gym_set))
+        .route("/api/gym/sessions/{session_id}/sets", get(get_gym_sets))
+        .route(
+            "/api/gym/sessions/{session_id}/sets/{set_id}",
+            put(update_gym_set),
+        )
+        .route(
+            "/api/gym/sessions/{session_id}/sets/{set_id}",
+            delete(delete_gym_set),
         )
         // Settings routes
         .route("/api/settings", put(update_settings))
