@@ -14,6 +14,7 @@ pub enum EmailType {
     MonthlyRecap,
     WeeklyRecap,
     YearlyRecap,
+    DailyUsageRecap,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -60,6 +61,13 @@ pub struct JobEmailYearlyRecap {
     pub username: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct JobEmailDailyUsageRecap {
+    pub email: String,
+    pub date: String,
+    pub usage_summary: String,
+}
+
 impl fmt::Display for TaskType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -77,6 +85,7 @@ impl fmt::Display for EmailType {
             EmailType::MonthlyRecap => write!(f, "MonthlyRecap"),
             EmailType::WeeklyRecap => write!(f, "WeeklyRecap"),
             EmailType::YearlyRecap => write!(f, "YearlyRecap"),
+            EmailType::DailyUsageRecap => write!(f, "DailyUsageRecap"),
         }
     }
 }

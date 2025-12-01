@@ -1,5 +1,6 @@
 use crate::{
     mail_jobs::{
+        daily_usage_recap_mail::handle_daily_usage_recap_email,
         email_change_mail::handle_email_change_email,
         monthly_recap_mail::handle_monthly_recap_email,
         register_mail::handle_registration_email,
@@ -10,8 +11,8 @@ use crate::{
     worker_main::state::WorkerState,
 };
 use entities::{
-    EmailType, JobEmail, JobEmailMonthlyRecap, JobEmailRegister, JobEmailResetPassword,
-    JobEmailWeeklyRecap, JobEmailYearlyRecap,
+    EmailType, JobEmail, JobEmailDailyUsageRecap, JobEmailMonthlyRecap, JobEmailRegister,
+    JobEmailResetPassword, JobEmailWeeklyRecap, JobEmailYearlyRecap,
 };
 use lettre::{Message, SmtpTransport, Transport, message::header::ContentType};
 use tracing::info;
@@ -41,6 +42,10 @@ pub async fn handle_mail_job(worker_state: WorkerState, job: JobEmail) -> anyhow
         EmailType::YearlyRecap => {
             let payload: JobEmailYearlyRecap = serde_json::from_value(job.data)?;
             handle_yearly_recap_email(worker_state, payload).await
+        }
+        EmailType::DailyUsageRecap => {
+            let payload: JobEmailDailyUsageRecap = serde_json::from_value(job.data)?;
+            handle_daily_usage_recap_email(worker_state, payload).await
         }
     }
 }
