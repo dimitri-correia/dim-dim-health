@@ -12,8 +12,7 @@ pub async fn handle_weekly_recap_email(
     let preferences_url = format!("{}/settings/email-preferences", worker_state.frontend_url);
     let content = format!(
         "Hey {}.\n\nThis is your weekly recap for DimDim Health!\n\n[PLACEHOLDER: Weekly statistics and progress will be displayed here]\n\nThis week's highlights:\n- Workouts completed: [PLACEHOLDER]\n- Weight change: [PLACEHOLDER]\n- Meals logged: [PLACEHOLDER]\n- Daily average calories: [PLACEHOLDER]\n\nKeep up the great work!\n\nCheers,\nDimDim Health Team\n\n---\nManage your email preferences: {}",
-        data.username,
-        preferences_url
+        data.username, preferences_url
     );
 
     send_email(

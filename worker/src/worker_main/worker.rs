@@ -49,28 +49,25 @@ pub async fn worker_main() {
 
     // Spawn multiple worker tasks
     let mut handles = vec![];
-    
+
     // Spawn the monthly recap queue processor
     let monthly_processor_state = worker_state.clone();
-    let monthly_processor_handle = tokio::spawn(async move {
-        process_monthly_recap_queue(monthly_processor_state).await
-    });
+    let monthly_processor_handle =
+        tokio::spawn(async move { process_monthly_recap_queue(monthly_processor_state).await });
     handles.push(monthly_processor_handle);
-    
+
     // Spawn the weekly recap queue processor
     let weekly_processor_state = worker_state.clone();
-    let weekly_processor_handle = tokio::spawn(async move {
-        process_weekly_recap_queue(weekly_processor_state).await
-    });
+    let weekly_processor_handle =
+        tokio::spawn(async move { process_weekly_recap_queue(weekly_processor_state).await });
     handles.push(weekly_processor_handle);
-    
+
     // Spawn the yearly recap queue processor
     let yearly_processor_state = worker_state.clone();
-    let yearly_processor_handle = tokio::spawn(async move {
-        process_yearly_recap_queue(yearly_processor_state).await
-    });
+    let yearly_processor_handle =
+        tokio::spawn(async move { process_yearly_recap_queue(yearly_processor_state).await });
     handles.push(yearly_processor_handle);
-    
+
     for i in 0..settings.number_workers {
         let worker_id = format!("worker-{i}");
         let worker_state = worker_state.clone();

@@ -1,38 +1,22 @@
 use crate::helpers::{
     app_paths::APP_PATHS,
+    test_data::TestData,
     test_server::{get_app_state, get_test_server},
 };
 use axum::http::{HeaderValue, StatusCode};
-use dimdim_health_api::schemas::auth_schemas::LoginResponse;
-use serde_json::json;
 
 #[tokio::test]
 async fn test_join_public_group_already_member() {
-    let username = "testalreadymember";
-    let email = format!("{username}@dimdim.fr");
-    let password = "securepassword";
+    let td = TestData::new("publicgroupuser");
+    let user = td.save_in_db().await;
 
     let app_test = get_app_state().await;
     let server = get_test_server(app_test.clone()).await;
 
-    let res = server
-        .post(APP_PATHS.create_user)
-        .json(&json!({
-            "user": {
-                "username": username,
-                "email": email,
-                "password": password
-            }
-        }))
-        .await;
-
-    res.assert_status(StatusCode::OK);
-    let login_response = res.json::<LoginResponse>();
-
     let user_id = app_test
         .repositories
         .user_repository
-        .find_by_username(username)
+        .find_by_username(&user.username)
         .await
         .unwrap()
         .unwrap()
@@ -42,8 +26,7 @@ async fn test_join_public_group_already_member() {
         .post(APP_PATHS.join_public_group)
         .add_header(
             "Authorization",
-            HeaderValue::from_str(format!("Token {}", login_response.access_token).as_str())
-                .unwrap(),
+            HeaderValue::from_str(format!("Token {}", user.token).as_str()).unwrap(),
         )
         .await;
 

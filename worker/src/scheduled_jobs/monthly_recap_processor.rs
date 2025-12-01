@@ -1,6 +1,6 @@
 use chrono::{Datelike, Timelike, Utc};
 use entities::{
-    email_preferences, users, EmailType, Job, JobEmail, JobEmailMonthlyRecap, TaskType,
+    EmailType, Job, JobEmail, JobEmailMonthlyRecap, TaskType, email_preferences, users,
 };
 use redis::AsyncCommands;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
@@ -13,10 +13,10 @@ use crate::worker_main::state::WorkerState;
 /// Runs on the 1st of each month at 09:00 AM
 pub async fn process_monthly_recap_queue(worker_state: WorkerState) {
     info!("Starting monthly recap scheduler");
-    
+
     loop {
         let now = Utc::now();
-        
+
         // Check if it's the 1st of the month and around 9 AM (within a 5-minute window)
         if now.day() == 1 && now.hour() == 9 && now.minute() < 5 {
             info!("Triggering monthly recap emails");
@@ -44,26 +44,26 @@ async fn enqueue_monthly_recap_emails(worker_state: &WorkerState) -> anyhow::Res
         .find_also_related(users::Entity)
         .all(&worker_state.db)
         .await?;
-    
+
     let mut count = 0;
-    
+
     for (_pref, user_opt) in users_with_prefs {
         if let Some(user) = user_opt {
             let job_email_monthly_recap = JobEmailMonthlyRecap {
                 email: user.email.clone(),
                 username: user.username.clone(),
             };
-            
+
             let job_email = JobEmail {
                 email_type: EmailType::MonthlyRecap,
                 data: serde_json::to_value(job_email_monthly_recap)?,
             };
-            
+
             let job = Job {
                 task_type: TaskType::Email,
                 data: serde_json::to_value(job_email)?,
             };
-            
+
             // Push to Redis
             let mut redis = worker_state.redis.clone();
             match redis
@@ -80,6 +80,6 @@ async fn enqueue_monthly_recap_emails(worker_state: &WorkerState) -> anyhow::Res
             }
         }
     }
-    
+
     Ok(count)
 }
