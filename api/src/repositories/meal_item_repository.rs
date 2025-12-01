@@ -59,9 +59,7 @@ impl MealItemRepository {
     }
 
     pub async fn delete(&self, id: &Uuid) -> Result<(), sea_orm::DbErr> {
-        meal_item::Entity::delete_by_id(*id)
-            .exec(&self.db)
-            .await?;
+        meal_item::Entity::delete_by_id(*id).exec(&self.db).await?;
         Ok(())
     }
 }

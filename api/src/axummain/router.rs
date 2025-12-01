@@ -56,13 +56,15 @@ pub fn get_main_router(app_state: AppState) -> Router {
                 .level(Level::INFO)
                 .include_headers(false),
         )
-        .on_failure(|error: tower_http::classify::ServerErrorsFailureClass, latency, _span: &_| {
-            tracing::error!(
-                error = %error,
-                latency = ?latency,
-                "Request failed"
-            );
-        });
+        .on_failure(
+            |error: tower_http::classify::ServerErrorsFailureClass, latency, _span: &_| {
+                tracing::error!(
+                    error = %error,
+                    latency = ?latency,
+                    "Request failed"
+                );
+            },
+        );
 
     Router::new()
         // Health check route
