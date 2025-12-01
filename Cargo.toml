@@ -2,6 +2,11 @@
 resolver = "2"
 members = ["api", "worker", "entities", "migration"]
 
+# Release profile optimizations for better performance
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
 
 [workspace.dependencies]
 # Async trait support

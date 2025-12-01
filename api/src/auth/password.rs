@@ -1,39 +1,61 @@
 use bcrypt::{DEFAULT_COST, hash, verify};
 
-pub fn hash_password(password: &str, cost: Option<u32>) -> Result<String, bcrypt::BcryptError> {
+/// Hashes a password using bcrypt asynchronously.
+/// Uses spawn_blocking to avoid blocking the async runtime.
+pub async fn hash_password_async(
+    password: String,
+    cost: Option<u32>,
+) -> Result<String, bcrypt::BcryptError> {
     let cost = cost.unwrap_or(DEFAULT_COST);
-    hash(password, cost)
+    tokio::task::spawn_blocking(move || hash(password, cost))
+        .await
+        .expect("spawn_blocking failed")
 }
 
-pub fn verify_password(password: &str, hash: &str) -> Result<bool, bcrypt::BcryptError> {
-    verify(password, hash)
+/// Verifies a password against a hash asynchronously.
+/// Uses spawn_blocking to avoid blocking the async runtime.
+pub async fn verify_password_async(
+    password: String,
+    password_hash: String,
+) -> Result<bool, bcrypt::BcryptError> {
+    tokio::task::spawn_blocking(move || verify(password, &password_hash))
+        .await
+        .expect("spawn_blocking failed")
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_hash_and_verify_password() {
-        let password = "my_secret_pwd";
+    #[tokio::test]
+    async fn test_hash_and_verify_password() {
+        let password = "my_secret_pwd".to_string();
 
-        let hashed = hash_password(password, Some(4)).expect("failed to hash password");
+        let hashed = hash_password_async(password.clone(), Some(4))
+            .await
+            .expect("failed to hash password");
 
         assert_ne!(password, hashed);
 
-        let is_valid = verify_password(password, &hashed).expect("failed to verify password");
+        let is_valid = verify_password_async(password, hashed)
+            .await
+            .expect("failed to verify password");
 
         assert!(is_valid);
     }
 
-    #[test]
-    fn test_verify_password_incorrect() {
-        let password = "correct_pwd";
-        let wrong = "wrong_pwd";
+    #[tokio::test]
+    async fn test_verify_password_incorrect() {
+        let password = "correct_pwd".to_string();
+        let wrong = "wrong_pwd".to_string();
 
-        let hashed = hash_password(password, Some(4)).expect("failed to hash password");
+        let hashed = hash_password_async(password.clone(), Some(4))
+            .await
+            .expect("failed to hash password");
 
-        let is_valid = verify_password(wrong, &hashed).expect("failed to verify password");
+        let is_valid = verify_password_async(wrong, hashed)
+            .await
+            .expect("failed to verify password");
 
         assert!(!is_valid);
     }
