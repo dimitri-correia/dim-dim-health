@@ -9,7 +9,7 @@ use serde_json::json;
 
 #[tokio::test]
 async fn test_create_user() {
-    let td = TestData::new("testcreateuser");
+    let td = TestData::with_base_name("testcreateuser");
 
     let app_test = get_app_state().await;
     let server = get_test_server(app_test.clone()).await;
@@ -63,7 +63,7 @@ async fn test_create_user() {
 
 #[tokio::test]
 async fn test_create_user_too_small_username() {
-    let td = TestData::new("t");
+    let td = TestData::with_base_name("t");
 
     let app_test = get_app_state().await;
     let server = get_test_server(app_test.clone()).await;
@@ -84,7 +84,7 @@ async fn test_create_user_too_small_username() {
 
 #[tokio::test]
 async fn test_create_user_invalid_email() {
-    let td = TestData::new("testinvalidemail");
+    let td = TestData::with_base_name("testinvalidemail");
     let email = "invalid-email-format";
 
     let app_test = get_app_state().await;
@@ -106,7 +106,7 @@ async fn test_create_user_invalid_email() {
 
 #[tokio::test]
 async fn test_create_user_weak_password() {
-    let td = TestData::new("testweakpassword");
+    let td = TestData::with_base_name("testweakpassword");
     let password = "123";
 
     let app_test = get_app_state().await;
@@ -128,7 +128,7 @@ async fn test_create_user_weak_password() {
 
 #[tokio::test]
 async fn test_create_user_duplicate_username() {
-    let td = TestData::new("duplicateuser");
+    let td = TestData::with_base_name("duplicateuser");
 
     let app_test = get_app_state().await;
     let server = get_test_server(app_test.clone()).await;
