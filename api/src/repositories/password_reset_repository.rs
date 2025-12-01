@@ -28,12 +28,10 @@ impl PasswordResetRepository {
             id: NotSet,
             user_id: Set(*user_id),
             token: Set(token.to_owned()),
-            expires_at: Set(expires_at.to_owned()),
+            expires_at: Set(*expires_at),
             created_at: NotSet,
         };
-        let password_reset_token = password_reset_token.insert(&self.db).await?;
-
-        Ok(password_reset_token)
+        password_reset_token.insert(&self.db).await
     }
 
     pub async fn find_by_token(

@@ -28,15 +28,13 @@ impl UserInfoRepository {
     ) -> Result<user_additional_infos::Model, sea_orm::DbErr> {
         let user_infos = user_additional_infos::ActiveModel {
             user_id: Set(*user_id),
-            birth_date: Set(birth_date.to_owned()),
+            birth_date: Set(*birth_date),
             height_in_cm: Set(height_in_cm),
             gender: Set(gender),
             activity_level: Set(activity_level),
             updated_at: NotSet,
         };
-        let user_infos = user_infos.insert(&self.db).await?;
-
-        Ok(user_infos)
+        user_infos.insert(&self.db).await
     }
 
     pub async fn find_by_user_id(
@@ -72,7 +70,7 @@ impl UserInfoRepository {
         };
 
         if let Some(bd) = birth_date {
-            active.birth_date = Set(bd.to_owned());
+            active.birth_date = Set(*bd);
         }
 
         if let Some(h) = height_in_cm {

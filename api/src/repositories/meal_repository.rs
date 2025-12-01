@@ -38,7 +38,7 @@ impl MealRepository {
     }
 
     pub async fn find_by_id(&self, id: &Uuid) -> Result<Option<meal::Model>, sea_orm::DbErr> {
-        meal::Entity::find_by_id(id.to_owned()).one(&self.db).await
+        meal::Entity::find_by_id(*id).one(&self.db).await
     }
 
     pub async fn find_by_user_id(
@@ -46,7 +46,7 @@ impl MealRepository {
         user_id: &Uuid,
     ) -> Result<Vec<meal::Model>, sea_orm::DbErr> {
         meal::Entity::find()
-            .filter(meal::Column::UserId.eq(user_id.to_owned()))
+            .filter(meal::Column::UserId.eq(*user_id))
             .order_by_desc(meal::Column::Date)
             .all(&self.db)
             .await
@@ -58,7 +58,7 @@ impl MealRepository {
         date: chrono::NaiveDate,
     ) -> Result<Vec<meal::Model>, sea_orm::DbErr> {
         meal::Entity::find()
-            .filter(meal::Column::UserId.eq(user_id.to_owned()))
+            .filter(meal::Column::UserId.eq(*user_id))
             .filter(meal::Column::Date.eq(date))
             .all(&self.db)
             .await
@@ -93,9 +93,7 @@ impl MealRepository {
     }
 
     pub async fn delete(&self, id: &Uuid) -> Result<(), sea_orm::DbErr> {
-        meal::Entity::delete_by_id(id.to_owned())
-            .exec(&self.db)
-            .await?;
+        meal::Entity::delete_by_id(*id).exec(&self.db).await?;
         Ok(())
     }
 }

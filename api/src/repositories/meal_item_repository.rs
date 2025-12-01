@@ -40,7 +40,7 @@ impl MealItemRepository {
         meal_id: &Uuid,
     ) -> Result<Vec<meal_item::Model>, sea_orm::DbErr> {
         meal_item::Entity::find()
-            .filter(meal_item::Column::MealId.eq(meal_id.to_owned()))
+            .filter(meal_item::Column::MealId.eq(*meal_id))
             .all(&self.db)
             .await
     }
@@ -55,13 +55,11 @@ impl MealItemRepository {
             quantity_in_grams: Set(quantity_in_grams),
             ..Default::default()
         };
-        let meal_item = meal_item.update(&self.db).await?;
-
-        Ok(meal_item)
+        meal_item.update(&self.db).await
     }
 
     pub async fn delete(&self, id: &Uuid) -> Result<(), sea_orm::DbErr> {
-        meal_item::Entity::delete_by_id(id.to_owned())
+        meal_item::Entity::delete_by_id(*id)
             .exec(&self.db)
             .await?;
         Ok(())
