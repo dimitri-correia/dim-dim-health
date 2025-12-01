@@ -14,11 +14,5 @@ pub async fn handle_daily_usage_recap_email(
         data.date, data.usage_summary
     );
 
-    send_email(
-        worker_state,
-        data.email.to_string(),
-        subject.to_string(),
-        content.to_string(),
-    )
-    .await
+    send_email(worker_state, data.email, subject, content).await
 }
