@@ -11,17 +11,17 @@ use crate::helpers::test_server::get_app_state;
 ///
 /// ## With a base name (for simpler tests)
 /// ```
-/// let td = TestData::new("testcreateuser");
+/// let td = TestData::with_base_name("testcreateuser");
 /// // Access directly via fields
 /// let username = &td.username; // "testcreateuser_abc12345"
-/// let email = &td.email;       // "testcreateuser_def67890@test.dimdim.fr"
+/// let email = &td.email;       // "testcreateuser_abc12345@test.dimdim.fr"
 /// ```
 ///
 /// ## Without a base name (for tests that need multiple unique values)
 /// ```
 /// let td = TestData::new();
-/// let username1 = td.unique_username("user1"); // "user1_abc12345"
-/// let username2 = td.unique_username("user2"); // "user2_def67890"
+/// let username1 = td.username("user1"); // "user1_abc12345"
+/// let username2 = td.username("user2"); // "user2_abc12345"
 /// ```
 #[allow(dead_code)]
 pub struct TestData {
@@ -45,7 +45,7 @@ impl TestData {
         Self {
             unique_id: unique_id.clone(),
             username: format!("{}_{}", base_name_test, unique_id),
-            email: format!("{}_{}_@test.dimdim.fr", base_name_test, unique_id),
+            email: format!("{}_{}@test.dimdim.fr", base_name_test, unique_id),
             password: "securepassword".to_string(),
             token: format!("{}_{}", base_name_test, unique_id),
         }
@@ -58,22 +58,21 @@ impl TestData {
     }
 
     /// Generate a unique username with the given suffix.
+    /// Uses the instance's unique ID to ensure consistency within the same TestData instance.
     pub fn username(&self, suffix: &str) -> String {
-        format!("{}_{}", suffix, Uuid::new_v4().to_string()[..8].to_string())
+        format!("{}_{}", suffix, self.unique_id)
     }
 
     /// Generate a unique email with the given suffix.
+    /// Uses the instance's unique ID to ensure consistency within the same TestData instance.
     pub fn email(&self, suffix: &str) -> String {
-        format!(
-            "{}_{}@test.dimdim.fr",
-            suffix,
-            Uuid::new_v4().to_string()[..8].to_string()
-        )
+        format!("{}_{}@test.dimdim.fr", suffix, self.unique_id)
     }
 
     /// Generate a unique token with the given suffix.
+    /// Uses the instance's unique ID to ensure consistency within the same TestData instance.
     pub fn token(&self, suffix: &str) -> String {
-        format!("{}_{}", suffix, Uuid::new_v4().to_string()[..8].to_string())
+        format!("{}_{}", suffix, self.unique_id)
     }
 
     /// Create a user in the database using the default username, email, and password.
