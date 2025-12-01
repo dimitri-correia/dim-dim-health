@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use entities::{
     exercise_muscle, gym_exercise,
     sea_orm_active_enums::{MuscleEnum, MuscleRoleEnum},
@@ -19,6 +21,50 @@ pub struct GymExerciseRepository {
 impl GymExerciseRepository {
     pub fn new(db: DatabaseConnection) -> Self {
         Self { db }
+    }
+
+    /// Helper function to convert exercises and their muscles into responses
+    fn build_responses(
+        exercises: Vec<gym_exercise::Model>,
+        all_muscles: Vec<exercise_muscle::Model>,
+    ) -> Vec<GymExerciseResponse> {
+        // Group muscles by exercise_id
+        let mut muscles_by_exercise: HashMap<Uuid, Vec<exercise_muscle::Model>> = HashMap::new();
+        for muscle in all_muscles {
+            muscles_by_exercise
+                .entry(muscle.exercise_id)
+                .or_default()
+                .push(muscle);
+        }
+
+        exercises
+            .into_iter()
+            .map(|exercise| {
+                let muscles = muscles_by_exercise
+                    .get(&exercise.id)
+                    .cloned()
+                    .unwrap_or_default();
+
+                let primary_muscles: Vec<MuscleEnum> = muscles
+                    .iter()
+                    .filter(|m| m.role == MuscleRoleEnum::Primary)
+                    .map(|m| m.muscle.clone())
+                    .collect();
+                let secondary_muscles: Vec<MuscleEnum> = muscles
+                    .iter()
+                    .filter(|m| m.role == MuscleRoleEnum::Secondary)
+                    .map(|m| m.muscle.clone())
+                    .collect();
+
+                GymExerciseResponse {
+                    id: exercise.id,
+                    name: exercise.name,
+                    description: exercise.description,
+                    primary_muscles,
+                    secondary_muscles,
+                }
+            })
+            .collect()
     }
 
     pub async fn create(
@@ -97,24 +143,8 @@ impl GymExerciseRepository {
                     .all(&self.db)
                     .await?;
 
-                let primary_muscles: Vec<MuscleEnum> = muscles
-                    .iter()
-                    .filter(|m| m.role == MuscleRoleEnum::Primary)
-                    .map(|m| m.muscle.clone())
-                    .collect();
-                let secondary_muscles: Vec<MuscleEnum> = muscles
-                    .iter()
-                    .filter(|m| m.role == MuscleRoleEnum::Secondary)
-                    .map(|m| m.muscle.clone())
-                    .collect();
-
-                Ok(Some(GymExerciseResponse {
-                    id: exercise.id,
-                    name: exercise.name,
-                    description: exercise.description,
-                    primary_muscles,
-                    secondary_muscles,
-                }))
+                let responses = Self::build_responses(vec![exercise], muscles);
+                Ok(responses.into_iter().next())
             }
             None => Ok(None),
         }
@@ -123,34 +153,18 @@ impl GymExerciseRepository {
     pub async fn find_all(&self) -> Result<Vec<GymExerciseResponse>, sea_orm::DbErr> {
         let exercises = gym_exercise::Entity::find().all(&self.db).await?;
 
-        let mut responses = Vec::new();
-        for exercise in exercises {
-            let muscles = exercise_muscle::Entity::find()
-                .filter(exercise_muscle::Column::ExerciseId.eq(exercise.id))
-                .all(&self.db)
-                .await?;
-
-            let primary_muscles: Vec<MuscleEnum> = muscles
-                .iter()
-                .filter(|m| m.role == MuscleRoleEnum::Primary)
-                .map(|m| m.muscle.clone())
-                .collect();
-            let secondary_muscles: Vec<MuscleEnum> = muscles
-                .iter()
-                .filter(|m| m.role == MuscleRoleEnum::Secondary)
-                .map(|m| m.muscle.clone())
-                .collect();
-
-            responses.push(GymExerciseResponse {
-                id: exercise.id,
-                name: exercise.name,
-                description: exercise.description,
-                primary_muscles,
-                secondary_muscles,
-            });
+        if exercises.is_empty() {
+            return Ok(Vec::new());
         }
 
-        Ok(responses)
+        // Fetch all muscles for all exercises in a single query
+        let exercise_ids: Vec<Uuid> = exercises.iter().map(|e| e.id).collect();
+        let all_muscles = exercise_muscle::Entity::find()
+            .filter(exercise_muscle::Column::ExerciseId.is_in(exercise_ids))
+            .all(&self.db)
+            .await?;
+
+        Ok(Self::build_responses(exercises, all_muscles))
     }
 
     pub async fn find_by_muscle(
@@ -163,21 +177,28 @@ impl GymExerciseRepository {
             .all(&self.db)
             .await?;
 
-        let exercise_ids: Vec<Uuid> = exercise_muscles.iter().map(|em| em.exercise_id).collect();
-
         // Get unique exercise ids
-        let mut unique_ids: Vec<Uuid> = exercise_ids.clone();
-        unique_ids.sort();
-        unique_ids.dedup();
+        let mut exercise_ids: Vec<Uuid> = exercise_muscles.iter().map(|em| em.exercise_id).collect();
+        exercise_ids.sort();
+        exercise_ids.dedup();
 
-        let mut responses = Vec::new();
-        for exercise_id in unique_ids {
-            if let Some(response) = self.find_by_id_with_muscles(&exercise_id).await? {
-                responses.push(response);
-            }
+        if exercise_ids.is_empty() {
+            return Ok(Vec::new());
         }
 
-        Ok(responses)
+        // Fetch all exercises in a single query
+        let exercises = gym_exercise::Entity::find()
+            .filter(gym_exercise::Column::Id.is_in(exercise_ids.clone()))
+            .all(&self.db)
+            .await?;
+
+        // Fetch all muscles for these exercises
+        let all_muscles = exercise_muscle::Entity::find()
+            .filter(exercise_muscle::Column::ExerciseId.is_in(exercise_ids))
+            .all(&self.db)
+            .await?;
+
+        Ok(Self::build_responses(exercises, all_muscles))
     }
 
     pub async fn find_by_name(&self, name: &str) -> Result<Vec<GymExerciseResponse>, sea_orm::DbErr> {
@@ -186,34 +207,18 @@ impl GymExerciseRepository {
             .all(&self.db)
             .await?;
 
-        let mut responses = Vec::new();
-        for exercise in exercises {
-            let muscles = exercise_muscle::Entity::find()
-                .filter(exercise_muscle::Column::ExerciseId.eq(exercise.id))
-                .all(&self.db)
-                .await?;
-
-            let primary_muscles: Vec<MuscleEnum> = muscles
-                .iter()
-                .filter(|m| m.role == MuscleRoleEnum::Primary)
-                .map(|m| m.muscle.clone())
-                .collect();
-            let secondary_muscles: Vec<MuscleEnum> = muscles
-                .iter()
-                .filter(|m| m.role == MuscleRoleEnum::Secondary)
-                .map(|m| m.muscle.clone())
-                .collect();
-
-            responses.push(GymExerciseResponse {
-                id: exercise.id,
-                name: exercise.name,
-                description: exercise.description,
-                primary_muscles,
-                secondary_muscles,
-            });
+        if exercises.is_empty() {
+            return Ok(Vec::new());
         }
 
-        Ok(responses)
+        // Fetch all muscles for all matched exercises in a single query
+        let exercise_ids: Vec<Uuid> = exercises.iter().map(|e| e.id).collect();
+        let all_muscles = exercise_muscle::Entity::find()
+            .filter(exercise_muscle::Column::ExerciseId.is_in(exercise_ids))
+            .all(&self.db)
+            .await?;
+
+        Ok(Self::build_responses(exercises, all_muscles))
     }
 
     pub async fn update(
@@ -286,24 +291,8 @@ impl GymExerciseRepository {
             .all(&self.db)
             .await?;
 
-        let final_primary_muscles: Vec<MuscleEnum> = muscles
-            .iter()
-            .filter(|m| m.role == MuscleRoleEnum::Primary)
-            .map(|m| m.muscle.clone())
-            .collect();
-        let final_secondary_muscles: Vec<MuscleEnum> = muscles
-            .iter()
-            .filter(|m| m.role == MuscleRoleEnum::Secondary)
-            .map(|m| m.muscle.clone())
-            .collect();
-
-        Ok(GymExerciseResponse {
-            id: exercise.id,
-            name: exercise.name,
-            description: exercise.description,
-            primary_muscles: final_primary_muscles,
-            secondary_muscles: final_secondary_muscles,
-        })
+        let responses = Self::build_responses(vec![exercise], muscles);
+        Ok(responses.into_iter().next().unwrap())
     }
 
     pub async fn delete(&self, id: &Uuid) -> Result<(), sea_orm::DbErr> {
