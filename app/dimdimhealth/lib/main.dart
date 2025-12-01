@@ -12,6 +12,7 @@ import 'screens/verify_email_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/weight_screen.dart';
 import 'screens/meals_screen.dart';
+import 'screens/gym_screen.dart';
 import 'screens/manage_watchers_screen.dart';
 import 'screens/watching_screen.dart';
 import 'screens/settings_screen.dart';
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
           '/home': (context) => const AuthGuard(child: HomeScreen()),
           '/weight': (context) => const AuthGuard(child: WeightScreen()),
           '/meals': (context) => const AuthGuard(child: MealsScreen()),
+          '/gym': (context) => const AuthGuard(child: GymScreen()),
           '/manage-watchers': (context) =>
               const AuthGuard(child: ManageWatchersScreen()),
           '/watching': (context) => const AuthGuard(child: WatchingScreen()),

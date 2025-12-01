@@ -106,6 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               title: 'Workouts',
                               subtitle: 'Plan workouts',
                               color: AppConfig.goldColor,
+                              route: '/gym',
                             ),
                             _buildActionCard(
                               context,

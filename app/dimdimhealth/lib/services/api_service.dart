@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/food_item.dart';
+import '../models/gym.dart';
 import '../models/meal.dart';
 import '../models/user.dart';
 import '../models/watch_permission.dart';
@@ -1080,6 +1081,357 @@ class ApiService {
     } else {
       throw ApiException(
         'Failed to delete meal item',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  // Gym Exercise API methods
+
+  /// Get all gym exercises, optionally filtered by muscle or name
+  Future<List<GymExercise>> getGymExercises(
+    String accessToken, {
+    String? muscle,
+    String? name,
+  }) async {
+    String url = '$baseUrl/api/gym/exercises';
+    final queryParams = <String, String>{};
+    if (muscle != null) queryParams['muscle'] = muscle;
+    if (name != null) queryParams['name'] = name;
+    if (queryParams.isNotEmpty) {
+      url += '?${Uri(queryParameters: queryParams).query}';
+    }
+
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => GymExercise.fromJson(json)).toList();
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else {
+      throw ApiException(
+        'Failed to fetch gym exercises',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Get a specific gym exercise by ID
+  Future<GymExercise> getGymExercise(String accessToken, String id) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/gym/exercises/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return GymExercise.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Exercise not found', statusCode: 404);
+    } else {
+      throw ApiException(
+        'Failed to fetch gym exercise',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Create a new gym exercise
+  Future<GymExercise> createGymExercise({
+    required String accessToken,
+    required String name,
+    String? description,
+    required List<String> primaryMuscles,
+    required List<String> secondaryMuscles,
+  }) async {
+    final request = CreateGymExerciseRequest(
+      name: name,
+      description: description,
+      primaryMuscles: primaryMuscles,
+      secondaryMuscles: secondaryMuscles,
+    );
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/gym/exercises'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return GymExercise.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
+    } else {
+      throw ApiException(
+        'Failed to create gym exercise',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Delete a gym exercise
+  Future<void> deleteGymExercise({
+    required String accessToken,
+    required String id,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/api/gym/exercises/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 204) {
+      return;
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 403) {
+      throw ApiException('Not allowed to delete this exercise', statusCode: 403);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Exercise not found', statusCode: 404);
+    } else {
+      throw ApiException(
+        'Failed to delete gym exercise',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  // Gym Session API methods
+
+  /// Get all gym sessions, optionally filtered by date
+  Future<List<GymSession>> getGymSessions(
+    String accessToken, {
+    DateTime? date,
+  }) async {
+    String url = '$baseUrl/api/gym/sessions';
+    if (date != null) {
+      url += '?date=${_formatDate(date)}';
+    }
+
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => GymSession.fromJson(json)).toList();
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else {
+      throw ApiException(
+        'Failed to fetch gym sessions',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Get a specific gym session by ID
+  Future<GymSession> getGymSession(String accessToken, String id) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/gym/sessions/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return GymSession.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 403) {
+      throw ApiException('Not allowed to view this session', statusCode: 403);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Session not found', statusCode: 404);
+    } else {
+      throw ApiException(
+        'Failed to fetch gym session',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Create a new gym session
+  Future<GymSession> createGymSession({
+    required String accessToken,
+    required DateTime date,
+  }) async {
+    final request = CreateGymSessionRequest(date: _formatDate(date));
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/gym/sessions'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return GymSession.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
+    } else {
+      throw ApiException(
+        'Failed to create gym session',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Delete a gym session
+  Future<void> deleteGymSession({
+    required String accessToken,
+    required String id,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/api/gym/sessions/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 204) {
+      return;
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 403) {
+      throw ApiException('Not allowed to delete this session', statusCode: 403);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Session not found', statusCode: 404);
+    } else {
+      throw ApiException(
+        'Failed to delete gym session',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  // Gym Set API methods
+
+  /// Get all sets for a gym session
+  Future<List<GymSet>> getGymSets(String accessToken, String sessionId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/gym/sessions/$sessionId/sets'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => GymSet.fromJson(json)).toList();
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 403) {
+      throw ApiException('Not allowed to view this session', statusCode: 403);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Session not found', statusCode: 404);
+    } else {
+      throw ApiException(
+        'Failed to fetch gym sets',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Create a new gym set
+  Future<GymSet> createGymSet({
+    required String accessToken,
+    required String sessionId,
+    required String exerciseId,
+    required int setNumber,
+    required int repetitions,
+    required double weightKg,
+  }) async {
+    final request = CreateGymSetRequest(
+      exerciseId: exerciseId,
+      setNumber: setNumber,
+      repetitions: repetitions,
+      weightKg: weightKg.toStringAsFixed(2),
+    );
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/gym/sessions/$sessionId/sets'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return GymSet.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 403) {
+      throw ApiException('Not allowed to modify this session', statusCode: 403);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Session not found', statusCode: 404);
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
+    } else {
+      throw ApiException(
+        'Failed to create gym set',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Delete a gym set
+  Future<void> deleteGymSet({
+    required String accessToken,
+    required String sessionId,
+    required String setId,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/api/gym/sessions/$sessionId/sets/$setId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 204) {
+      return;
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 403) {
+      throw ApiException('Not allowed to modify this session', statusCode: 403);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Session or set not found', statusCode: 404);
+    } else {
+      throw ApiException(
+        'Failed to delete gym set',
         statusCode: response.statusCode,
       );
     }
