@@ -4,6 +4,7 @@ import '../models/food_item.dart';
 import '../models/gym.dart';
 import '../models/meal.dart';
 import '../models/user.dart';
+import '../models/user_info.dart';
 import '../models/watch_permission.dart';
 import '../models/weight.dart';
 import '../utils/app_config.dart';
@@ -1432,6 +1433,121 @@ class ApiService {
     } else {
       throw ApiException(
         'Failed to delete gym set',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  // User Additional Info API methods
+
+  /// Get user additional info
+  Future<UserAdditionalInfo?> getUserInfo(String accessToken) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/user/info'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return UserAdditionalInfo.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 404) {
+      return null;
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else {
+      throw ApiException(
+        'Failed to fetch user info',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Create user additional info
+  Future<UserAdditionalInfo> createUserInfo({
+    required String accessToken,
+    required DateTime birthDate,
+    required int heightInCm,
+    required Gender gender,
+    required double activityLevel,
+  }) async {
+    final request = CreateUserInfoRequest(
+      birthDate: _formatDate(birthDate),
+      heightInCm: heightInCm,
+      gender: gender,
+      activityLevel: activityLevel.toStringAsFixed(3),
+    );
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/user/info'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return UserAdditionalInfo.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 409) {
+      throw ApiException(
+        'User info already exists. Use update instead.',
+        statusCode: 409,
+      );
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
+    } else {
+      throw ApiException(
+        'Failed to create user info',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Update user additional info
+  Future<UserAdditionalInfo> updateUserInfo({
+    required String accessToken,
+    DateTime? birthDate,
+    int? heightInCm,
+    Gender? gender,
+    double? activityLevel,
+  }) async {
+    final Map<String, dynamic> body = {};
+    if (birthDate != null) body['birth_date'] = _formatDate(birthDate);
+    if (heightInCm != null) body['height_in_cm'] = heightInCm;
+    if (gender != null) body['gender'] = gender.toJson();
+    if (activityLevel != null) {
+      body['activity_level'] = activityLevel.toStringAsFixed(3);
+    }
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/api/user/info'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      return UserAdditionalInfo.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 404) {
+      throw ApiException(
+        'User info not found. Create it first.',
+        statusCode: 404,
+      );
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
+    } else {
+      throw ApiException(
+        'Failed to update user info',
         statusCode: response.statusCode,
       );
     }

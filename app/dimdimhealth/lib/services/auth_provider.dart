@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/user.dart';
+import '../models/user_info.dart';
 import '../services/api_service.dart';
 
 class AuthProvider with ChangeNotifier {
@@ -13,6 +14,7 @@ class AuthProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   List<String> _userGroups = [];
+  UserAdditionalInfo? _userInfo;
 
   User? get user => _user;
   String? get accessToken => _accessToken;
@@ -21,6 +23,7 @@ class AuthProvider with ChangeNotifier {
   String? get error => _error;
   List<String> get userGroups => _userGroups;
   bool get isInPublicGroup => _userGroups.contains('PublicGroup');
+  UserAdditionalInfo? get userInfo => _userInfo;
 
   Future<void> loadSavedAuth() async {
     try {
@@ -367,6 +370,100 @@ class AuthProvider with ChangeNotifier {
     try {
       await _apiService.leavePublicGroup(_accessToken!);
       await fetchUserGroups();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Network error. Please check your connection.';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // User Additional Info methods
+  Future<bool> fetchUserInfo() async {
+    if (_accessToken == null) {
+      return false;
+    }
+
+    try {
+      _userInfo = await _apiService.getUserInfo(_accessToken!);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      // If fetch fails, don't update anything
+      return false;
+    }
+  }
+
+  Future<bool> createUserInfo({
+    required DateTime birthDate,
+    required int heightInCm,
+    required Gender gender,
+    required double activityLevel,
+  }) async {
+    if (_accessToken == null) {
+      _error = 'Not authenticated';
+      return false;
+    }
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _userInfo = await _apiService.createUserInfo(
+        accessToken: _accessToken!,
+        birthDate: birthDate,
+        heightInCm: heightInCm,
+        gender: gender,
+        activityLevel: activityLevel,
+      );
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Network error. Please check your connection.';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateUserInfo({
+    DateTime? birthDate,
+    int? heightInCm,
+    Gender? gender,
+    double? activityLevel,
+  }) async {
+    if (_accessToken == null) {
+      _error = 'Not authenticated';
+      return false;
+    }
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _userInfo = await _apiService.updateUserInfo(
+        accessToken: _accessToken!,
+        birthDate: birthDate,
+        heightInCm: heightInCm,
+        gender: gender,
+        activityLevel: activityLevel,
+      );
       _isLoading = false;
       notifyListeners();
       return true;
