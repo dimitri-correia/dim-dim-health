@@ -3,7 +3,7 @@ use crate::{
     auth::{
         jwt::generate_token,
         middleware::RequireAuth,
-        password::{hash_password, verify_password},
+        password::{hash_password_async, verify_password_async},
         refresh_token::generate_refresh_token,
     },
     axummain::state::AppState,
@@ -55,7 +55,8 @@ pub async fn register(
         return Err(StatusCode::CONFLICT.into_response());
     }
 
-    let password_hash = hash_password(&payload.user.password, None)
+    let password_hash = hash_password_async(payload.user.password.clone(), None)
+        .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
     common_register_logic(
@@ -86,7 +87,8 @@ pub async fn register_guest(
     };
 
     let email = format!("{username}{GUEST_EMAIL_DOMAIN}");
-    let password_hash = hash_password("password", Some(4))
+    let password_hash = hash_password_async("password".to_string(), Some(4))
+        .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
     common_register_logic(state, username, email, password_hash, true)
@@ -213,8 +215,10 @@ pub async fn login(
             StatusCode::UNAUTHORIZED.into_response()
         })?;
 
-    let password_valid = verify_password(&payload.user.password, &user.password_hash)
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+    let password_valid =
+        verify_password_async(payload.user.password.clone(), user.password_hash.clone())
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
     if !password_valid {
         info!("Invalid password attempt for email: {}", payload.user.email);
@@ -455,7 +459,8 @@ pub async fn reset_password(
         return Err(StatusCode::GONE.into_response());
     }
 
-    let new_password_hash = hash_password(&payload.new_password, None)
+    let new_password_hash = hash_password_async(payload.new_password.clone(), None)
+        .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
     debug!("Updating password for user {}", reset_token.user_id);
@@ -479,7 +484,8 @@ pub async fn reset_password(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
     let refresh_token = generate_refresh_token();
-    let refresh_token_hash = hash_password(&refresh_token, Some(4))
+    let refresh_token_hash = hash_password_async(refresh_token.clone(), Some(4))
+        .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
     state

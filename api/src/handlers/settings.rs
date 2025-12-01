@@ -1,7 +1,7 @@
 use crate::{
     auth::{
         middleware::RequireAuth,
-        password::{hash_password, verify_password},
+        password::{hash_password_async, verify_password_async},
     },
     axummain::state::AppState,
     schemas::settings_schemas::*,
@@ -80,8 +80,12 @@ pub async fn update_settings(
     // Update password if provided
     if let Some(ref passwords) = payload.passwords {
         // Verify current password
-        let password_valid = verify_password(&passwords.current_password, &user.password_hash)
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
+        let password_valid = verify_password_async(
+            passwords.current_password.clone(),
+            user.password_hash.clone(),
+        )
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
         if !password_valid {
             return Err((
@@ -92,7 +96,8 @@ pub async fn update_settings(
         }
 
         // Hash and update new password
-        let new_password_hash = hash_password(&passwords.new_password, None)
+        let new_password_hash = hash_password_async(passwords.new_password.clone(), None)
+            .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?;
 
         debug!("Updating password for user {}", user.id);

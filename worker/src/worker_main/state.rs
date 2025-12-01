@@ -59,7 +59,7 @@ impl WorkerState {
 async fn get_db_pool(database_url: &str) -> Result<DatabaseConnection, sea_orm::DbErr> {
     info!("Connecting to the database at {}", database_url);
     let mut opt = ConnectOptions::new(database_url);
-    opt.max_connections(3)
+    opt.max_connections(10)
         .min_connections(2)
         .sqlx_logging(true)
         .sqlx_logging_level(log::LevelFilter::Debug);
