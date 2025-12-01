@@ -677,7 +677,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Text(
                       _selectedBirthDate != null
-                          ? _formatDate(_selectedBirthDate!.toIso8601String())
+                          ? _formatDateTime(_selectedBirthDate!)
                           : 'Select birth date',
                       style: TextStyle(
                         color: _selectedBirthDate != null
@@ -894,12 +894,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _formatDate(String dateStr) {
     try {
       final date = DateTime.parse(dateStr);
-      final day = date.day.toString().padLeft(2, '0');
-      final month = date.month.toString().padLeft(2, '0');
-      final year = date.year.toString();
-      return '$day/$month/$year';
+      return _formatDateTime(date);
     } catch (e) {
       return 'Unknown date';
     }
+  }
+
+  String _formatDateTime(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final year = date.year.toString();
+    return '$day/$month/$year';
   }
 }

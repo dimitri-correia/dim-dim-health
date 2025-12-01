@@ -27,6 +27,11 @@ class ApiService {
     return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
+  /// Formats an activity level for API calls with consistent precision
+  String _formatActivityLevel(double activityLevel) {
+    return activityLevel.toStringAsFixed(3);
+  }
+
   Future<LoginResponse> register({
     required String username,
     required String email,
@@ -1476,7 +1481,7 @@ class ApiService {
       birthDate: _formatDate(birthDate),
       heightInCm: heightInCm,
       gender: gender,
-      activityLevel: activityLevel.toStringAsFixed(3),
+      activityLevel: _formatActivityLevel(activityLevel),
     );
 
     final response = await http.post(
@@ -1521,7 +1526,7 @@ class ApiService {
     if (heightInCm != null) body['height_in_cm'] = heightInCm;
     if (gender != null) body['gender'] = gender.toJson();
     if (activityLevel != null) {
-      body['activity_level'] = activityLevel.toStringAsFixed(3);
+      body['activity_level'] = _formatActivityLevel(activityLevel);
     }
 
     final response = await http.put(
