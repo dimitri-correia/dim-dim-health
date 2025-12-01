@@ -152,3 +152,11 @@ The project consists of three main components:
 ### Frontend
 - **Framework**: Flutter
 - **Platforms**: Web, Android, iOS
+
+
+
+
+## TODO
+- what to do with item ownership (food item, exercice)
+- weekly streak
+- perfs ??
