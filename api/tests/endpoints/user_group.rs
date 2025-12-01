@@ -7,37 +7,30 @@ use axum::http::{HeaderValue, StatusCode};
 
 #[tokio::test]
 async fn test_join_public_group_already_member() {
-    let td = TestData::new("publicgroupuser");
-    let user = td.save_in_db().await;
+    let td = TestData::with_base_name("publicgroupuser");
+    let (user, access_token) = td.create_user_with_token().await;
 
     let app_test = get_app_state().await;
     let server = get_test_server(app_test.clone()).await;
 
-    let user_id = app_test
-        .repositories
-        .user_repository
-        .find_by_username(&user.username)
-        .await
-        .unwrap()
-        .unwrap()
-        .id;
+    let user_id = user.id;
 
     let res = server
         .post(APP_PATHS.join_public_group)
         .add_header(
             "Authorization",
-            HeaderValue::from_str(format!("Token {}", user.token).as_str()).unwrap(),
+            HeaderValue::from_str(format!("Token {}", access_token).as_str()).unwrap(),
         )
         .await;
 
     res.assert_status(StatusCode::OK);
 
-    // Try to join again
+    // Try to join again (should still be OK - idempotent)
     let res = server
         .post(APP_PATHS.join_public_group)
         .add_header(
             "Authorization",
-            HeaderValue::from_str(format!("Token {}", login_response.access_token).as_str())
+            HeaderValue::from_str(format!("Token {}", access_token).as_str())
                 .unwrap(),
         )
         .await;
@@ -48,7 +41,7 @@ async fn test_join_public_group_already_member() {
         .get(APP_PATHS.get_public_group_members)
         .add_header(
             "Authorization",
-            HeaderValue::from_str(format!("Token {}", login_response.access_token).as_str())
+            HeaderValue::from_str(format!("Token {}", access_token).as_str())
                 .unwrap(),
         )
         .await;
@@ -66,10 +59,10 @@ async fn test_join_public_group_already_member() {
     );
 
     let res = server
-        .post(APP_PATHS.get_user_groups)
+        .get(APP_PATHS.get_user_groups)
         .add_header(
             "Authorization",
-            HeaderValue::from_str(format!("Token {}", login_response.access_token).as_str())
+            HeaderValue::from_str(format!("Token {}", access_token).as_str())
                 .unwrap(),
         )
         .await;
@@ -86,7 +79,7 @@ async fn test_join_public_group_already_member() {
         .post(APP_PATHS.leave_public_group)
         .add_header(
             "Authorization",
-            HeaderValue::from_str(format!("Token {}", login_response.access_token).as_str())
+            HeaderValue::from_str(format!("Token {}", access_token).as_str())
                 .unwrap(),
         )
         .await;

@@ -4,7 +4,7 @@ use dimdim_health_api::axummain::{router, state};
 
 static TEST_APP_STATE: OnceCell<state::AppState> = OnceCell::new();
 static DB_URL: &str = "postgres://test:test-db@localhost:5433/dimdimhealthtest";
-static REDIS_URL: &str = "redis://localhost:6379";
+static REDIS_URL: &str = "redis://localhost:6380";
 
 use entities::env_loader::Settings;
 use sea_orm::{Database, DbErr};
@@ -13,7 +13,7 @@ async fn init_test_db() {
     let script_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .unwrap()
-        .join("scripts/test-db/run_test_db.sh");
+        .join("scripts/test-env.sh");
 
     let status = tokio::process::Command::new(script_path)
         .current_dir(
