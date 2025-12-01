@@ -28,6 +28,7 @@ use crate::handlers::settings::update_settings;
 use crate::handlers::user_group::{
     get_public_group_members, get_user_groups, join_public_group, leave_public_group,
 };
+use crate::handlers::user_info::{create_user_info, get_user_info, update_user_info};
 use crate::handlers::user_watch_permissions::{
     get_watchers, get_watching, grant_watch_permission, revoke_watch_permission, search_users,
 };
@@ -80,6 +81,10 @@ pub fn get_main_router(app_state: AppState) -> Router {
         .route("/api/auth/reset-password", post(reset_password))
         .route("/api/auth/refresh-token", post(refresh_token))
         .route("/api/auth/logout", post(logout))
+        // User additional info routes
+        .route("/api/user/info", get(get_user_info))
+        .route("/api/user/info", post(create_user_info))
+        .route("/api/user/info", put(update_user_info))
         // User weight routes
         .route("/api/user/weights", post(create_user_weight))
         .route("/api/user/weights", get(get_user_weights))
