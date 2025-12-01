@@ -12,8 +12,7 @@ pub async fn handle_yearly_recap_email(
     let preferences_url = format!("{}/settings/email-preferences", worker_state.frontend_url);
     let content = format!(
         "Hey {}.\n\nHappy New Year! 🎉 This is your yearly recap for DimDim Health!\n\n[PLACEHOLDER: Yearly statistics and progress will be displayed here]\n\nYour achievements this year:\n- Total workouts completed: [PLACEHOLDER]\n- Total weight change: [PLACEHOLDER]\n- Total meals logged: [PLACEHOLDER]\n- Most active month: [PLACEHOLDER]\n- Longest streak: [PLACEHOLDER]\n\nCongratulations on another year of health progress!\n\nCheers,\nDimDim Health Team\n\n---\nManage your email preferences: {}",
-        data.username,
-        preferences_url
+        data.username, preferences_url
     );
 
     send_email(

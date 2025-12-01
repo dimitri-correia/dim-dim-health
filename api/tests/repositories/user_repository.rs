@@ -1,16 +1,17 @@
-use crate::helpers::test_server::get_app_state;
+use crate::helpers::{test_data::TestData, test_server::get_app_state};
 use uuid::Uuid;
 
 #[tokio::test]
 async fn test_user_repo_create_and_get() {
-    let username = "testrepocreateuser";
-    let email = format!("{username}@test.fr");
+    let td = TestData::new();
+    let username = td.username("testrepocreateuser");
+    let email = td.email("testrepocreateuser");
     let password_hash = "securepassword";
 
     let user_repo = &get_app_state().await.repositories.user_repository;
 
     let res = user_repo
-        .create(username, &email, password_hash, false)
+        .create(&username, &email, password_hash, false)
         .await
         .unwrap();
     assert_eq!(res.username, username);
@@ -22,7 +23,7 @@ async fn test_user_repo_create_and_get() {
     let user_id = res.id;
 
     let res = user_repo
-        .create(username, &email, password_hash, false)
+        .create(&username, &email, password_hash, false)
         .await;
     assert!(res.is_err());
 
@@ -40,7 +41,7 @@ async fn test_user_repo_create_and_get() {
     let res = user_repo.find_by_email("notexisitingemail").await.unwrap();
     assert!(res.is_none());
 
-    let res = user_repo.find_by_username(username).await.unwrap();
+    let res = user_repo.find_by_username(&username).await.unwrap();
     assert!(res.is_some());
     assert_eq!(res.unwrap().email, email);
 
@@ -51,7 +52,7 @@ async fn test_user_repo_create_and_get() {
     assert!(res.is_none());
 
     let res = user_repo
-        .user_already_exists(&email, username)
+        .user_already_exists(&email, &username)
         .await
         .unwrap();
     assert!(res);
@@ -63,7 +64,7 @@ async fn test_user_repo_create_and_get() {
     assert!(res);
 
     let res = user_repo
-        .user_already_exists("notexistingemail", username)
+        .user_already_exists("notexistingemail", &username)
         .await
         .unwrap();
     assert!(res);
@@ -87,13 +88,14 @@ async fn test_user_repo_create_and_get() {
 
 #[tokio::test]
 async fn test_user_repo_create_and_update() {
-    let username = "testrepoupdateuser";
-    let email = format!("{username}@dimdim.fr");
+    let td = TestData::new();
+    let username = td.username("testrepoupdateuser");
+    let email = td.email("testrepoupdateuser");
     let password_hash = "securepassword";
 
     let user_repo = &get_app_state().await.repositories.user_repository;
     let res = user_repo
-        .create(username, &email, password_hash, false)
+        .create(&username, &email, password_hash, false)
         .await
         .unwrap();
 
@@ -102,9 +104,9 @@ async fn test_user_repo_create_and_update() {
     let res = user_repo.update(&user_id, None, None).await;
     assert!(res.is_err());
 
-    let new_username = "updatedusername";
+    let new_username = td.username("updatedusername");
     let res = user_repo
-        .update(&user_id, Some(new_username), None)
+        .update(&user_id, Some(&new_username), None)
         .await
         .unwrap();
     assert_eq!(res.username, new_username);
@@ -114,7 +116,7 @@ async fn test_user_repo_create_and_update() {
     assert_eq!(res.username, new_username);
     assert_eq!(res.email, email);
 
-    let new_email = format!("{new_username}@dimdim.fr");
+    let new_email = td.email("updatedusername");
     let res = user_repo
         .update(&user_id, None, Some(&new_email))
         .await
@@ -126,10 +128,10 @@ async fn test_user_repo_create_and_update() {
     assert_eq!(res.username, new_username);
     assert_eq!(res.email, new_email);
 
-    let final_username = "finalusername";
-    let final_email = format!("{final_username}@dimdim.fr");
+    let final_username = td.username("finalusername");
+    let final_email = td.email("finalusername");
     let res = user_repo
-        .update(&user_id, Some(final_username), Some(&final_email))
+        .update(&user_id, Some(&final_username), Some(&final_email))
         .await
         .unwrap();
     assert_eq!(res.username, final_username);
@@ -147,13 +149,19 @@ async fn test_user_repo_create_and_update() {
 
 #[tokio::test]
 async fn test_sql_injection() {
-    let email: &str = "attacker@attack.fr'); DROP TABLE users; --";
-    let username = "test_sql_injection";
+    let td = TestData::new();
+    // Intentionally malformed email to test SQL injection protection
+    // The database should properly escape this and store it as literal text
+    let email = format!(
+        "{}_attack'); DROP TABLE users; --@attack.fr",
+        td.username("attacker")
+    );
+    let username = td.username("test_sql_injection");
     let password_hash = "password";
 
     let user_repo = &get_app_state().await.repositories.user_repository;
     let res = user_repo
-        .create(username, email, password_hash, false)
+        .create(&username, &email, password_hash, false)
         .await
         .unwrap();
 
@@ -167,14 +175,15 @@ async fn test_sql_injection() {
 
 #[tokio::test]
 async fn test_user_repo_create_guest_user() {
-    let username = "testguestuser";
-    let email = format!("{username}@test.fr");
+    let td = TestData::new();
+    let username = td.username("testguestuser");
+    let email = td.email("testguestuser");
     let password_hash = "securepassword";
 
     let user_repo = &get_app_state().await.repositories.user_repository;
 
     let res = user_repo
-        .create(username, &email, password_hash, true)
+        .create(&username, &email, password_hash, true)
         .await
         .unwrap();
     assert_eq!(res.username, username);
@@ -194,14 +203,15 @@ async fn test_user_repo_create_guest_user() {
 
 #[tokio::test]
 async fn test_user_repo_create_regular_user() {
-    let username = "testregularuser";
-    let email = format!("{username}@test.fr");
+    let td = TestData::new();
+    let username = td.username("testregularuser");
+    let email = td.email("testregularuser");
     let password_hash = "securepassword";
 
     let user_repo = &get_app_state().await.repositories.user_repository;
 
     let res = user_repo
-        .create(username, &email, password_hash, false)
+        .create(&username, &email, password_hash, false)
         .await
         .unwrap();
     assert_eq!(res.username, username);

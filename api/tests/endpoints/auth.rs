@@ -1,5 +1,6 @@
 use crate::helpers::{
     app_paths::APP_PATHS,
+    test_data::TestData,
     test_server::{get_app_state, get_test_server},
 };
 use axum::http::{HeaderValue, StatusCode};
@@ -8,9 +9,7 @@ use serde_json::json;
 
 #[tokio::test]
 async fn test_create_user() {
-    let username = "testcreateuser";
-    let email = format!("{username}@dimdim.fr");
-    let password = "securepassword";
+    let td = TestData::new("testcreateuser");
 
     let app_test = get_app_state().await;
     let server = get_test_server(app_test.clone()).await;
@@ -19,9 +18,9 @@ async fn test_create_user() {
         .post(APP_PATHS.create_user)
         .json(&json!({
             "user": {
-                "username": username,
-                "email": email,
-                "password": password
+                "username": td.username,
+                "email": td.email,
+                "password": td.password
             }
         }))
         .await;
@@ -29,8 +28,8 @@ async fn test_create_user() {
     res.assert_status(StatusCode::OK);
 
     let login_response = res.json::<LoginResponse>();
-    assert_eq!(login_response.user.username, username);
-    assert_eq!(login_response.user.email, email);
+    assert_eq!(login_response.user.username, td.username);
+    assert_eq!(login_response.user.email, td.email);
 
     let res = server
         .get(APP_PATHS.current_user)
@@ -43,30 +42,28 @@ async fn test_create_user() {
 
     res.assert_status(StatusCode::OK);
     let current_user_data = res.json::<UserResponse>().user;
-    assert_eq!(current_user_data.username, username);
-    assert_eq!(current_user_data.email, email);
+    assert_eq!(current_user_data.username, td.username);
+    assert_eq!(current_user_data.email, td.email);
 
     let res = server
         .post(APP_PATHS.login_user)
         .json(&json!({
             "user": {
-                "email": email,
-                "password": password
+                "email": td.email,
+                "password": td.password
             }
         }))
         .await;
 
     res.assert_status(StatusCode::OK);
     let login_user_data = res.json::<UserResponse>().user;
-    assert_eq!(login_user_data.username, username);
-    assert_eq!(login_user_data.email, email);
+    assert_eq!(login_user_data.username, td.username);
+    assert_eq!(login_user_data.email, td.email);
 }
 
 #[tokio::test]
 async fn test_create_user_too_small_username() {
-    let username = "t";
-    let email = format!("{username}@dimdim.fr");
-    let password = "securepassword";
+    let td = TestData::new("t");
 
     let app_test = get_app_state().await;
     let server = get_test_server(app_test.clone()).await;
@@ -75,9 +72,9 @@ async fn test_create_user_too_small_username() {
         .post(APP_PATHS.create_user)
         .json(&json!({
                 "user":{
-                    "username":username,
-                    "email":email,
-                    "password":password
+                    "username":td.username,
+                    "email":td.email,
+                    "password":td.password
                 }
         }))
         .await;
@@ -87,9 +84,8 @@ async fn test_create_user_too_small_username() {
 
 #[tokio::test]
 async fn test_create_user_invalid_email() {
-    let username = "testinvalidemail";
+    let td = TestData::new("testinvalidemail");
     let email = "invalid-email-format";
-    let password = "securepassword";
 
     let app_test = get_app_state().await;
     let server = get_test_server(app_test.clone()).await;
@@ -98,9 +94,9 @@ async fn test_create_user_invalid_email() {
         .post(APP_PATHS.create_user)
         .json(&json!({
                 "user":{
-                    "username":username,
+                    "username":td.username,
                     "email":email,
-                    "password":password
+                    "password":td.password
                 }
         }))
         .await;
@@ -110,8 +106,7 @@ async fn test_create_user_invalid_email() {
 
 #[tokio::test]
 async fn test_create_user_weak_password() {
-    let username = "testweakpassword";
-    let email = format!("{username}@email.fr");
+    let td = TestData::new("testweakpassword");
     let password = "123";
 
     let app_test = get_app_state().await;
@@ -121,8 +116,8 @@ async fn test_create_user_weak_password() {
         .post(APP_PATHS.create_user)
         .json(&json!({
                 "user":{
-                    "username":username,
-                    "email":email,
+                    "username":td.username,
+                    "email":td.email,
                     "password":password
                 }
         }))
@@ -133,10 +128,7 @@ async fn test_create_user_weak_password() {
 
 #[tokio::test]
 async fn test_create_user_duplicate_username() {
-    let username = "duplicateuser";
-    let email1 = format!("{username}1@dimdim.fr");
-    let email2 = format!("{username}2@dimdim.fr");
-    let password = "securepassword";
+    let td = TestData::new("duplicateuser");
 
     let app_test = get_app_state().await;
     let server = get_test_server(app_test.clone()).await;
@@ -145,9 +137,9 @@ async fn test_create_user_duplicate_username() {
         .post(APP_PATHS.create_user)
         .json(&json!({
                 "user":{
-                    "username":username,
-                    "email":email1,
-                    "password":password
+                    "username":td.username,
+                    "email":td.email,
+                    "password":td.password
                 }
         }))
         .await;
@@ -157,9 +149,9 @@ async fn test_create_user_duplicate_username() {
         .post(APP_PATHS.create_user)
         .json(&json!({
                 "user":{
-                    "username":username,
-                    "email":email2,
-                    "password":password
+                    "username":td.username,
+                    "email":format!("new_{}",td.email),
+                    "password":td.password
                 }
         }))
         .await;

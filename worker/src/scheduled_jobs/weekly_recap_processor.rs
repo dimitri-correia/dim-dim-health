@@ -1,7 +1,5 @@
 use chrono::{Datelike, Timelike, Utc, Weekday};
-use entities::{
-    email_preferences, users, EmailType, Job, JobEmail, JobEmailWeeklyRecap, TaskType,
-};
+use entities::{EmailType, Job, JobEmail, JobEmailWeeklyRecap, TaskType, email_preferences, users};
 use redis::AsyncCommands;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use std::time::Duration;
@@ -13,10 +11,10 @@ use crate::worker_main::state::WorkerState;
 /// Runs every Monday at 09:00 AM
 pub async fn process_weekly_recap_queue(worker_state: WorkerState) {
     info!("Starting weekly recap scheduler");
-    
+
     loop {
         let now = Utc::now();
-        
+
         // Check if it's Monday and around 9 AM (within a 5-minute window)
         if now.weekday() == Weekday::Mon && now.hour() == 9 && now.minute() < 5 {
             info!("Triggering weekly recap emails");
@@ -44,26 +42,26 @@ async fn enqueue_weekly_recap_emails(worker_state: &WorkerState) -> anyhow::Resu
         .find_also_related(users::Entity)
         .all(&worker_state.db)
         .await?;
-    
+
     let mut count = 0;
-    
+
     for (_pref, user_opt) in users_with_prefs {
         if let Some(user) = user_opt {
             let job_email_weekly_recap = JobEmailWeeklyRecap {
                 email: user.email.clone(),
                 username: user.username.clone(),
             };
-            
+
             let job_email = JobEmail {
                 email_type: EmailType::WeeklyRecap,
                 data: serde_json::to_value(job_email_weekly_recap)?,
             };
-            
+
             let job = Job {
                 task_type: TaskType::Email,
                 data: serde_json::to_value(job_email)?,
             };
-            
+
             // Push to Redis
             let mut redis = worker_state.redis.clone();
             match redis
@@ -80,6 +78,6 @@ async fn enqueue_weekly_recap_emails(worker_state: &WorkerState) -> anyhow::Resu
             }
         }
     }
-    
+
     Ok(count)
 }
