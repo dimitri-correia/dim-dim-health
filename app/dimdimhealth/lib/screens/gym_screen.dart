@@ -525,7 +525,7 @@ class _GymScreenState extends State<GymScreen> {
                 ),
                 _buildSummaryItem(
                   '${_exercises.length}',
-                  'Exercises',
+                  'Available',
                   Icons.fitness_center,
                 ),
               ],
