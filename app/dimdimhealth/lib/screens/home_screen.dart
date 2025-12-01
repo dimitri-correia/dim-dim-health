@@ -76,8 +76,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         // 2 columns for mobile, 4 columns for desktop
                         final crossAxisCount =
                             constraints.maxWidth >= AppConfig.desktopBreakpoint
-                                ? 4
-                                : 2;
+                            ? 4
+                            : 2;
 
                         return GridView.count(
                           crossAxisCount: crossAxisCount,
@@ -98,6 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               title: 'Meals',
                               subtitle: 'Log your meals',
                               color: AppConfig.redColor,
+                              route: '/meals',
                             ),
                             _buildActionCard(
                               context,

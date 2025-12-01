@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../models/food_item.dart';
+import '../models/meal.dart';
 import '../models/user.dart';
 import '../models/watch_permission.dart';
 import '../models/weight.dart';
@@ -17,6 +19,11 @@ class ApiException implements Exception {
 
 class ApiService {
   final String baseUrl = AppConfig.apiUrl;
+
+  /// Formats a DateTime to YYYY-MM-DD string format for API calls
+  String _formatDate(DateTime date) {
+    return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
 
   Future<LoginResponse> register({
     required String username,
@@ -632,6 +639,447 @@ class ApiService {
     } else {
       throw ApiException(
         'Failed to leave public group',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  // Food Item API methods
+
+  /// Get all food items, optionally filtered by name or scan code
+  Future<List<FoodItem>> getFoodItems(
+    String accessToken, {
+    String? name,
+    String? scanCode,
+  }) async {
+    String url = '$baseUrl/api/food-items';
+    final queryParams = <String, String>{};
+    if (name != null) queryParams['name'] = name;
+    if (scanCode != null) queryParams['scan_code'] = scanCode;
+    if (queryParams.isNotEmpty) {
+      url += '?${Uri(queryParameters: queryParams).query}';
+    }
+
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => FoodItem.fromJson(json)).toList();
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else {
+      throw ApiException(
+        'Failed to fetch food items',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Create a new food item
+  Future<FoodItem> createFoodItem({
+    required String accessToken,
+    required String name,
+    String? description,
+    String? scanCode,
+    required int caloriesPer100g,
+    required int proteinPer100g,
+    required int carbsPer100g,
+    required int fatPer100g,
+  }) async {
+    final request = CreateFoodItemRequest(
+      name: name,
+      description: description,
+      scanCode: scanCode,
+      caloriesPer100g: caloriesPer100g,
+      proteinPer100g: proteinPer100g,
+      carbsPer100g: carbsPer100g,
+      fatPer100g: fatPer100g,
+    );
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/food-items'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return FoodItem.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
+    } else {
+      throw ApiException(
+        'Failed to create food item',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Update a food item
+  Future<FoodItem> updateFoodItem({
+    required String accessToken,
+    required String id,
+    String? name,
+    String? description,
+    String? scanCode,
+    int? caloriesPer100g,
+    int? proteinPer100g,
+    int? carbsPer100g,
+    int? fatPer100g,
+  }) async {
+    final request = UpdateFoodItemRequest(
+      name: name,
+      description: description,
+      scanCode: scanCode,
+      caloriesPer100g: caloriesPer100g,
+      proteinPer100g: proteinPer100g,
+      carbsPer100g: carbsPer100g,
+      fatPer100g: fatPer100g,
+    );
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/api/food-items/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return FoodItem.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 403) {
+      throw ApiException('Not allowed to modify this food item', statusCode: 403);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Food item not found', statusCode: 404);
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
+    } else {
+      throw ApiException(
+        'Failed to update food item',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Delete a food item
+  Future<void> deleteFoodItem({
+    required String accessToken,
+    required String id,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/api/food-items/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 204) {
+      return;
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 403) {
+      throw ApiException('Not allowed to delete this food item', statusCode: 403);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Food item not found', statusCode: 404);
+    } else {
+      throw ApiException(
+        'Failed to delete food item',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  // Meal API methods
+
+  /// Get all meals, optionally filtered by date
+  Future<List<Meal>> getMeals(String accessToken, {DateTime? date}) async {
+    String url = '$baseUrl/api/meals';
+    if (date != null) {
+      url += '?date=${_formatDate(date)}';
+    }
+
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Meal.fromJson(json)).toList();
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else {
+      throw ApiException(
+        'Failed to fetch meals',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Create a new meal
+  Future<Meal> createMeal({
+    required String accessToken,
+    required MealType kind,
+    required DateTime date,
+    String? description,
+  }) async {
+    final request = CreateMealRequest(
+      kind: kind.value,
+      date: _formatDate(date),
+      description: description,
+    );
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/meals'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return Meal.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
+    } else {
+      throw ApiException(
+        'Failed to create meal',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Update a meal
+  Future<Meal> updateMeal({
+    required String accessToken,
+    required String id,
+    MealType? kind,
+    DateTime? date,
+    String? description,
+  }) async {
+    final Map<String, dynamic> body = {};
+    if (kind != null) body['kind'] = kind.value;
+    if (date != null) {
+      body['date'] = _formatDate(date);
+    }
+    if (description != null) body['description'] = description;
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/api/meals/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      return Meal.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 403) {
+      throw ApiException('Not allowed to modify this meal', statusCode: 403);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Meal not found', statusCode: 404);
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
+    } else {
+      throw ApiException(
+        'Failed to update meal',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Delete a meal
+  Future<void> deleteMeal({
+    required String accessToken,
+    required String id,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/api/meals/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 204) {
+      return;
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 403) {
+      throw ApiException('Not allowed to delete this meal', statusCode: 403);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Meal not found', statusCode: 404);
+    } else {
+      throw ApiException(
+        'Failed to delete meal',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  // Meal Item API methods
+
+  /// Get all items for a meal
+  Future<List<MealItem>> getMealItems(
+    String accessToken,
+    String mealId,
+  ) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/meals/$mealId/items'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => MealItem.fromJson(json)).toList();
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 403) {
+      throw ApiException('Not allowed to view this meal', statusCode: 403);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Meal not found', statusCode: 404);
+    } else {
+      throw ApiException(
+        'Failed to fetch meal items',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Add an item to a meal
+  Future<MealItem> addMealItem({
+    required String accessToken,
+    required String mealId,
+    required String foodItemId,
+    required int quantityInGrams,
+  }) async {
+    final request = AddMealItemRequest(
+      foodItemId: foodItemId,
+      quantityInGrams: quantityInGrams,
+    );
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/meals/$mealId/items'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return MealItem.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 403) {
+      throw ApiException('Not allowed to modify this meal', statusCode: 403);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Meal not found', statusCode: 404);
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
+    } else {
+      throw ApiException(
+        'Failed to add meal item',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Update a meal item
+  Future<MealItem> updateMealItem({
+    required String accessToken,
+    required String mealId,
+    required String itemId,
+    required int quantityInGrams,
+  }) async {
+    final request = UpdateMealItemRequest(
+      quantityInGrams: quantityInGrams,
+    );
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/api/meals/$mealId/items/$itemId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return MealItem.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 403) {
+      throw ApiException('Not allowed to modify this meal', statusCode: 403);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Meal or item not found', statusCode: 404);
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw ApiException(error['error'] ?? 'Invalid data', statusCode: 400);
+    } else {
+      throw ApiException(
+        'Failed to update meal item',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
+  /// Delete a meal item
+  Future<void> deleteMealItem({
+    required String accessToken,
+    required String mealId,
+    required String itemId,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/api/meals/$mealId/items/$itemId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $accessToken',
+      },
+    );
+
+    if (response.statusCode == 204) {
+      return;
+    } else if (response.statusCode == 401) {
+      throw ApiException('Unauthorized', statusCode: 401);
+    } else if (response.statusCode == 403) {
+      throw ApiException('Not allowed to modify this meal', statusCode: 403);
+    } else if (response.statusCode == 404) {
+      throw ApiException('Meal or item not found', statusCode: 404);
+    } else {
+      throw ApiException(
+        'Failed to delete meal item',
         statusCode: response.statusCode,
       );
     }
